@@ -3,6 +3,7 @@ boolean arrowEnableOverName = false;
 boolean arrowEnableOverWeight = false;
 boolean arrowEnableOverTrail = false;
 boolean arrowEnableOverGravity = false;
+boolean arrowEnableOverBounds = false;
 
 boolean overRect(int x, int y, int width, int height) {
   if (mouseX >= x && mouseX <= x+width &&
@@ -13,31 +14,48 @@ boolean overRect(int x, int y, int width, int height) {
   }
 }
 
-void hover() {//handles hovers on titles and checkboxes for options
-  if ( overRect(BOTTOM_INIT_X, BOTTOM_INIT_Y, 320, 20) ) {
+void drawBounds() {
+  if (ENABLE_BOUNDS) {
+    noFill();
+    translate(width/2, height/2);
+    pushMatrix();
+    stroke(255);
+    box(width, height, 1200);
+    popMatrix();
+    translate(-width/2, -height/2);
+  }
+}
+
+void hover() {//handles hovers on titles and tickboxes for options
+  if ( overRect(BOTTOM_INIT_X, BOTTOM_INIT_Y, 320, 20) ) {//Arrow tickbox
     arrowEnableOverVel = true;
   } else {
     arrowEnableOverVel = false;
   }
-  if (overRect(BOTTOM_INIT_X, BOTTOM_INIT_Y-50, 295, 20)) {
+  if (overRect(BOTTOM_INIT_X, BOTTOM_INIT_Y-50, 295, 20)) {//Name tickbox
     arrowEnableOverName = true;
   } else {
     arrowEnableOverName = false;
   }
-  if (overRect(BOTTOM_INIT_X, BOTTOM_INIT_Y-100, 270, 20)) {
+  if (overRect(BOTTOM_INIT_X, BOTTOM_INIT_Y-100, 270, 20)) {//Weight tickbox
     arrowEnableOverWeight = true;
   } else {
     arrowEnableOverWeight = false;
   }
-  if (overRect(BOTTOM_INIT_X, BOTTOM_INIT_Y-150, 220, 20)) {
+  if (overRect(BOTTOM_INIT_X, BOTTOM_INIT_Y-150, 220, 20)) {//Trail tickbox
     arrowEnableOverTrail = true;
   } else {
     arrowEnableOverTrail = false;
   }
-  if (overRect(BOTTOM_INIT_X, BOTTOM_INIT_Y-200, 220, 20)) {
+  if (overRect(BOTTOM_INIT_X, BOTTOM_INIT_Y-200, 220, 20)) {//Gravity tickbox
     arrowEnableOverGravity = true;
   } else {
     arrowEnableOverGravity = false;
+  }
+  if (overRect(BOTTOM_INIT_X, BOTTOM_INIT_Y-250, 240, 20)) {//Visible bounds tickbox
+    arrowEnableOverBounds = true;
+  } else {
+    arrowEnableOverBounds = false;
   }
 }
 
@@ -106,6 +124,9 @@ void drawGUI() {//Handles the display for the Graphical User Intefrace. Is on by
 
     //enable gravity
     drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-200, "Enable gravity", ENABLE_GRAVITY, arrowEnableOverGravity);
+    
+    //enable bounds
+    drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-250, "Enable boundaries", ENABLE_BOUNDS, arrowEnableOverBounds);
     drawHints();
   }
 }

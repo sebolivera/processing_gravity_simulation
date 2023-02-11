@@ -14,6 +14,9 @@ void mousePressed() {//handles the clicks on the checkboxes
   if (arrowEnableOverGravity) {
     ENABLE_GRAVITY = !ENABLE_GRAVITY;
   }
+  if (arrowEnableOverBounds) {
+    ENABLE_BOUNDS = !ENABLE_BOUNDS;
+  }
 }
 
 void keyReleased() {//Handle of keypresses

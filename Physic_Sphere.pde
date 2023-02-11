@@ -215,37 +215,38 @@ class Physic_Sphere {//Base class for the spheres
       }
     }
   }
-  
+
   void update() {//Updates the position of the sphere. It is to be noted that this and the correctClipping function are the only parts of the code that should access the position directly
     prevPos.add(pos.copy());
     vel.add(acc);
-
-    if (pos.x<=0 && vel.x<0)
-    {
-      vel.x = -vel.x*bounciness;
-    } else if (pos.x>=MAX_WIDTH && vel.x>0)
-    {
-      vel.x = -vel.x*bounciness;
-    }
-    if (pos.y<=0 && vel.y<0)
-    {
-      vel.y = -vel.y*bounciness;
-    } else if (pos.y>=MAX_HEIGHT && vel.y>0)
-    {
-      vel.y = -vel.y*bounciness;
-    }
-    if (pos.z>=0 && vel.z>0)
-    {
-      vel.z = -vel.z*bounciness;
-    } else if (pos.z<=-MAX_DEPTH && vel.z<0)
-    {
-      vel.z = -vel.z*bounciness;
+    if (ENABLE_BOUNDS) {
+      if (pos.x<=0 && vel.x<0)
+      {
+        vel.x = -vel.x*bounciness;
+      } else if (pos.x>=MAX_WIDTH && vel.x>0)
+      {
+        vel.x = -vel.x*bounciness;
+      }
+      if (pos.y<=0 && vel.y<0)
+      {
+        vel.y = -vel.y*bounciness;
+      } else if (pos.y>=MAX_HEIGHT && vel.y>0)
+      {
+        vel.y = -vel.y*bounciness;
+      }
+      if (pos.z>=0 && vel.z>0)
+      {
+        vel.z = -vel.z*bounciness;
+      } else if (pos.z<=-MAX_DEPTH && vel.z<0)
+      {
+        vel.z = -vel.z*bounciness;
+      }
     }
     nullifyPVectorNaN(vel);//there *might* be a chance for spheres to get trapped inbetween two bouncing spheres that apply opposite forces, which will result in them over-correcting their velocities. This prevents an impossible velocity from being applied to a sphere, which allows them to clip a little bit, but ultimately prevents both crashes and excessive clipping.
     pos.add(vel);
     correctPVectorNaN(pos, prevPos);//prevents the positions from being altered too much after fast hitting spheres. While very rares, instances where one sphere gets knocked off screen tend to crash the simulation due to the gravitational forces being skewed toward it after a while.
   }
-  
+
   void display() {//draws a sphere according to its position radius, color, index (which gives the name) and tail effect.
     pushMatrix();
     noStroke();
@@ -268,7 +269,7 @@ class Physic_Sphere {//Base class for the spheres
     if (DRAW_TRAILS) {//Processing's way of drawing strokes gives them no depth on the Z axis, which makes them look flat when the balls turn at sharp angles or face slightly away from the camera.
       for (int i = prevPos.size()>0?prevPos.size()-1:0; i>(prevPos.size()>20?prevPos.size()-20:0); i--)
       {
-        stroke(c, lerp(255, 0, ((float)(prevPos.size()<20?i:prevPos.size()-i))/(prevPos.size()<20?prevPos.size():20)));
+        stroke(c, lerp(255, 25, ((float)(prevPos.size()<20?i:prevPos.size()-i))/(prevPos.size()<20?prevPos.size():20)));
         strokeWeight(lerp(0, radius*2, lerp(1.0, 0, ((float)(prevPos.size()<20?prevPos.size()-i:prevPos.size()-i))/(prevPos.size()<20?prevPos.size():20))));
         curveVertex(prevPos.get(i).x, prevPos.get(i).y, prevPos.get(i).z );
       }
