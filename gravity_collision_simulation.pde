@@ -1,15 +1,17 @@
-float G = 1;
 import java.util.ArrayList;
 import java.lang.Object;
-boolean DRAW_TRAILS = true;
-boolean DRAW_ARROWS = true;
-boolean DRAW_NAME = true;
-boolean DRAW_WEIGHT = true;
-int idx_counter = 0;
-int MAX_THREAD_SIZE = Runtime.getRuntime().availableProcessors();
+
+float G = 1;
+boolean DRAW_TRAILS = false;
+boolean DRAW_ARROWS = false;
+boolean DRAW_NAME = false;
+boolean DRAW_WEIGHT = false;
+int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
 boolean ENABLE_GRAVITY = true;
-boolean paused = false;
-int collisionsPerFrame = 0;
+boolean PAUSED = false;
+int SPHERE_COUNT = 20;
+boolean SHOW_INTERFACE = true;
+int UNPAUSED_TIMER = -3000;
 
 public class InvalidObjectAmount extends Exception {
   public InvalidObjectAmount(String message) {
@@ -443,19 +445,18 @@ class Celestial_Thread extends Thread {
 ArrayList<Celestial_object> balls;
 ArrayList<Celestial_Thread> threaded_balls;
 Celestial_object sun;
-int OBJ_AMT = 20;
 void restart() throws Exception
 {
   balls = new ArrayList<>();
   threaded_balls = new ArrayList<>();
   color whatever;
-  for (int i = 0; i<OBJ_AMT; i++)
+  for (int i = 0; i<SPHERE_COUNT; i++)
   {
     whatever = color(random(200)+55, random(200)+55, random(200)+55);
     float randX = random(600.0);
     float randY = random(600.0);
     float randZ = random(1200.0)-600.0;
-    float randR = random( 2+random(10.0));
+    float randR = random( 2.0+random(10.0));
     PVector t_pos = new PVector(randX, randY, randZ);
     boolean clipped = false;
     for (int j = 0; j<balls.size(); j++) {
@@ -479,9 +480,9 @@ void restart() throws Exception
   threaded_balls = new ArrayList<Celestial_Thread>();
 
   ArrayList<Integer> balls_idx_batch = new ArrayList<>();
-  if (MAX_THREAD_SIZE>OBJ_AMT)
+  if (THREAD_COUNT>SPHERE_COUNT)
   {
-    for (int i = 0; i<OBJ_AMT; i++)
+    for (int i = 0; i<SPHERE_COUNT; i++)
     {
       balls_idx_batch.add(i);
     }
@@ -489,9 +490,9 @@ void restart() throws Exception
     balls_idx_batch.clear();//Technically useless since the app will most likely crash due to over-allocation of objects in the first place, but every little bit helps, I guess.
   } else
   {
-    int items_per_thread = OBJ_AMT/MAX_THREAD_SIZE;
+    int items_per_thread = SPHERE_COUNT/THREAD_COUNT;
     int global_idx = 0;
-    for (int i = 0; i<MAX_THREAD_SIZE; i++)
+    for (int i = 0; i<THREAD_COUNT; i++)
     {
       for (int j = 0; j < items_per_thread; j++)
       {
@@ -501,10 +502,10 @@ void restart() throws Exception
       threaded_balls.add(new Celestial_Thread(balls_idx_batch, balls));
       balls_idx_batch.clear();
     }
-    if (OBJ_AMT%MAX_THREAD_SIZE!=0)
+    if (SPHERE_COUNT%THREAD_COUNT!=0)
     {//fill in the rest of the balls if some are left after even distribution
       try {//mostly leaving this here so I don't forget the syntax for exceptions in java...
-        if (OBJ_AMT-global_idx<=0) {
+        if (SPHERE_COUNT-global_idx<=0) {
           throw new InvalidObjectAmount("No items remain after initial insertion.");
         }
       }
@@ -512,7 +513,7 @@ void restart() throws Exception
       {
         throw new InvalidObjectAmount("No items remain after initial insertion.");
       }
-      int remaining_objs = (OBJ_AMT-global_idx);
+      int remaining_objs = (SPHERE_COUNT-global_idx);
       for (int i = 0; i<remaining_objs; i++)
       {
         threaded_balls.get(i).add_to_objs(global_idx);
@@ -532,9 +533,13 @@ boolean arrowEnableOverName = false;
 boolean arrowEnableOverWeight = false;
 boolean arrowEnableOverTrail = false;
 boolean arrowEnableOverGravity = false;
-
+PFont fontBold, fontLight;
 void setup() {
   size(1000, 1000, P3D);
+
+  fontBold = createFont("Roboto-Black.ttf", 128);
+  fontLight = createFont("Roboto-Light.ttf", 30);
+  textFont(fontBold);
   rectColor = color(0);
   rectHighlight = color(51);
   try {
@@ -545,7 +550,6 @@ void setup() {
   }
   rectX = 50;
   rectY = height-50;
-  smooth(0);
 }
 
 
@@ -596,7 +600,7 @@ void hover() {
   } else {
     arrowEnableOverTrail = false;
   }
-  if (overRect(rectX+330, rectY, rectSize+200, rectSize)) {
+  if (overRect(rectX, rectY-200, rectSize+200, rectSize)) {
     arrowEnableOverGravity = true;
   } else {
     arrowEnableOverGravity = false;
@@ -611,7 +615,7 @@ void draw() {
   translate(200, 150);
 
 
-  if (!paused) {
+  if (!PAUSED) {
     for (int i = 0; i<threaded_balls.size(); i++)
     {
       threaded_balls.get(i).run();
@@ -638,86 +642,135 @@ void draw() {
   strokeWeight(1);
   textSize(30);
 
-  //enable arrows
-  if (arrowEnableOverVel) {
-    fill(rectHighlight);
-  } else {
-    fill(rectColor);
-  }
-  rect(rectX, rectY, rectSize, rectSize);
-  if (DRAW_ARROWS) {
-    fill(0, 255, 0);
-    text("✓", rectX, rectY+20);
-  }
-  fill(255);
-  text("Show velocity arrows", 80, height-30);
+  if (SHOW_INTERFACE) {
 
-  //enable names
+    //enable arrows
+    if (arrowEnableOverVel) {
+      fill(rectHighlight);
+    } else {
+      fill(rectColor);
+    }
+    rect(rectX, rectY, rectSize, rectSize);
+    if (DRAW_ARROWS) {
+      fill(255, 255, 0);
+      text("X", rectX, rectY+20);
+    }
+    if (arrowEnableOverVel) {
+      fill(255);
+    } else {
+      fill(200);
+    }
+    text("Show velocity arrows", 80, height-30);
 
-  if (arrowEnableOverName) {
-    fill(rectHighlight);
-  } else {
-    fill(rectColor);
-  }
-  rect(rectX, rectY-50, rectSize, rectSize);
-  if (DRAW_NAME) {
-    fill(0, 255, 0);
-    text("✓", rectX, rectY-30);
-  }
-  fill(255);
-  text("Show ball names", 80, height-80);
+    //enable names
+
+    if (arrowEnableOverName) {
+      fill(rectHighlight);
+    } else {
+      fill(rectColor);
+    }
+    rect(rectX, rectY-50, rectSize, rectSize);
+    if (DRAW_NAME) {
+      fill(255, 255, 0);
+      text("X", rectX, rectY-30);
+    }
+
+    if (arrowEnableOverName) {
+      fill(255);
+    } else {
+      fill(200);
+    }
+    text("Show ball names", 80, height-80);
 
 
-  //enable weights
+    //enable weights
 
-  if (arrowEnableOverWeight) {
-    fill(rectHighlight);
-  } else {
-    fill(rectColor);
-  }
-  rect(rectX, rectY-100, rectSize, rectSize);
-  if (DRAW_WEIGHT) {
-    fill(0, 255, 0);
-    text("✓", rectX, rectY-80);
-  }
-  fill(255);
-  text("Show ball weights", 80, height-130);
+    if (arrowEnableOverWeight) {
+      fill(rectHighlight);
+    } else {
+      fill(rectColor);
+    }
+    rect(rectX, rectY-100, rectSize, rectSize);
+    if (DRAW_WEIGHT) {
+      fill(255, 255, 0);
+      text("X", rectX, rectY-80);
+    }
+    if (arrowEnableOverWeight) {
+      fill(255);
+    } else {
+      fill(200);
+    }
+    text("Show ball weights", 80, height-130);
 
-  //enable trails
+    //enable trails
 
-  if (arrowEnableOverTrail) {
-    fill(rectHighlight);
-  } else {
-    fill(rectColor);
-  }
-  rect(rectX, rectY-150, rectSize, rectSize);
-  if (DRAW_TRAILS) {
-    fill(0, 255, 0);
-    text("✓", rectX, rectY-130);
-  }
-  fill(255);
-  text("Show trails", 80, height-180);
-  
-  
-  //enable gravity
+    if (arrowEnableOverTrail) {
+      fill(rectHighlight);
+    } else {
+      fill(rectColor);
+    }
+    rect(rectX, rectY-150, rectSize, rectSize);
+    if (DRAW_TRAILS) {
+      fill(255, 255, 0);
+      text("X", rectX, rectY-130);
+    }
+    if (arrowEnableOverTrail) {
+      fill(255);
+    } else {
+      fill(200);
+    }
+    text("Show trails", 80, height-180);
 
-  if (arrowEnableOverGravity) {
-    fill(rectHighlight);
-  } else {
-    fill(rectColor);
-  }
-  rect(rectX+350, rectY, rectSize, rectSize);
-  if (ENABLE_GRAVITY) {
-    fill(0, 255, 0);
-    text("✓", rectX+350, rectY+20);
-  }
-  fill(255);
-  text("Enable gravity", 430, height-30);
 
+    //enable gravity
+
+    if (arrowEnableOverGravity) {
+      fill(rectHighlight);
+    } else {
+      fill(rectColor);
+    }
+    rect(rectX, rectY-200, rectSize, rectSize);
+    if (ENABLE_GRAVITY) {
+      fill(255, 255, 0);
+      text("X", rectX, rectY-180);
+    }
+    if (arrowEnableOverGravity) {
+      fill(255);
+    } else {
+      fill(200);
+    }
+    text("Enable gravity", 80, height-230);
+    fill(255);
+    textFont(fontLight);
+    text("Press 'R' to restart the simulation", width-475, height-30);
+    text("Press 'H' to hide the interface", width-475, height-130);
+
+    if (PAUSED) {
+      textFont(fontLight);
+      text("Press 'P' to unpause the simulation", width-475, height-80);
+      textFont(fontBold);
+      noStroke();
+      fill(255, 0, 0);
+      rect( 35, 68, 10, 30);
+      rect( 50, 68, 10, 30);
+      textSize(50);
+      text("PAUSED", 75, 100);
+    } else
+    {
+      textFont(fontLight);
+      text("Press 'P' to pause the simulation", width-475, height-80);
+      textFont(fontBold);
+      noStroke();
+      if (millis()-UNPAUSED_TIMER<2000) {
+        fill(0, lerp(255, 0, (float)(millis()-UNPAUSED_TIMER)/2000), 0);
+        triangle(35, 70, 35, 96, 65, 83);
+        textSize(50);
+        text("RUNNING", 75, 100);
+      }
+    }
+  }
   popMatrix();
 }
-
-
 
 void keyReleased() {
   if (keyCode == 82) {
@@ -730,6 +783,13 @@ void keyReleased() {
   }
   if (keyCode == 80)
   {
-    paused = !paused;
+    PAUSED = !PAUSED;
+    if (!PAUSED) {
+      UNPAUSED_TIMER = millis();
+    }
+  }
+  if (keyCode == 72)
+  {
+    SHOW_INTERFACE = !SHOW_INTERFACE;
   }
 }
