@@ -249,9 +249,9 @@ class Physic_Sphere {//Base class for the spheres
 
   void display() {//draws a sphere according to its position radius, color, index (which gives the name) and tail effect.
     pushMatrix();
-    noStroke();
     translate(pos.x, pos.y, pos.z);
-    fill(lerp(red(c)/10, red(c), (pos.z+MAX_DEPTH)/(MAX_DEPTH*2)), lerp(green(c)/10, green(c), (pos.z+MAX_DEPTH)/(MAX_DEPTH*2)), lerp(blue(c)/10, blue(c), (pos.z+MAX_DEPTH)/(MAX_DEPTH*2)));
+    noStroke();
+    fill(lerp(red(c)/10, red(c), (pos.z+MAX_DEPTH)/(MAX_DEPTH*2)), lerp(green(c)/10, green(c), (pos.z+MAX_DEPTH)/(MAX_DEPTH*2)), lerp(blue(c)/10, blue(c), (pos.z+MAX_DEPTH)/(MAX_DEPTH*2)), 200);
     sphere(radius*2);
     popMatrix();
     fill(255-red(c), 255-green(c), 255-blue(c));
