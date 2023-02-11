@@ -39,10 +39,8 @@ void draw() {
   hover();//see GUI tab for details
   drawBounds();
   translate(200, 150);//Not exactly sure why, but the camera seems to be somewhat off-center
-  
-  
   stroke(0);
-  
+
   if (!PAUSED) {//management of the physics of the sphere
     for (int i = 0; i<threaded_spheres.size(); i++)
     {

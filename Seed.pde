@@ -2,10 +2,10 @@ public void seed(int amount)//Creates
 {
   spheres = new ArrayList<>();
   threaded_spheres = new ArrayList<>();
-  color whatever;
+  color rand_color;
   for (int i = 0; i<amount; i++)
   {
-    whatever = color(random(200)+55, random(200)+55, random(200)+55);
+    rand_color = color(random(200)+55, random(200)+55, random(200)+55);
     float randX = random(600.0);
     float randY = random(600.0);
     float randZ = random(1200.0)-600.0;
@@ -21,7 +21,7 @@ public void seed(int amount)//Creates
         t_pos = new PVector(randX, randY, randZ);
       }
     }
-    spheres.add(new Physic_Sphere(i, whatever, new PVector(randX, randY, randZ), new PVector(1-random(5), 1-random(5), 1-random(5)), randR, 0.5+random(0.5)));
+    spheres.add(new Physic_Sphere(i, rand_color, new PVector(randX, randY, randZ), new PVector(1-random(5), 1-random(5), 1-random(5)), randR, 0.5+random(0.5)));
   }
 
   threaded_spheres = new ArrayList<Sphere_Batch_Thread>();
