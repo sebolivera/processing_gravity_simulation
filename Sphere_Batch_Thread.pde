@@ -1,9 +1,13 @@
-class Physic_Sphere_Threaded extends Thread {//Thread wrapper for batches of sphere objects
+class Sphere_Batch_Thread extends Thread {
+  /* 
+   * Thread wrapper for batches of sphere objects
+   * Spheres are distributed as evenly as possible in the threads so that the balancing is somewhat reasonable. 
+   */
   ArrayList<Integer> obj_idx_list;
   ArrayList<Physic_Sphere> collider_list;
   ArrayList<Integer> indexes = new ArrayList<Integer>();
 
-  Physic_Sphere_Threaded(ArrayList<Integer> t_obj_idx_list, ArrayList<Physic_Sphere> t_collider_list) {
+  Sphere_Batch_Thread(ArrayList<Integer> t_obj_idx_list, ArrayList<Physic_Sphere> t_collider_list) {
     obj_idx_list = new ArrayList<Integer>();
     t_obj_idx_list.forEach((n)-> obj_idx_list.add(n));
     collider_list = new ArrayList<Physic_Sphere>();

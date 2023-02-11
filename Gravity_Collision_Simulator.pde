@@ -13,20 +13,20 @@ int THREAD_COUNT = Runtime.getRuntime().availableProcessors();//Creates as many 
 boolean SHOW_INTERFACE = true;//Handles the display of the GUI.
 int UNPAUSED_TIMER = -3000;//Handles the fade-out for the "Running" text on unpause action.
 
-ArrayList<Physic_Sphere> spheres;
-ArrayList<Physic_Sphere_Threaded> threaded_spheres;
+ArrayList<Physic_Sphere> spheres;//global collection of sphres, used for display and collision detection. They are independent of the threads by design, but might be replaced in the future.
+ArrayList<Sphere_Batch_Thread> threaded_spheres;//Collection of batches split into several threads to ease the ressource usage during computation. Is only relevant for amounts of spheres>100 for normal settings, but doesn't hurt.
 
-PFont fontBold, fontLight;
-color rectColor;
-color rectHighlight;
+PFont fontBold, fontLight;//A custom font has to be used otherwise the text appears pixellated on some OS.
+color TICKBOX_COLOR;//color of the tickboxes when 
+color TICKBOX_HIGHLIGHT_COLOR;
 
 void setup() {
-  size(1000, 1000, P3D);//OpenGL didn't show any significant difference, feel free to use it instead.
-  fontBold = createFont("Roboto-Black.ttf", 128);//A custom font has to be used otherwise the text appears pixellated on some OS.
+  size(1000, 1000, P3D);//OpenGL didn't show any significant difference in display, feel free to use it instead.
+  fontBold = createFont("Roboto-Black.ttf", 128);
   fontLight = createFont("Roboto-Light.ttf", 30);
   textFont(fontBold);
-  rectColor = color(0);
-  rectHighlight = color(51);
+  TICKBOX_COLOR = color(0);
+  TICKBOX_HIGHLIGHT_COLOR = color(51);
   seed(SPHERE_COUNT);//See Seed Tab
   BOTTOM_INIT_X = 50;
   BOTTOM_INIT_Y = height-50;
@@ -38,13 +38,13 @@ void draw() {
   lights();
   hover();
   translate(200, 150);
-  if (!PAUSED) {
+  if (!PAUSED) {//management of the physics of the sphere
     for (int i = 0; i<threaded_spheres.size(); i++)
     {
       threaded_spheres.get(i).run();
     }
   }
-  for (int i = 0; i<spheres.size(); i++)
+  for (int i = 0; i<spheres.size(); i++)//Display of each sphere has to happen even when the game is paused as the GUI stays active
   {
     spheres.get(i).display();
   }
@@ -54,8 +54,8 @@ void draw() {
     try {
       threaded_spheres.get(i).join();
     }
-    catch (InterruptedException e) {
-      System.out.println("Collision error. One of the threads couldn't manage the collision calculations in time.");//Safety counter in the de-clipping function should prevent this from ever happening, though it makes the de-clipping a bit more approximate than actually ideal.
+    catch (InterruptedException e) {//Safety counter in the de-clipping function should prevent this from ever happening, though it makes the de-clipping a bit more approximate than actually ideal.
+      System.out.println("Collision error. One of the threads couldn't manage the collision calculations in time.");
       e.printStackTrace();
     }
   }

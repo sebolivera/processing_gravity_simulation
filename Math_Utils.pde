@@ -1,6 +1,6 @@
 
 float getXYZAngleForImpactVector (PVector vel, PVector delta_vel) {
-  //gets xyz angle between the direction of an object and the vector between it and the other ball
+  //gets xyz angle between the direction of an object and the vector between it and the other ball. The PVector.angleBetween function gave odd results.
   PVector normalized_vel = vel.copy();
   PVector delta = delta_vel.copy();
   normalized_vel.normalize();
@@ -10,14 +10,14 @@ float getXYZAngleForImpactVector (PVector vel, PVector delta_vel) {
   return acos(numerator/denominator);
 }
 
-PVector getCenterVector (PVector vel, PVector delta_vel)
+PVector getCenterVector (PVector vect, PVector delta)//applies the angle to the original vector, which it gets from the normalized delta center-vector impact
 {
-  PVector finalVect = vel.copy();
-  finalVect.mult(getXYZAngleForImpactVector(vel, delta_vel));
+  PVector finalVect = vect.copy();
+  finalVect.mult(getXYZAngleForImpactVector(vect, delta));
   return finalVect;
 }
 
-PVector getNormalizedDelta(PVector pos_1, PVector pos_2)
+PVector getNormalizedDelta(PVector pos_1, PVector pos_2)//gets the angle between two colliding spheres and normalizes it.
 {
   PVector delta = pos_2.copy();
   delta.sub(pos_1);
@@ -26,7 +26,7 @@ PVector getNormalizedDelta(PVector pos_1, PVector pos_2)
   return delta;
 }
 
-PVector getNormalVector(PVector vel, PVector pos_1, PVector pos_2) {
+PVector getNormalVector(PVector vel, PVector pos_1, PVector pos_2) {//Takes two positions and a velocity, and sends back the opposite impact vector (impact vectors get transfered from the velocity of the other object).
   PVector delta = getNormalizedDelta(pos_1, pos_2);
   PVector v_final = getCenterVector(vel, delta);//impact vector for the current object
   PVector xz = new PVector(pos_2.x-pos_1.x, 0, pos_2.z-pos_1.z);
