@@ -32,7 +32,7 @@ boolean ArrayListPairContains(ArrayList<Pair> HS, Pair other, boolean can_be_rev
   return false;
 }
 
-int ArrayListPairGetAt(ArrayList<Pair> HS, Pair other)
+int ArrayListPairGetAt(ArrayList<Pair> HS, Pair other)//indexof for tuples since ArrayList of complex structures are compared by reference and not values.
 {
   for (int i = 0; i<HS.size(); i++)
   {

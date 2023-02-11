@@ -2,7 +2,7 @@
 
 This is a small personnal project I started to get a handle on collision and gravity simulations in 3D spaces.
 
-The inspiration was taken from [The Coding Train](https://www.youtube.com/@TheCodingTrain)'s episode on [Mutual Attraction](https://www.youtube.com/watch?v=GjbKsOkN1Oc).
+The inspiration was taken from [The Coding Train](https://www.youtube.com/@TheCodingTrain)'s episode on [Mutual Attraction](https://www.youtube.com/watch?v=GjbKsOkN1Oc) though I chose to increase the complexity by bringing the project into the third dimension.
 
 > Note: This sketch was made using Processing 4, I cannot guarantee that it will work in other versions.
 
@@ -70,6 +70,7 @@ Thread management is done using the native Java implementation, which procludes 
 ## Upcoming features 
 
 I will try to add more control over the simulation, including but not limited to the following:
+- Camera control
 - Control of sphere generation
 - Sphere creation (with ajustable sliders for customization)
 - Support for massless spheres (photons, basically)

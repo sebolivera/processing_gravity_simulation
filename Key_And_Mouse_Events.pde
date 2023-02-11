@@ -1,4 +1,4 @@
-void mousePressed() {
+void mousePressed() {//handles the clicks on the checkboxes
   if (arrowEnableOverVel) {
     DRAW_ARROWS = !DRAW_ARROWS;
   }
@@ -16,18 +16,18 @@ void mousePressed() {
   }
 }
 
-void keyReleased() {
-  if (keyCode == 82) {
+void keyReleased() {//Handle of keypresses
+  if (keyCode == 82) {// 'r' for 'restart'
     seed(SPHERE_COUNT);
   }
-  if (keyCode == 80)
+  if (keyCode == 80)// 'p' for 'pause'
   {
     PAUSED = !PAUSED;
     if (!PAUSED) {
       UNPAUSED_TIMER = millis();
     }
   }
-  if (keyCode == 72)
+  if (keyCode == 72)// 'h' for 'hide'
   {
     SHOW_INTERFACE = !SHOW_INTERFACE;
   }

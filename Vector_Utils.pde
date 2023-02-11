@@ -1,4 +1,4 @@
-void nullifyPVectorNaN(PVector input_vect) {
+void nullifyPVectorNaN(PVector input_vect) {//Removes all possible miscalclations froma vector by setting NaN values to 0. It is a patchowork until I figure out a way to make it better.
   if (Float.isNaN(input_vect.x)) {
     input_vect.x = 0;
   }
@@ -10,7 +10,7 @@ void nullifyPVectorNaN(PVector input_vect) {
   }
 }
 
-void correctPVectorNaN(PVector input_vect, ArrayList<PVector> initial_vects) {
+void correctPVectorNaN(PVector input_vect, ArrayList<PVector> initial_vects) {//Replaces the value of a vector by a previous value picked from the array I used to trace the tales. It shouldn't happen much but it helps in reducing the clipping when too many spheres are agglutinated.
   for (int i = initial_vects.size()-1; i>=0; i--) {
     PVector initial_vect = initial_vects.get(i);
     if (Float.isNaN(input_vect.x)) {

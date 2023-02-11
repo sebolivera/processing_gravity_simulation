@@ -24,7 +24,7 @@ public void seed(int amount)//Creates
     spheres.add(new Physic_Sphere(i, whatever, new PVector(randX, randY, randZ), new PVector(1-random(5), 1-random(5), 1-random(5)), randR, 0.5+random(0.5)));
   }
 
-  threaded_spheres = new ArrayList<Physic_Sphere_Threaded>();
+  threaded_spheres = new ArrayList<Sphere_Batch_Thread>();
 
   ArrayList<Integer> spheres_idx_batch = new ArrayList<>();
   if (THREAD_COUNT>amount)
@@ -33,7 +33,7 @@ public void seed(int amount)//Creates
     {
       spheres_idx_batch.add(i);
     }
-    threaded_spheres.add(new Physic_Sphere_Threaded(spheres_idx_batch, spheres));
+    threaded_spheres.add(new Sphere_Batch_Thread(spheres_idx_batch, spheres));
     spheres_idx_batch.clear();//Technically useless since the app will most likely crash due to over-allocation of objects in the first place, but every little bit helps, I guess.
   } else
   {
@@ -46,7 +46,7 @@ public void seed(int amount)//Creates
         spheres_idx_batch.add(global_idx);
         global_idx++;
       }
-      threaded_spheres.add(new Physic_Sphere_Threaded(spheres_idx_batch, spheres));
+      threaded_spheres.add(new Sphere_Batch_Thread(spheres_idx_batch, spheres));
       spheres_idx_batch.clear();
     }
     if (amount%THREAD_COUNT!=0)

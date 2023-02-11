@@ -13,7 +13,7 @@ boolean overRect(int x, int y, int width, int height) {
   }
 }
 
-void hover() {//will have to figure out a way to get dynamic text width
+void hover() {//handles hovers on titles and checkboxes for options
   if ( overRect(BOTTOM_INIT_X, BOTTOM_INIT_Y, 320, 20) ) {
     arrowEnableOverVel = true;
   } else {
@@ -41,11 +41,11 @@ void hover() {//will have to figure out a way to get dynamic text width
   }
 }
 
-void drawMenuElementTickBox(int x, int y, String text, boolean active, boolean hovered) {
+void drawMenuElementTickBox(int x, int y, String text, boolean active, boolean hovered) {//draws a checkbox, a tickmark and a label for each element
   if (hovered) {
-    fill(rectHighlight);
+    fill(TICKBOX_HIGHLIGHT_COLOR);
   } else {
-    fill(rectColor);
+    fill(TICKBOX_COLOR);
   }
   rect(x, y, 20, 20);
   if (active) {
@@ -96,13 +96,13 @@ void drawGUI() {//Handles the display for the Graphical User Intefrace. Is on by
     drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y, "Show velocity arrows", DRAW_ARROWS, arrowEnableOverVel);
 
     //enable name display
-    drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-50, "Show ball names", DRAW_NAMES, arrowEnableOverName);
+    drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-50, "Show sphere names", DRAW_NAMES, arrowEnableOverName);
 
     //enable sphere weights display
-    drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-100, "Show ball weights", DRAW_WEIGHTS, arrowEnableOverWeight);
+    drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-100, "Show sphere weights", DRAW_WEIGHTS, arrowEnableOverWeight);
 
     //enable trails display
-    drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-150, "Show ball weights", DRAW_TRAILS, arrowEnableOverTrail);
+    drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-150, "Show sphere weights", DRAW_TRAILS, arrowEnableOverTrail);
 
     //enable gravity
     drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-200, "Enable gravity", ENABLE_GRAVITY, arrowEnableOverGravity);

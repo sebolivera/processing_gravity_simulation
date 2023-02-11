@@ -1,6 +1,10 @@
 ArrayList<Pair> collision_index_fakemutex = new ArrayList<Pair>();//locks pairs of colliding spheres in the event that they belong to different threads trying to calculate their collisions at the same time
 
 class Physic_Sphere {//Base class for the spheres
+  /*
+   * Core of the simulation. Each sphere has an update function that allows it to look at all other objects and apply their gravity to it, while they do the same for eachother
+   * A sphere has position (3D vector), a radius (float>0), a velocity (3D vector), a mass (float>0), an acceleration (3D vector), a color (processing Color>=(255, 255, 255)), an index (int>=0) and a bounciness (0<=float<=1)
+   */
   float MAX_WIDTH = 600.0;
   float MAX_HEIGHT = 600.0;
   float MAX_DEPTH = 600.0;
@@ -14,7 +18,8 @@ class Physic_Sphere {//Base class for the spheres
   float bounciness;
   int index;
   public PVector acc;
-  Physic_Sphere(int t_index, color t_c, PVector t_pos, PVector t_vel, float t_radius, float t_mass) {
+
+  Physic_Sphere(int t_index, color t_c, PVector t_pos, PVector t_vel, float t_radius, float t_mass) {//Bounciness is optional, and has been known to cause some issues when too many spheres are colliding, so it is 1 by default (perfect bounciness)
     index = t_index;
     c = t_c;
     pos = t_pos;
@@ -24,6 +29,7 @@ class Physic_Sphere {//Base class for the spheres
     acc = new PVector(0.0, 0.0, 0.0);
     bounciness = 1.0;
   }
+
   Physic_Sphere(int t_index, color t_c, PVector t_pos, PVector t_vel, float t_radius, float t_mass, float t_bounciness) {
     index = t_index;
     c = t_c;
@@ -37,7 +43,7 @@ class Physic_Sphere {//Base class for the spheres
 
 
   void drawArrow(float cx, float cy, float cz, float len, PVector dest)
-  {//How is drawing a proper arrow literally harder than the whole math part? I had to resort to copying code from https://forum.processing.org/one/topic/drawing-an-arrow.html
+  {//Drawing an arrow proved itself to be quite the challenge. I took inspiration from from https://forum.processing.org/one/topic/drawing-an-arrow.html and tweaked it a bit.
     pushMatrix();
     strokeWeight(radius/2);
     translate(cx, cy, cz);
@@ -79,69 +85,6 @@ class Physic_Sphere {//Base class for the spheres
   }
 
 
-  void update() {
-
-    prevPos.add(pos.copy());
-    vel.add(acc);
-
-    if (pos.x<=0 && vel.x<0)
-    {
-      vel.x = -vel.x*bounciness;
-    } else if (pos.x>=MAX_WIDTH && vel.x>0)
-    {
-      vel.x = -vel.x*bounciness;
-    }
-    if (pos.y<=0 && vel.y<0)
-    {
-      vel.y = -vel.y*bounciness;
-    } else if (pos.y>=MAX_HEIGHT && vel.y>0)
-    {
-      vel.y = -vel.y*bounciness;
-    }
-    if (pos.z>=0 && vel.z>0)
-    {
-      vel.z = -vel.z*bounciness;
-    } else if (pos.z<=-MAX_DEPTH && vel.z<0)
-    {
-      vel.z = -vel.z*bounciness;
-    }
-    nullifyPVectorNaN(vel);//there *might* be a chance for balls to get trapped inbetween two bouncing balls that apply opposite forces, which will result in them over-correcting their velocities. This prevents an impossible velocity from being applied to a ball, which allows them to clip a little bit, but ultimately prevents both crashes and excessive clipping.
-    pos.add(vel);
-    correctPVectorNaN(pos, prevPos);//prevents the positions from being altered too much after fast hitting balls. While very rares, instances where one ball gets knocked off screen tend to crash the simulation due to the gravitational forces being skewed toward it after a while.
-  }
-  void display() {
-    pushMatrix();
-    noStroke();
-    translate(pos.x, pos.y, pos.z);
-    fill(lerp(red(c)/10, red(c), (pos.z+MAX_DEPTH)/(MAX_DEPTH*2)), lerp(green(c)/10, green(c), (pos.z+MAX_DEPTH)/(MAX_DEPTH*2)), lerp(blue(c)/10, blue(c), (pos.z+MAX_DEPTH)/(MAX_DEPTH*2)));
-    sphere(radius*2);
-    popMatrix();
-    fill(255-red(c), 255-green(c), 255-blue(c));
-    textSize(radius*3);
-    if (DRAW_NAMES) {
-      text((char) (index+65), lerp(MAX_WIDTH*0.05, MAX_WIDTH*0.95, (pos.x - radius)/MAX_WIDTH), lerp(MAX_HEIGHT*.05, MAX_HEIGHT*0.95, (pos.y+radius)/MAX_HEIGHT)+100, pos.z+radius*2);//index+65 will print ascii characters starting at 'A'
-    }
-    if (DRAW_WEIGHTS) {
-      text(((int)floor(mass*100)), lerp(MAX_WIDTH*0.05, MAX_WIDTH*0.95, (pos.x - radius)/MAX_WIDTH), lerp(MAX_HEIGHT*.05, MAX_HEIGHT*0.95, (pos.y+radius)/MAX_HEIGHT), pos.z+radius*2);
-    }
-    noFill();
-    beginShape();
-    curveVertex(pos.x, pos.y, pos.z);
-    strokeCap(SQUARE);
-    if (DRAW_TRAILS) {
-      for (int i = prevPos.size()>0?prevPos.size()-1:0; i>(prevPos.size()>20?prevPos.size()-20:0); i--)
-      {
-        stroke(c, lerp(255, 0, ((float)(prevPos.size()<20?i:prevPos.size()-i))/(prevPos.size()<20?prevPos.size():20)));
-        strokeWeight(lerp(0, radius*2, lerp(1.0, 0, ((float)(prevPos.size()<20?prevPos.size()-i:prevPos.size()-i))/(prevPos.size()<20?prevPos.size():20))));
-        curveVertex(prevPos.get(i).x, prevPos.get(i).y, prevPos.get(i).z );
-      }
-    }
-    endShape();
-
-    if (index>=0 && DRAW_ARROWS) {
-      drawArrow(pos.x, pos.y, pos.z, radius, vel);
-    }
-  }
   boolean isCollidingWith(Physic_Sphere other)
   {
     if (index!=other.index) {
@@ -159,7 +102,7 @@ class Physic_Sphere {//Base class for the spheres
   void collideWith(Physic_Sphere other) {
     Pair duo = new Pair(index, other.index);
     if (isCollidingWith(other)) {
-      if (!ArrayListPairContains(collision_index_fakemutex, duo, true)) {//prevents the "other" ball from doing the same calculation if it belongs to another thread
+      if (!ArrayListPairContains(collision_index_fakemutex, duo, true)) {//prevents the "other" sphere from doing the same calculation if it belongs to another thread
         //safety copies of the velocities in case of large clumping of objects
         // Cumulative implementation of angle collisions and massed elastic collisions
         // see:
@@ -247,7 +190,7 @@ class Physic_Sphere {//Base class for the spheres
     }
   }
 
-  void applyAttraction(ArrayList<Physic_Sphere> others)
+  void applyAttraction(ArrayList<Physic_Sphere> others)//applies gravity forces (provided they are enabled) to a sphere as well as all the others. Do note that this part accesses other spheres without going through the Thread structures, as the movement from one frame to the other should be negligible.
   {
     PVector final_acc = new PVector(0, 0, 0);
     PVector t_acc = new PVector(0, 0, 0);
@@ -270,6 +213,70 @@ class Physic_Sphere {//Base class for the spheres
       if (!Float.isNaN(t_acc.x+t_acc.y+t_acc.z)) {
         acc = final_acc.copy();
       }
+    }
+  }
+  
+  void update() {//Updates the position of the sphere. It is to be noted that this and the correctClipping function are the only parts of the code that should access the position directly
+    prevPos.add(pos.copy());
+    vel.add(acc);
+
+    if (pos.x<=0 && vel.x<0)
+    {
+      vel.x = -vel.x*bounciness;
+    } else if (pos.x>=MAX_WIDTH && vel.x>0)
+    {
+      vel.x = -vel.x*bounciness;
+    }
+    if (pos.y<=0 && vel.y<0)
+    {
+      vel.y = -vel.y*bounciness;
+    } else if (pos.y>=MAX_HEIGHT && vel.y>0)
+    {
+      vel.y = -vel.y*bounciness;
+    }
+    if (pos.z>=0 && vel.z>0)
+    {
+      vel.z = -vel.z*bounciness;
+    } else if (pos.z<=-MAX_DEPTH && vel.z<0)
+    {
+      vel.z = -vel.z*bounciness;
+    }
+    nullifyPVectorNaN(vel);//there *might* be a chance for spheres to get trapped inbetween two bouncing spheres that apply opposite forces, which will result in them over-correcting their velocities. This prevents an impossible velocity from being applied to a sphere, which allows them to clip a little bit, but ultimately prevents both crashes and excessive clipping.
+    pos.add(vel);
+    correctPVectorNaN(pos, prevPos);//prevents the positions from being altered too much after fast hitting spheres. While very rares, instances where one sphere gets knocked off screen tend to crash the simulation due to the gravitational forces being skewed toward it after a while.
+  }
+  
+  void display() {//draws a sphere according to its position radius, color, index (which gives the name) and tail effect.
+    pushMatrix();
+    noStroke();
+    translate(pos.x, pos.y, pos.z);
+    fill(lerp(red(c)/10, red(c), (pos.z+MAX_DEPTH)/(MAX_DEPTH*2)), lerp(green(c)/10, green(c), (pos.z+MAX_DEPTH)/(MAX_DEPTH*2)), lerp(blue(c)/10, blue(c), (pos.z+MAX_DEPTH)/(MAX_DEPTH*2)));
+    sphere(radius*2);
+    popMatrix();
+    fill(255-red(c), 255-green(c), 255-blue(c));
+    textSize(radius*3);
+    if (DRAW_NAMES) {
+      text((char) (index+65), lerp(MAX_WIDTH*0.05, MAX_WIDTH*0.95, (pos.x - radius)/MAX_WIDTH), lerp(MAX_HEIGHT*.05, MAX_HEIGHT*0.95, (pos.y+radius)/MAX_HEIGHT)+100, pos.z+radius*2);//index+65 will print ascii characters starting at 'A'. I am aware that it won't be able to print some of them, but this mostly decorative or for debugging.
+    }
+    if (DRAW_WEIGHTS) {
+      text(((int)floor(mass*100)), lerp(MAX_WIDTH*0.05, MAX_WIDTH*0.95, (pos.x - radius)/MAX_WIDTH), lerp(MAX_HEIGHT*.05, MAX_HEIGHT*0.95, (pos.y+radius)/MAX_HEIGHT), pos.z+radius*2);
+    }
+    noFill();
+    beginShape();
+    curveVertex(pos.x, pos.y, pos.z);
+    strokeCap(SQUARE);
+    if (DRAW_TRAILS) {//Processing's way of drawing strokes gives them no depth on the Z axis, which makes them look flat when the balls turn at sharp angles or face slightly away from the camera.
+      for (int i = prevPos.size()>0?prevPos.size()-1:0; i>(prevPos.size()>20?prevPos.size()-20:0); i--)
+      {
+        stroke(c, lerp(255, 0, ((float)(prevPos.size()<20?i:prevPos.size()-i))/(prevPos.size()<20?prevPos.size():20)));
+        strokeWeight(lerp(0, radius*2, lerp(1.0, 0, ((float)(prevPos.size()<20?prevPos.size()-i:prevPos.size()-i))/(prevPos.size()<20?prevPos.size():20))));
+        curveVertex(prevPos.get(i).x, prevPos.get(i).y, prevPos.get(i).z );
+      }
+    }
+    endShape();
+
+    if (index>=0 && DRAW_ARROWS) {
+      drawArrow(pos.x, pos.y, pos.z, radius, vel);
     }
   }
 }
