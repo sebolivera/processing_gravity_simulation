@@ -1,4 +1,4 @@
-# Gravity/Elastic Collision Simulation engine
+# Gravity/Elastic Collision Simulation Engine
 
 This is a personnal project to get a handle on collision and gravity simulations in 3D space. The inspiration was taken from [The Coding Train](https://www.youtube.com/@TheCodingTrain)'s episode on [Mutual Attraction](https://www.youtube.com/watch?v=GjbKsOkN1Oc).
 
