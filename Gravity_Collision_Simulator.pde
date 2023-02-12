@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.lang.Object;
 import peasy.*;
 
-PeasyCam cam;
+PeasyCam cam;//peasycam registers handlers for click movements.
 PeasyDragHandler PanDragHandler;
 PeasyDragHandler ZoomDragHandler;
 PeasyDragHandler RotateDragHandler;
@@ -16,11 +16,10 @@ boolean DRAW_WEIGHTS = false;//Shows the weight of a sphere (multiplied by 100 a
 boolean ENABLE_GRAVITY = true;//Enables attraction between the spheres
 boolean ENABLE_BOUNDS = true;//Enable box bounds. Due to the way I implemented this, these values are hard-coded, but I will probably allow the walls to be dynamically adjusted in the future.
 boolean PAUSED = false;//Handles the logic part of the physic simulation
-int SPHERE_COUNT = 2;//Default amount of spheres, feel free to edit it to try out other simulations.
+int SPHERE_COUNT = 20;//Default amount of spheres, feel free to edit it to try out other simulations.
 int THREAD_COUNT = Runtime.getRuntime().availableProcessors();//Creates as many threads as there are cores available. Should never be less than 1 unless bad things are about to happen.
 boolean SHOW_INTERFACE = true;//Handles the display of the GUI.
 int UNPAUSED_TIMER = -3000;//Handles the fade-out for the "Running" text on unpause action.
-int frames = 0;
 
 ArrayList<Physic_Sphere> spheres;//global collection of sphres, used for display and collision detection. They are independent of the threads by design, but might be replaced in the future.
 ArrayList<Sphere_Batch_Thread> threaded_spheres;//Collection of batches split into several threads to ease the ressource usage during computation. Is only relevant for amounts of spheres>100 for normal settings, but doesn't hurt.
@@ -30,9 +29,9 @@ color TICKBOX_COLOR;//color of the tickboxes when
 color TICKBOX_HIGHLIGHT_COLOR;
 
 void setup() {
-  size(1000, 1000, P3D);//OpenGL didn't show any significant difference in display, feel free to use it instead.
+  size(1000, 1000, P3D);//OpenGL didn't show any significant difference in performance, feel free to use it instead.
 
-  cam = new PeasyCam(this, width/2, height/2, height+800, 100);
+  cam = new PeasyCam(this, width/2, height/2, height+800, 100);//using peasycam as I don't want to have to code my entire camera system myself.
   PanDragHandler = cam.getPanDragHandler();
   ZoomDragHandler = cam.getZoomDragHandler();
   RotateDragHandler = cam.getRotateDragHandler();
@@ -83,5 +82,4 @@ void draw() {
   rotateY((float) frames/1000);
   drawGUI();//See GUI Tab
   popMatrix();
-  frames++;
 }
