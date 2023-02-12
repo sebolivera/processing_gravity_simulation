@@ -17,12 +17,28 @@ boolean overRect(int x, int y, int width, int height) {
 void drawBounds() {
   if (ENABLE_BOUNDS) {
     noFill();
-    translate(width/2, height/2);
-    pushMatrix();
     stroke(255);
-    box(width, height, 1200);
-    popMatrix();
-    translate(-width/2, -height/2);
+    
+    //had issues with Box() function so I resorted to simply drawing the lines.
+    line(0, 0, 0, width, 0, 0);
+    line(0, 0, 0, 0, height, 0);
+    line(0, 0, 0, 0, 0, height);
+    
+    line(width, 0, 0, width, height, 0);
+    line(width, 0, 0, width, 0, height);
+    
+    line(width, 0, height, 0, 0, height);
+    line(width, 0, height, width, height, height);
+    
+    line(0, 0, height, width, 0, height);
+    line(0, 0, height, 0, height, height);
+    
+    
+    line(0, height, height, width, height, height);
+    line(0, height, height, 0, height, 0);
+    
+    line(width, height, 0, width, height, height);
+    line(width, height, 0, 0, height, 0);
   }
 }
 
@@ -81,8 +97,12 @@ void drawMenuElementTickBox(int x, int y, String text, boolean active, boolean h
 void drawHints() {
   fill(255);
   textFont(fontLight);
-  text("Press 'R' to restart the simulation", width-475, height-30);
+  text("Use left-click to move around", width-475, height-330);
+  text("Use right-click to rotate the camera", width-475, height-280);
+  text("Use mouse wheel to zoom", width-475, height-230);
+  text("Double-click to reset camera", width-475, height-180);
   text("Press 'H' to hide the interface", width-475, height-130);
+  text("Press 'R' to restart the simulation", width-475, height-30);
   if (PAUSED) {
     textFont(fontLight);
     text("Press 'P' to unpause the simulation", width-475, height-80);
@@ -110,6 +130,7 @@ void drawHints() {
 
 void drawGUI() {//Handles the display for the Graphical User Intefrace. Is on by default.
   if (SHOW_INTERFACE) {
+    cam.beginHUD();
     //enable velocity arrows display
     drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y, "Show velocity arrows", DRAW_ARROWS, arrowEnableOverVel);
 
@@ -120,13 +141,14 @@ void drawGUI() {//Handles the display for the Graphical User Intefrace. Is on by
     drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-100, "Show sphere weights", DRAW_WEIGHTS, arrowEnableOverWeight);
 
     //enable trails display
-    drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-150, "Show sphere weights", DRAW_TRAILS, arrowEnableOverTrail);
+    drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-150, "Show sphere trails", DRAW_TRAILS, arrowEnableOverTrail);
 
     //enable gravity
     drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-200, "Enable gravity", ENABLE_GRAVITY, arrowEnableOverGravity);
-    
+
     //enable bounds
     drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-250, "Enable boundaries", ENABLE_BOUNDS, arrowEnableOverBounds);
     drawHints();
+    cam.endHUD();
   }
 }

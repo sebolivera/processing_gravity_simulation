@@ -5,9 +5,9 @@ class Physic_Sphere {//Base class for the spheres
    * Core of the simulation. Each sphere has an update function that allows it to look at all other objects and apply their gravity to it, while they do the same for eachother
    * A sphere has position (3D vector), a radius (float>0), a velocity (3D vector), a mass (float>0), an acceleration (3D vector), a color (processing Color>=(255, 255, 255)), an index (int>=0) and a bounciness (0<=float<=1)
    */
-  float MAX_WIDTH = 600.0;
-  float MAX_HEIGHT = 600.0;
-  float MAX_DEPTH = 600.0;
+  float MAX_WIDTH = 1000.0;
+  float MAX_HEIGHT = 1000.0;
+  float MAX_DEPTH = 1000.0;
   color c;
   PVector pos;
   PVector vel;
@@ -234,10 +234,10 @@ class Physic_Sphere {//Base class for the spheres
       {
         vel.y = -vel.y*bounciness;
       }
-      if (pos.z>=0 && vel.z>0)
+      if (pos.z<=0 && vel.z<0)
       {
         vel.z = -vel.z*bounciness;
-      } else if (pos.z<=-MAX_DEPTH && vel.z<0)
+      } else if (pos.z>=MAX_DEPTH && vel.z>0)
       {
         vel.z = -vel.z*bounciness;
       }
@@ -251,7 +251,7 @@ class Physic_Sphere {//Base class for the spheres
     pushMatrix();
     translate(pos.x, pos.y, pos.z);
     noStroke();
-    fill(lerp(red(c)/10, red(c), (pos.z+MAX_DEPTH)/(MAX_DEPTH*2)), lerp(green(c)/10, green(c), (pos.z+MAX_DEPTH)/(MAX_DEPTH*2)), lerp(blue(c)/10, blue(c), (pos.z+MAX_DEPTH)/(MAX_DEPTH*2)), 200);
+    fill(c, 200);
     sphere(radius*2);
     popMatrix();
     fill(255-red(c), 255-green(c), 255-blue(c));

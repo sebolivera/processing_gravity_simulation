@@ -19,6 +19,9 @@ You can download Processing 4 from [the official website](https://processing.org
 ## How to use
 
 To start the sketch, simply press the play button in the processing window. You don't have to control anything, the disposition of the spheres is randomly generated. If you want to customize the amount of generated spheres, you can edit the SPHERE_COUNT with any value you wish to try (that is above one).
+
+Move the camera using left-click, rotate using right-click, zoom using mouse wheel and reset camera with any double-click.
+
 Further customization will have to wait until I get around to implement them.
 
 Commands:
@@ -70,7 +73,7 @@ Thread management is done using the native Java implementation, which procludes 
 ## Upcoming features 
 
 I will try to add more control over the simulation, including but not limited to the following:
-- Camera control
+- Better Camera control
 - Control of sphere generation
 - Sphere creation (with ajustable sliders for customization)
 - Support for massless spheres (photons, basically)

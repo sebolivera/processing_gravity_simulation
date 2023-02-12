@@ -6,17 +6,17 @@ public void seed(int amount)//Creates
   for (int i = 0; i<amount; i++)
   {
     rand_color = color(random(200)+55, random(200)+55, random(200)+55);
-    float randX = random(600.0);
-    float randY = random(600.0);
-    float randZ = random(1200.0)-600.0;
+    float randX = random(1000.0);
+    float randY = random(1000.0);
+    float randZ = random(1000.0);
     float randR = random( 2.0+random(10.0));
     PVector t_pos = new PVector(randX, randY, randZ);
     for (int j = 0; j<spheres.size(); j++) {
       while (PVector.dist(t_pos, spheres.get(j).pos)<randR)
       {
-        randX = random(600.0);
-        randY = random(600.0);
-        randZ = random(1200.0)-600.0;
+        randX = random(1000.0);
+        randY = random(1000.0);
+        randZ = random(1000.0);
         randR = random( 2+random(10.0));
         t_pos = new PVector(randX, randY, randZ);
       }
