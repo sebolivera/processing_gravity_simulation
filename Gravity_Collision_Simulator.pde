@@ -20,6 +20,8 @@ int SPHERE_COUNT = 20;//Default amount of spheres, feel free to edit it to try o
 int THREAD_COUNT = Runtime.getRuntime().availableProcessors();//Creates as many threads as there are cores available. Should never be less than 1 unless bad things are about to happen.
 boolean SHOW_INTERFACE = true;//Handles the display of the GUI.
 int UNPAUSED_TIMER = -3000;//Handles the fade-out for the "Running" text on unpause action.
+HScrollbar gravity_scroll;
+boolean firstMousePress = false;
 
 ArrayList<Physic_Sphere> spheres;//global collection of sphres, used for display and collision detection. They are independent of the threads by design, but might be replaced in the future.
 ArrayList<Sphere_Batch_Thread> threaded_spheres;//Collection of batches split into several threads to ease the ressource usage during computation. Is only relevant for amounts of spheres>100 for normal settings, but doesn't hurt.
@@ -27,10 +29,8 @@ ArrayList<Sphere_Batch_Thread> threaded_spheres;//Collection of batches split in
 PFont fontBold, fontLight;//A custom font has to be used otherwise the text appears pixellated on some OS.
 color TICKBOX_COLOR;//color of the tickboxes when
 color TICKBOX_HIGHLIGHT_COLOR;
-
 void setup() {
   size(1000, 1000, P3D);//OpenGL didn't show any significant difference in performance, feel free to use it instead.
-
   cam = new PeasyCam(this, width/2, height/2, height+800, 100);//using peasycam as I don't want to have to code my entire camera system myself.
   PanDragHandler = cam.getPanDragHandler();
   ZoomDragHandler = cam.getZoomDragHandler();
@@ -45,6 +45,7 @@ void setup() {
   seed(SPHERE_COUNT);//See Seed Tab
   BOTTOM_INIT_X = 50;
   BOTTOM_INIT_Y = height-50;
+  gravity_scroll = new HScrollbar(0, height/2-8, width, 16, 16);
 }
 
 void draw() {
@@ -79,7 +80,6 @@ void draw() {
   stroke(255);
   strokeWeight(1);
   textSize(30);
-  rotateY((float) frames/1000);
   drawGUI();//See GUI Tab
   popMatrix();
 }

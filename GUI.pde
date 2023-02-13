@@ -149,6 +149,8 @@ void drawGUI() {//Handles the display for the Graphical User Intefrace. Is on by
     //enable bounds
     drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-250, "Enable boundaries", ENABLE_BOUNDS, arrowEnableOverBounds);
     drawHints();
+    //gravity_scroll.update();
+    //gravity_scroll.display();
     cam.endHUD();
   }
 }
