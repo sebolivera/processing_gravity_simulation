@@ -14,29 +14,48 @@ boolean overRect(int x, int y, int width, int height) {
   }
 }
 
+interface FloatFunction {
+  void update(Float f);
+}
+
+void initGUI() {
+  BOTTOM_INIT_X = 50;
+  BOTTOM_INIT_Y = height-50;
+  TICKBOX_COLOR = color(0);
+  TICKBOX_HIGHLIGHT_COLOR = color(51);
+  FloatFunction editGLambda = (n) -> {
+    edit_G(n);
+  };
+  FloatFunction editGLOBAL_SPEEDLambda = (n) -> {
+    edit_GLOBAL_SPEED(n);
+  };
+
+  gravity_scroll = new HScrollbar(BOTTOM_INIT_X, BOTTOM_INIT_Y-280, width/3, 16, 0, 2, "Global gravity scale", 0.5, editGLambda, true, "0", "2");
+  speed_scroll = new HScrollbar(BOTTOM_INIT_X, BOTTOM_INIT_Y-350, width/3, 16, 0, 100, "Simulation speed scale", 1.0, editGLOBAL_SPEEDLambda, false, "Slow", "Fast");
+}
+
 void drawBounds() {
   if (ENABLE_BOUNDS) {
     noFill();
     stroke(255);
-    
     //had issues with Box() function so I resorted to simply drawing the lines.
     line(0, 0, 0, width, 0, 0);
     line(0, 0, 0, 0, height, 0);
     line(0, 0, 0, 0, 0, height);
-    
+
     line(width, 0, 0, width, height, 0);
     line(width, 0, 0, width, 0, height);
-    
+
     line(width, 0, height, 0, 0, height);
     line(width, 0, height, width, height, height);
-    
+
     line(0, 0, height, width, 0, height);
     line(0, 0, height, 0, height, height);
-    
-    
+
+
     line(0, height, height, width, height, height);
     line(0, height, height, 0, height, 0);
-    
+
     line(width, height, 0, width, height, height);
     line(width, height, 0, 0, height, 0);
   }
@@ -128,6 +147,13 @@ void drawHints() {
   }
 }
 
+void drawMouse(){
+  strokeWeight(2);
+  stroke(0, 0, 255);
+  line(mouseX-25, mouseY, mouseX+25, mouseY);
+  line(mouseX, mouseY-25, mouseX, mouseY+25);
+  strokeWeight(1);
+}
 void drawGUI() {//Handles the display for the Graphical User Intefrace. Is on by default.
   if (SHOW_INTERFACE) {
     cam.beginHUD();
@@ -149,8 +175,12 @@ void drawGUI() {//Handles the display for the Graphical User Intefrace. Is on by
     //enable bounds
     drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-250, "Enable boundaries", ENABLE_BOUNDS, arrowEnableOverBounds);
     drawHints();
-    //gravity_scroll.update();
-    //gravity_scroll.display();
+    gravity_scroll.update();
+    gravity_scroll.display();
+    speed_scroll.update();
+    speed_scroll.display();
+
+    drawMouse();
     cam.endHUD();
   }
 }

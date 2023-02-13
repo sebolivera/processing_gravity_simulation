@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.lang.Object;
 import peasy.*;
+import java.util.function.Consumer;
 
 PeasyCam cam;//peasycam registers handlers for click movements.
 PeasyDragHandler PanDragHandler;
@@ -8,6 +9,7 @@ PeasyDragHandler ZoomDragHandler;
 PeasyDragHandler RotateDragHandler;
 
 float G = 1;//Gravity constant
+int GLOBAL_SPEED=0;
 int BOTTOM_INIT_X, BOTTOM_INIT_Y;
 boolean DRAW_TRAILS = false;//Shows a trail effect as spheres move
 boolean DRAW_ARROWS = false;//Shows velocity arrows of each sphere
@@ -20,8 +22,9 @@ int SPHERE_COUNT = 20;//Default amount of spheres, feel free to edit it to try o
 int THREAD_COUNT = Runtime.getRuntime().availableProcessors();//Creates as many threads as there are cores available. Should never be less than 1 unless bad things are about to happen.
 boolean SHOW_INTERFACE = true;//Handles the display of the GUI.
 int UNPAUSED_TIMER = -3000;//Handles the fade-out for the "Running" text on unpause action.
-HScrollbar gravity_scroll;
+HScrollbar gravity_scroll, speed_scroll;
 boolean firstMousePress = false;
+int FRAMES = 0;
 
 ArrayList<Physic_Sphere> spheres;//global collection of sphres, used for display and collision detection. They are independent of the threads by design, but might be replaced in the future.
 ArrayList<Sphere_Batch_Thread> threaded_spheres;//Collection of batches split into several threads to ease the ressource usage during computation. Is only relevant for amounts of spheres>100 for normal settings, but doesn't hurt.
@@ -40,13 +43,19 @@ void setup() {
   fontBold = createFont("Roboto-Black.ttf", 128);
   fontLight = createFont("Roboto-Light.ttf", 30);
   textFont(fontBold);
-  TICKBOX_COLOR = color(0);
-  TICKBOX_HIGHLIGHT_COLOR = color(51);
   seed(SPHERE_COUNT);//See Seed Tab
-  BOTTOM_INIT_X = 50;
-  BOTTOM_INIT_Y = height-50;
-  gravity_scroll = new HScrollbar(0, height/2-8, width, 16, 16);
+  initGUI();
+  noCursor();
 }
+
+void edit_G(float val){
+  G = val;
+}
+
+void edit_GLOBAL_SPEED(float val){
+  GLOBAL_SPEED = (int) easeOut(0, 100, (float)val/100.0, 5);
+}
+
 
 void draw() {
   background(0);
@@ -82,4 +91,5 @@ void draw() {
   textSize(30);
   drawGUI();//See GUI Tab
   popMatrix();
+  FRAMES++;
 }

@@ -217,34 +217,36 @@ class Physic_Sphere {//Base class for the spheres
   }
 
   void update() {//Updates the position of the sphere. It is to be noted that this and the correctClipping function are the only parts of the code that should access the position directly
-    prevPos.add(pos.copy());
-    vel.add(acc);
-    if (ENABLE_BOUNDS) {
-      if (pos.x<=0 && vel.x<0)
-      {
-        vel.x = -vel.x*bounciness;
-      } else if (pos.x>=MAX_WIDTH && vel.x>0)
-      {
-        vel.x = -vel.x*bounciness;
+    if (FRAMES%(GLOBAL_SPEED+1)==0) {
+      prevPos.add(pos.copy());
+      vel.add(acc);
+      if (ENABLE_BOUNDS) {
+        if (pos.x<=0 && vel.x<0)
+        {
+          vel.x = -vel.x*bounciness;
+        } else if (pos.x>=MAX_WIDTH && vel.x>0)
+        {
+          vel.x = -vel.x*bounciness;
+        }
+        if (pos.y<=0 && vel.y<0)
+        {
+          vel.y = -vel.y*bounciness;
+        } else if (pos.y>=MAX_HEIGHT && vel.y>0)
+        {
+          vel.y = -vel.y*bounciness;
+        }
+        if (pos.z<=0 && vel.z<0)
+        {
+          vel.z = -vel.z*bounciness;
+        } else if (pos.z>=MAX_DEPTH && vel.z>0)
+        {
+          vel.z = -vel.z*bounciness;
+        }
       }
-      if (pos.y<=0 && vel.y<0)
-      {
-        vel.y = -vel.y*bounciness;
-      } else if (pos.y>=MAX_HEIGHT && vel.y>0)
-      {
-        vel.y = -vel.y*bounciness;
-      }
-      if (pos.z<=0 && vel.z<0)
-      {
-        vel.z = -vel.z*bounciness;
-      } else if (pos.z>=MAX_DEPTH && vel.z>0)
-      {
-        vel.z = -vel.z*bounciness;
-      }
+      nullifyPVectorNaN(vel);//there *might* be a chance for spheres to get trapped inbetween two bouncing spheres that apply opposite forces, which will result in them over-correcting their velocities. This prevents an impossible velocity from being applied to a sphere, which allows them to clip a little bit, but ultimately prevents both crashes and excessive clipping.
+      pos.add(vel);
+      correctPVectorNaN(pos, prevPos);//prevents the positions from being altered too much after fast hitting spheres. While very rares, instances where one sphere gets knocked off screen tend to crash the simulation due to the gravitational forces being skewed toward it after a while.
     }
-    nullifyPVectorNaN(vel);//there *might* be a chance for spheres to get trapped inbetween two bouncing spheres that apply opposite forces, which will result in them over-correcting their velocities. This prevents an impossible velocity from being applied to a sphere, which allows them to clip a little bit, but ultimately prevents both crashes and excessive clipping.
-    pos.add(vel);
-    correctPVectorNaN(pos, prevPos);//prevents the positions from being altered too much after fast hitting spheres. While very rares, instances where one sphere gets knocked off screen tend to crash the simulation due to the gravitational forces being skewed toward it after a while.
   }
 
   void display() {//draws a sphere according to its position radius, color, index (which gives the name) and tail effect.

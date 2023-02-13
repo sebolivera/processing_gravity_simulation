@@ -17,7 +17,7 @@ void mousePressed() {//handles the clicks on the checkboxes
   if (arrowEnableOverBounds) {
     ENABLE_BOUNDS = !ENABLE_BOUNDS;
   }
-  if (!firstMousePress) {
+  if (!firstMousePress) {//for the scrollbar
     firstMousePress = true;
   }
 }
