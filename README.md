@@ -55,4 +55,6 @@ Math for the collision was adapted from:
 
 Math for the gravitational pull was taken from [Wikipedia](https://en.wikipedia.org/wiki/Gravitational_acceleration).
 
-> Notes: I am notoriously terrible at math, and this (among other things) is an attempt to get a grasp on notions I never managed to properly understand in my youth. It is very possible that mistakes linger in the computational part of the code, and I would be thankful for any feedback about it.
+#### Notes
+
+I am notoriously terrible at math, and this (among other things) is an attempt to get a grasp on notions I never managed to properly understand in my youth. It is very possible that mistakes linger in the computational part of the code, and I would be thankful for any feedback about it.
