@@ -44,6 +44,7 @@ Due to the limitations of Processing, I decided to sacrifice some efficiency by 
 - The sketch uses concurrency to be able to deal with large amounts of particles.
 - The UI elements help visualizing how the collisions happen, but don't have any bearing on the physics (except for the gravity button).
 - Processing has notorious issues with displaying fonts, which is why I have an imported font in the data folder. If the font is blurry despite my fix, try restarting the sketch.
+- Thread management is done using the native Java implementation, which procludes the use of a mutex for managing collision indexes (hence the clumsy attempt at exclusive implementation).
 
 ## How I made it
 
@@ -55,29 +56,3 @@ Math for the collision was adapted from:
 Math for the gravitational pull was taken from [Wikipedia](https://en.wikipedia.org/wiki/Gravitational_acceleration).
 
 > Notes: I am notoriously terrible at math, and this (among other things) is an attempt to get a grasp on notions I never managed to properly understand in my youth. It is very possible that mistakes linger in the computational part of the code, and I would be thankful for any feedback about it.
-
-#### Notes
-Thread management is done using the native Java implementation, which procludes the use of a mutex for managing collision indexes (hence the clumsy attempt at exclusive implementation).
-
-## Bugs
-
-- Simulation stops: 
-- Sphere agglutination: I am aware that of the "clumping effect" the spheres go through when the simulation runs for a while. I do not have an adequate way to fix this yet, and I believe the behavior might be linked to some loss of kinetic energy due to incorrect distribution of mass. Feel free to reach out if you spot the source of this issue.
-    - Tangently, spheres bouncing off of these clumps will get a part of their velocity cancelled because of the way I implemented the collision part of the algorithm. I am aware of the issue and I believe I may have a solution, but I am not entirely sure how I will go about it yet.
-- Clipping: As much as I tried to correct the issue, some clipping still occurs in various settings
-- Unexpectedly fast speeds: spheres will rarely gain a wrong amount of velocity after a collision with another due to the accumulation of the anti-clipping algorithm and the distributed velocity, this can snowball and send the balls flinging in several circumstances. I could limit the maximum speed, but I would like to try and keep the possibility for spheres to get slung fast in drastic weight differences.
-- Spheres "stuck together": spheres will sometimes stick to another and they will start building speed really fast until they hit something. This is not really something I want to delve into, as it involve minute adjustment on the math parts and only happens when spheres collide at *very specific* angles.
-- Spheres phase through walls: haven't seen that one in quite some time, so I believe the issue is fixed for the moment.
-
-
-## Upcoming features 
-
-I will try to add more control over the simulation, including but not limited to the following:
-- Better Camera control
-- Control of sphere generation
-- Sphere creation (with ajustable sliders for customization)
-- Support for massless spheres (photons, basically)
-- Global physics tweaking (gravity constant, speed)
-- Cleaner interface
-
-I will also refactor the code to manage the interface in a cleaner way as well as separate the classes that don't need to be inside of the main file into other files.
