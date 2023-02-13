@@ -17,6 +17,9 @@ void mousePressed() {//handles the clicks on the checkboxes
   if (arrowEnableOverBounds) {
     ENABLE_BOUNDS = !ENABLE_BOUNDS;
   }
+  if (!firstMousePress) {
+    firstMousePress = true;
+  }
 }
 
 void keyReleased() {//Handle of keypresses
