@@ -40,3 +40,8 @@ PVector getNormalVector(PVector vel, PVector pos_1, PVector pos_2) {//Takes two 
   float impulse_z = v_final.mag()*cos(angle_xz);
   return new PVector (impulse_x, impulse_y, impulse_z);
 }
+
+
+public static float easeOut(float a, float b, float f, float fac) {
+  return lerp(a, b, (float)Math.pow(1.0-f, fac));
+}
