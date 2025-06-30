@@ -1,4 +1,3 @@
-//Taken from: https://processing.org/examples/scrollbar.html and tweaked
 class HScrollbar {
   int swidth, sheight;    // width and height of bar
   float xpos, ypos;       // x and y position of bar
@@ -38,11 +37,9 @@ class HScrollbar {
     }
     if (firstMousePress && over) {
       locked = true;
-      cam.setLeftDragHandler(null);
     }
     if (!mousePressed) {
       locked = false;
-      cam.setLeftDragHandler(PanDragHandler);
     }
     if (locked) {
       spos = constrain(mouseX-sheight/2, sposMin, sposMax);
@@ -53,7 +50,11 @@ class HScrollbar {
 
   void display() {
     noStroke();
-    if (over || locked) {
+
+    if (toggledFreeCam) {
+      fill(50);
+    }
+    else if (over || locked) {
       fill(150);
     } else {
       fill(100);
@@ -70,7 +71,12 @@ class HScrollbar {
     }
     rect(spos, ypos, sheight, sheight);
     textSize(30);
-    fill(255);
+    if (toggledFreeCam) {
+      fill(128);
+    }
+    else {
+      fill(255);
+    }
     text(label, xpos, ypos-sheight+10);
     if (showValue) {
       textSize(10);
@@ -89,7 +95,7 @@ class HScrollbar {
 
   boolean overEvent() {
     if (mouseX > xpos && mouseX < xpos+swidth &&
-      mouseY > ypos && mouseY < ypos+sheight) {
+            mouseY > ypos && mouseY < ypos+sheight) {
       return true;
     } else {
       return false;

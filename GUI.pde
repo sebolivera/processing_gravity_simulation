@@ -4,10 +4,11 @@ boolean arrowEnableOverWeight = false;
 boolean arrowEnableOverTrail = false;
 boolean arrowEnableOverGravity = false;
 boolean arrowEnableOverBounds = false;
+boolean toggledFreeCam = false;
 
 boolean overRect(int x, int y, int width, int height) {
   if (mouseX >= x && mouseX <= x+width &&
-    mouseY >= y && mouseY <= y+height) {
+          mouseY >= y && mouseY <= y+height) {
     return true;
   } else {
     return false;
@@ -29,7 +30,6 @@ void initGUI() {
   FloatFunction editGLOBAL_SPEEDLambda = (n) -> {
     edit_GLOBAL_SPEED(n);
   };
-
   gravity_scroll = new HScrollbar(BOTTOM_INIT_X, BOTTOM_INIT_Y-280, width/3, 16, 0, 2, "Global gravity scale", 0.5, editGLambda, true, "0", "2");
   speed_scroll = new HScrollbar(BOTTOM_INIT_X, BOTTOM_INIT_Y-350, width/3, 16, 0, 100, "Simulation speed scale", 1.0, editGLOBAL_SPEEDLambda, false, "Slow", "Fast");
 }
@@ -38,7 +38,7 @@ void drawBounds() {
   if (ENABLE_BOUNDS) {
     noFill();
     stroke(255);
-    //had issues with Box() function so I resorted to simply drawing the lines.
+    //Box() had issue in processing3, and so is drawn using lines only.
     line(0, 0, 0, width, 0, 0);
     line(0, 0, 0, 0, height, 0);
     line(0, 0, 0, 0, 0, height);
@@ -102,10 +102,16 @@ void drawMenuElementTickBox(int x, int y, String text, boolean active, boolean h
   }
   rect(x, y, 20, 20);
   if (active) {
-    fill(255, 255, 0);
+    if(toggledFreeCam) {
+      fill(128, 128, 128);
+    } else {
+      fill(255, 255, 0);
+    }
     text("X", x, y+20);
   }
-  if (hovered) {
+  if(toggledFreeCam) {
+    fill(128, 128, 128);
+  } else if (hovered) {
     fill(255);
   } else {
     fill(200);
@@ -114,17 +120,19 @@ void drawMenuElementTickBox(int x, int y, String text, boolean active, boolean h
 }
 
 void drawHints() {
-  fill(255);
   textFont(fontLight);
-  text("Use left-click to move around", width-475, height-330);
-  text("Use right-click to rotate the camera", width-475, height-280);
-  text("Use mouse wheel to zoom", width-475, height-230);
-  text("Double-click to reset camera", width-475, height-180);
-  text("Press 'H' to hide the interface", width-475, height-130);
-  text("Press 'R' to restart the simulation", width-475, height-30);
+  fill(255, 255, 0);
+  if (toggledFreeCam) {
+    text("Use wasd/zqsd to move around.", width-575, height-330);
+    text("Use right-click to move the camera laterally.", width-575, height-280);
+  }
+  text("Press 'f' to toggle freecam", width-575, height-230);
+  text("Press 'c' to reset camera position.", width-575, height-180);
+  text("Press 'h' to hide the interface.", width-575, height-130);
+  text("Press 'r' to restart the simulation.", width-575, height-30);
   if (PAUSED) {
     textFont(fontLight);
-    text("Press 'P' to unpause the simulation", width-475, height-80);
+    text("Press 'p' to unpause the simulation.", width-575, height-80);
     textFont(fontBold);
     noStroke();
     fill(255, 0, 0);
@@ -135,7 +143,7 @@ void drawHints() {
   } else
   {
     textFont(fontLight);
-    text("Press 'P' to pause the simulation", width-475, height-80);
+    text("Press 'p' to pause the simulation.", width-575, height-80);
     textFont(fontBold);
     noStroke();
     if (millis()-UNPAUSED_TIMER<2000) {
@@ -147,16 +155,28 @@ void drawHints() {
   }
 }
 
+float lastMouseX, lastMouseY;
+
 void drawMouse(){
   strokeWeight(2);
-  stroke(0, 0, 255);
-  line(mouseX-25, mouseY, mouseX+25, mouseY);
-  line(mouseX, mouseY-25, mouseX, mouseY+25);
+  if (toggledFreeCam) {
+    stroke(128);
+  }
+  else {
+    stroke(0, 0, 255);
+  }
+  if (!toggledFreeCam)
+  {
+    lastMouseX = mouseX;
+    lastMouseY = mouseY;
+  }
+  line(lastMouseX-25, lastMouseY, lastMouseX+25, lastMouseY);
+  line(lastMouseX, lastMouseY-25, lastMouseX, lastMouseY+25);
   strokeWeight(1);
 }
+
 void drawGUI() {//Handles the display for the Graphical User Intefrace. Is on by default.
   if (SHOW_INTERFACE) {
-    cam.beginHUD();
     //enable velocity arrows display
     drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y, "Show velocity arrows", DRAW_ARROWS, arrowEnableOverVel);
 
@@ -181,6 +201,5 @@ void drawGUI() {//Handles the display for the Graphical User Intefrace. Is on by
     speed_scroll.display();
 
     drawMouse();
-    cam.endHUD();
   }
 }
