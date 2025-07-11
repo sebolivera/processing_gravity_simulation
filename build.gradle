@@ -1,0 +1,42 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+def useJar = false
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+    maven {
+        name = 'jogamp'
+        url  = 'https://jogamp.org/deployment/maven/'
+    }
+
+}
+
+dependencies {
+    implementation 'org.processing:core:4.4.4'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+}
+
+application {
+    mainClass = 'app.GravityCollisionApp'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+            if (!useJar) {
+                srcDir 'vendor/ocd/src'
+            }
+        }
+    }
+}
+
+dependencies {
+    if (useJar) {
+        implementation files('vendor/ocd/library/ocd.jar')
+    }
+}
