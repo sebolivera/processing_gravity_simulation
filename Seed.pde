@@ -1,18 +1,18 @@
 public void seed(int amount)//Creates
 {
   spheres = new ArrayList<>();
-  threaded_spheres = new ArrayList<>();
-  color rand_color;
+  threadedSpheres = new ArrayList<>();
+  color randColor;
   for (int i = 0; i<amount; i++)
   {
-    rand_color = color(random(200)+55, random(200)+55, random(200)+55);
+    randColor = color(random(200)+55, random(200)+55, random(200)+55);
     float randX = random(1000.0);
     float randY = random(1000.0);
     float randZ = random(1000.0);
     float randR = random( 2.0+random(10.0));
     PVector t_pos = new PVector(randX, randY, randZ);
     for (int j = 0; j<spheres.size(); j++) {
-      while (PVector.dist(t_pos, spheres.get(j).pos)<randR)
+      while (PVector.dist(t_pos, spheres.get(j).position)<randR)
       {
         randX = random(1000.0);
         randY = random(1000.0);
@@ -21,43 +21,43 @@ public void seed(int amount)//Creates
         t_pos = new PVector(randX, randY, randZ);
       }
     }
-    spheres.add(new Physic_Sphere(i, rand_color, new PVector(randX, randY, randZ), new PVector(1-random(5), 1-random(5), 1-random(5)), randR, 0.5+random(0.5)));
+    spheres.add(new PhysicSphere(i, randColor, new PVector(randX, randY, randZ), new PVector(1-random(5), 1-random(5), 1-random(5)), randR, 0.5+random(0.5)));
   }
 
-  threaded_spheres = new ArrayList<Sphere_Batch_Thread>();
+  threadedSpheres = new ArrayList<SphereBatchThread>();
 
-  ArrayList<Integer> spheres_idx_batch = new ArrayList<>();
-  if (THREAD_COUNT>amount)
+  ArrayList<Integer> spheresIdxBatch = new ArrayList<>();
+  if (threadCount>amount)
   {
     for (int i = 0; i<amount; i++)
     {
-      spheres_idx_batch.add(i);
+      spheresIdxBatch.add(i);
     }
-    threaded_spheres.add(new Sphere_Batch_Thread(spheres_idx_batch, spheres));
-    spheres_idx_batch.clear();//Technically useless since the app will most likely crash due to over-allocation of objects in the first place, but every little bit helps, I guess.
+    threadedSpheres.add(new SphereBatchThread(spheresIdxBatch, spheres));
+    spheresIdxBatch.clear();//Technically useless since the app will most likely crash due to over-allocation of objects in the first place, but every little bit helps, I guess.
   } else
   {
-    int items_per_thread = amount/THREAD_COUNT;
-    int global_idx = 0;
-    for (int i = 0; i<THREAD_COUNT; i++)
+    int itemsPerThread = amount/threadCount;
+    int globalIdx = 0;
+    for (int i = 0; i<threadCount; i++)
     {
-      for (int j = 0; j < items_per_thread; j++)
+      for (int j = 0; j < itemsPerThread; j++)
       {
-        spheres_idx_batch.add(global_idx);
-        global_idx++;
+        spheresIdxBatch.add(globalIdx);
+        globalIdx++;
       }
-      threaded_spheres.add(new Sphere_Batch_Thread(spheres_idx_batch, spheres));
-      spheres_idx_batch.clear();
+      threadedSpheres.add(new SphereBatchThread(spheresIdxBatch, spheres));
+      spheresIdxBatch.clear();
     }
-    if (amount%THREAD_COUNT!=0)
+    if (amount%threadCount!=0)
     {
-      int remaining_objs = (amount-global_idx);
-      for (int i = 0; i<remaining_objs; i++)
+      int remainingObjs = (amount-globalIdx);
+      for (int i = 0; i<remainingObjs; i++)
       {
-        threaded_spheres.get(i).add_to_objs(global_idx);
-        global_idx++;
+        threadedSpheres.get(i).addToObjs(globalIdx);
+        globalIdx++;
       }
-      spheres_idx_batch.clear();
+      spheresIdxBatch.clear();
     }
   }
 }

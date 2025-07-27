@@ -1,5 +1,5 @@
 Set<String> keysDown = new HashSet<>();
-Set<String> MOVE_KEYS = Set.of("w", "a", "s", "d", "q", "z");
+Set<String> moveKeys = Set.of();
 float speedMult;
 boolean isShiftDown = false;
 float yaw, pitch;
@@ -7,22 +7,22 @@ float yaw, pitch;
 void mousePressed() {//handles the clicks on the checkboxes
   if (!toggledFreeCam){
     if (arrowEnableOverVel) {
-      DRAW_ARROWS = !DRAW_ARROWS;
+      arrowsDisplayed = !arrowsDisplayed;
     }
     if (arrowEnableOverName) {
-      DRAW_NAMES = !DRAW_NAMES;
+      namesDisplayed = !namesDisplayed;
     }
     if (arrowEnableOverWeight) {
-      DRAW_WEIGHTS = !DRAW_WEIGHTS;
+      weightsDisplayed = !weightsDisplayed;
     }
     if (arrowEnableOverTrail) {
-      DRAW_TRAILS = !DRAW_TRAILS;
+      tailsDisplayed = !tailsDisplayed;
     }
     if (arrowEnableOverGravity) {
-      ENABLE_GRAVITY = !ENABLE_GRAVITY;
+      gravityEnabled = !gravityEnabled;
     }
     if (arrowEnableOverBounds) {
-      ENABLE_BOUNDS = !ENABLE_BOUNDS;
+      boundsEnabled = !boundsEnabled;
     }
     if (!firstMousePress) {//for the scrollbar
       firstMousePress = true;
@@ -50,20 +50,20 @@ void move(){
       switch (currentKey) {
           case "z":
           case "w":
-              cam.dolly(-CAM_DOLLY_STEP * speedMult);
+              cam.dolly(-camDollyStep * speedMult);
               break;
       
           case "s":
-              cam.dolly( CAM_DOLLY_STEP * speedMult);
+              cam.dolly( camDollyStep * speedMult);
               break;
       
           case "q":
           case "a":
-              cam.truck(-CAM_PAN_STEP * speedMult);
+              cam.truck(-camPanStep * speedMult);
               break;
       
           case "d":
-              cam.truck( CAM_PAN_STEP * speedMult);
+              cam.truck( camPanStep * speedMult);
               break;
       
           default:
@@ -78,7 +78,7 @@ void keyPressed(KeyEvent e) {
     isAzerty = !isAzerty;
   }
   
-  if (MOVE_KEYS.contains("" + key)){
+  if (moveKeys.contains("" + key)){
     keysDown.add("" + key);
   }
   
@@ -89,21 +89,21 @@ void keyPressed(KeyEvent e) {
 
 void keyReleased(KeyEvent e) {//Handle of keypresses
   if (keyCode == 82) {// 'r' for 'restart'
-    seed(SPHERE_COUNT);
+    seed(sphereCount);
   }
   if (keyCode == 80)// 'p' for 'pause'
   {
-    PAUSED = !PAUSED;
-    if (!PAUSED) {
-      UNPAUSED_TIMER = millis();
+    isPaused = !isPaused;
+    if (!isPaused) {
+      unpausedTimer = millis();
     }
   }
   if (keyCode == 72)// 'h' for 'hide'
   {
-    SHOW_INTERFACE = !SHOW_INTERFACE;
+    showInterface = !showInterface;
   }
   
-  if (MOVE_KEYS.contains("" + key)){
+  if (moveKeys.contains("" + key)){
     keysDown.remove("" + key);
   }
   
