@@ -9,22 +9,22 @@ public class Pair<X, Y> {//Override for equality checking. Definitely not optimi
   {
     return (other.x==x && other.y ==y) || (other.y == x && other.x==y);
   }
-  public boolean equals_strict(Pair other)
+  public boolean equalsStrict(Pair other)
   {
     return (other.y == x && other.x==y);
   }
 }
 
 
-boolean ArrayListPairContains(ArrayList<Pair> HS, Pair other, boolean can_be_reverse)//is there really no lookup function for ArrayLists in Java? Am I missing something obvious?
+boolean ArrayListPairContains(ArrayList<Pair> HS, Pair other, boolean canBeReverse)//is there really no lookup function for ArrayLists in Java? Am I missing something obvious?
 {
   for (int i = 0; i<HS.size(); i++)
   {
-    if (can_be_reverse && HS.get(i).equals(other))
+    if (canBeReverse && HS.get(i).equals(other))
     {
       return true;
     }
-    if (!can_be_reverse && HS.get(i).equals_strict(other))
+    if (!canBeReverse && HS.get(i).equalsStrict(other))
     {
       return true;
     }
