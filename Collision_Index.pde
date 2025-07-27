@@ -1,5 +1,3 @@
-package misc;
-
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Prevents threads from accessing the same sphere at once.
  * <i>Prevents them from touching each other's balls, if you will.</i>
  */
-public final class CollisionIndex {
+public static final class CollisionIndex {
     /**
      * Holds a pair of colliding spheres.
      * <i>They always come in two.</i>

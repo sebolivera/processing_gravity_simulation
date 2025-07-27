@@ -1,7 +1,6 @@
 package model;
 
 import app.GravityCollisionApp;
-import kotlin.Pair;
 import misc.CollisionIndex;
 import processing.core.*;
 
@@ -24,106 +23,105 @@ public class PhysicSphere extends PApplet {
     float MAX_WIDTH = 1000.0f;
     float MAX_HEIGHT = 1000.0f;
     float MAX_DEPTH = 1000.0f;
-    int c;
-    PVector pos;
-    PVector vel;
-    ArrayList<PVector> prevPos = new ArrayList<PVector>();
-    int max_speed = 5;
+    int sphereColor;
+    PVector position;
+    PVector velocity;
+    ArrayList<PVector> prevPos = new ArrayList<>();
+    int maxSpeed = 5;
     float radius;
     float mass;
     float bounciness;
     int index;
-    public PVector acc;
+    public PVector acceleration;
 
     /**
      * Overload for normal bounciness sphere.
      * TODO: Switch to builder pattern, this is going to be a nightmare soon enough.
-     * @param t_index Sphere index.
-     * @param t_c Sphere color.
-     * @param t_pos Sphere initial position.
-     * @param t_vel Sphere initial velocity.
-     * @param t_radius Sphere radius.
-     * @param t_mass Sphere mass.
+     * @param index Sphere index.
+     * @param sphereColor Sphere color.
+     * @param position Sphere initial position.
+     * @param velocity Sphere initial velocity.
+     * @param radius Sphere radius.
+     * @param mass Sphere mass.
      */
-    PhysicSphere(int t_index, int t_c, PVector t_pos, PVector t_vel, float t_radius, float t_mass) {//Bounciness is optional and has been known to cause some issues when too many spheres are colliding, so it is 1 by default (perfect bounciness)
-        index = t_index;
-        c = t_c;
-        pos = t_pos;
-        vel = t_vel;
-        radius = t_radius * 2;
-        mass = t_mass;
-        acc = new PVector(0.0f, 0.0f, 0.0f);
-        bounciness = 1.0f;
+    PhysicSphere(int index, int sphereColor, PVector position, PVector velocity, float radius, float mass) {//Bounciness is optional and has been known to cause some issues when too many spheres are colliding, so it is 1 by default (perfect bounciness)
+        this.index = index;
+        this.sphereColor = sphereColor;
+        this.position = position;
+        this.velocity = velocity;
+        this.radius = radius * 2;
+        this.mass = mass;
+        this.acceleration = new PVector(0.0f, 0.0f, 0.0f);
+        this.bounciness = 1.0f;
     }
 
     /**
      * Creates an instance of a sphere.
-     * @param t_index Sphere index.
-     * @param t_c Sphere color.
-     * @param t_pos Sphere initial position.
-     * @param t_vel Sphere initial velocity.
-     * @param t_radius Sphere radius.
-     * @param t_mass Sphere mass.
-     * @param t_bounciness Sphere bounciness.
+     * @param index Sphere index.
+     * @param sphereColor Sphere color.
+     * @param position Sphere initial position.
+     * @param velocity Sphere initial velocity.
+     * @param radius Sphere radius.
+     * @param mass Sphere mass.
+     * @param bounciness Sphere bounciness.
      */
-    PhysicSphere(int t_index, int t_c, PVector t_pos, PVector t_vel, float t_radius, float t_mass, float t_bounciness) {
-        index = t_index;
-        c = t_c;
-        pos = t_pos;
-        vel = t_vel;
-        radius = t_radius * 2;
-        mass = t_mass;
-        acc = new PVector(0.0f, 0.0f, 0.0f);
-        bounciness = t_bounciness;
+    PhysicSphere(int index, int sphereColor, PVector position, PVector velocity, float radius, float mass, float bounciness) {
+        this.index = index;
+        this.sphereColor = sphereColor;
+        this.position = position;
+        this.velocity = velocity;
+        this.radius = radius * 2;
+        this.mass = mass;
+        this.acceleration = new PVector(0.0f, 0.0f, 0.0f);
+        this.bounciness = bounciness;
     }
 
 
     /**
-     * Drawing an arrow proved itself to be quite the challenge. I took inspiration from
-     * <a href="https://forum.processing.org/one/topic/drawing-an-arrow.html">this</a> and
-     * tweaked it a bit.
-     * @param cx X-coordinate of the arrow's origin.
-     * @param cy Y-coordinate of the arrow's origin.
-     * @param cz Z-coordinate of the arrow's origin.
-     * @param len Scalar applied to the length of the arrow.
-     * @param dest Target direction, expressed as a PVector.
+     * Draws an arrow. Adapted from <a href="https://forum.processing.org/one/topic/drawing-an-arrow.html">here</a>.
+     * <i>It's only stealing if it comes from StackOverflow, otherwise it's citing sources.</i>
+     * @param originX X-coordinate of the arrow's origin.
+     * @param originY Y-coordinate of the arrow's origin.
+     * @param originZ Z-coordinate of the arrow's origin.
+     * @param lengthScalar Scalar applied to the length of the arrow.
+     * @param targetDirection Target direction, expressed as a PVector.
      */
-    void drawArrow(float cx, float cy, float cz, float len, PVector dest) {//
+    void drawArrow(float originX, float originY, float originZ, float lengthScalar, PVector targetDirection) {//
         pushMatrix();
         strokeWeight(radius / 2);
-        translate(cx, cy, cz);
-        dest = dest.copy();
-        dest.normalize();
-        dest.mult(len * dest.mag() * 10);
+        translate(originX, originY, originZ);
+        targetDirection = targetDirection.copy();
+        targetDirection.normalize();
+        targetDirection.mult(lengthScalar * targetDirection.mag() * 10);
 
-        stroke(255 - red(c), 255 - green(c), 255 - blue(c));
-        line(0, 0, 0, dest.x, dest.y, dest.z);
-        fill(255 - red(c), 255 - green(c), 255 - blue(c));
-        float w = radius / 2;
-        float h = radius;
-        translate(dest.x, dest.y, dest.z);
+        stroke(255 - red(sphereColor), 255 - green(sphereColor), 255 - blue(sphereColor));
+        line(0, 0, 0, targetDirection.x, targetDirection.y, targetDirection.z);
+        fill(255 - red(sphereColor), 255 - green(sphereColor), 255 - blue(sphereColor));
+        float halfBaseSize = radius / 2;
+        float tipLength = radius;
+        translate(targetDirection.x, targetDirection.y, targetDirection.z);
         noStroke();
         beginShape();
-        vertex(-w, -w, -w);
-        vertex(w, -w, -w);
-        vertex(h * dest.x / 100, h * dest.y / 100, h * dest.z / 100);
+        vertex(-halfBaseSize, -halfBaseSize, -halfBaseSize);
+        vertex(halfBaseSize, -halfBaseSize, -halfBaseSize);
+        vertex(tipLength * targetDirection.x / 100, tipLength * targetDirection.y / 100, tipLength * targetDirection.z / 100);
         endShape();
         beginShape();
-        vertex(w, -w, -w);
-        vertex(w, w, -w);
-        vertex(h * dest.x / 100, h * dest.y / 100, h * dest.z / 100);
-        endShape();
-
-        beginShape();
-        vertex(w, w, -w);
-        vertex(-w, w, -w);
-        vertex(h * dest.x / 100, h * dest.y / 100, h * dest.z / 100);
+        vertex(halfBaseSize, -halfBaseSize, -halfBaseSize);
+        vertex(halfBaseSize, halfBaseSize, -halfBaseSize);
+        vertex(tipLength * targetDirection.x / 100, tipLength * targetDirection.y / 100, tipLength * targetDirection.z / 100);
         endShape();
 
         beginShape();
-        vertex(-w, w, -w);
-        vertex(-w, -w, -w);
-        vertex(h * dest.x / 100, h * dest.y / 100, h * dest.z / 100);
+        vertex(halfBaseSize, halfBaseSize, -halfBaseSize);
+        vertex(-halfBaseSize, halfBaseSize, -halfBaseSize);
+        vertex(tipLength * targetDirection.x / 100, tipLength * targetDirection.y / 100, tipLength * targetDirection.z / 100);
+        endShape();
+
+        beginShape();
+        vertex(-halfBaseSize, halfBaseSize, -halfBaseSize);
+        vertex(-halfBaseSize, -halfBaseSize, -halfBaseSize);
+        vertex(tipLength * targetDirection.x / 100, tipLength * targetDirection.y / 100, tipLength * targetDirection.z / 100);
         endShape();
 
         popMatrix();
@@ -132,19 +130,20 @@ public class PhysicSphere extends PApplet {
 
     /**
      * Checks whether one given sphere is colliding with the current instance.
+     * Accounts for both the current frame and the next one in case of high speeds.
      * <i>Are you hitting on me?</i>
      * @param other Another instance of a sphere.
      * @return {@code true} if the spheres are colliding.
      */
     boolean isCollidingWith(PhysicSphere other) {
         if (index != other.index) {
-            boolean isFrameColliding = other.pos.dist(pos) < other.radius * 2 + radius * 2;
-            PVector vectorized_position = pos.copy();
-            vectorized_position.dot(vel);
-            PVector other_vectorized_position = other.pos.copy();
-            other_vectorized_position.dot(other.vel);
-            boolean isVectorColliding = vectorized_position.dist(other_vectorized_position) < other.radius * 2 + radius * 2;
-            return isFrameColliding || isVectorColliding;//we account both for the current frame and the next one in case of high speeds
+            boolean isFrameColliding = other.position.dist(position) < other.radius * 2 + radius * 2;
+            PVector vectorizedPosition = position.copy();
+            vectorizedPosition.dot(velocity);
+            PVector otherVectorizedPosition = other.position.copy();
+            otherVectorizedPosition.dot(other.velocity);
+            boolean isVectorColliding = vectorizedPosition.dist(otherVectorizedPosition) < other.radius * 2 + radius * 2;
+            return isFrameColliding || isVectorColliding;
         }
         return false;
     }
@@ -157,72 +156,71 @@ public class PhysicSphere extends PApplet {
      * @param other The other sphere involved in the collision.
      */
     void collideWith(PhysicSphere other) {
-        Pair<Integer, Integer> duo = new Pair<Integer, Integer>(index, other.index);
         if (isCollidingWith(other)) {
             if (CollisionIndex.tryLock(this.index, other.index)) {
                 try {
-                    //safety copies of the velocities in case of large clumping of objects
+                    // Safety copies of the velocities in case of large clumping of objects
                     // Cumulative implementation of angle collisions and massed elastic collisions
-                    // see:
+                    // See:
                     // - Momentum conservation in angle collisions between two spherical bodies : https://atmos.illinois.edu/courses/atmos100/userdocs/3Dcollisions.html
                     // - Elastic collision and exchange of momentum between two bodies with different masses : https://physics.stackexchange.com/questions/681396/elastic-collision-3d-eqaution
                     // - TODO: add rotation to the equation (check https://www.euclideanspace.com/physics/dynamics/collision/threed/index.htm). ISSUE: don't know how to get rotation of object in processing 3
 
-                    PVector v_imp_2 = getNormalVector(vel, pos, other.pos);//v_imp_2 & v_imp_1 are swapped
-                    PVector v_imp_1 = getNormalVector(other.vel, other.pos, pos);
+                    PVector impulseSelf = getNormalVector(velocity, position, other.position);//selfImpulseVector & v_imp_1 are swapped
+                    PVector impulseOther = getNormalVector(other.velocity, other.position, position);
 
-                    // Apply the normal vectors to the velocity
+                    // Apply the normal vectors to the velocity.
 
-                    PVector v_normal_1 = vel.copy();
-                    v_normal_1.sub(v_imp_1);
+                    PVector residualVelocityOther = velocity.copy();
+                    residualVelocityOther.sub(impulseOther);
 
-                    PVector v_normal_2 = other.vel.copy();
-                    v_normal_2.sub(v_imp_2);
+                    PVector residualVelocitySelf = other.velocity.copy();
+                    residualVelocitySelf.sub(impulseSelf);
 
                     //elastic collision part (or how to account for mass)
 
                     // apply the normals to the movement vectors by accounting for the mass (see second link)
-                    PVector v_1_i = vel.copy();
-                    PVector v_2_i = other.vel.copy();
+                    PVector impactVelocitySelf = velocity.copy();
+                    PVector impactVelocityOther;
 
                     //Takes the normal impulse vector and applies it to the opposite force's magnitude. Since I couldn't find a simulation where accounted for both angle as well as mass, I had to improvise
-                    v_2_i = new PVector(v_1_i.mag() * (v_normal_2.x / v_normal_2.mag()), v_1_i.mag() * (v_normal_2.y / v_normal_2.mag()), v_1_i.mag() * (v_normal_2.z / v_normal_2.mag()));
-                    v_1_i = new PVector(v_2_i.mag() * (v_normal_1.x / v_normal_1.mag()), v_2_i.mag() * (v_normal_1.y / v_normal_1.mag()), v_2_i.mag() * (v_normal_1.z / v_normal_1.mag()));
+                    impactVelocityOther = new PVector(impactVelocitySelf.mag() * (residualVelocitySelf.x / residualVelocitySelf.mag()), impactVelocitySelf.mag() * (residualVelocitySelf.y / residualVelocitySelf.mag()), impactVelocitySelf.mag() * (residualVelocitySelf.z / residualVelocitySelf.mag()));
+                    impactVelocitySelf = new PVector(impactVelocityOther.mag() * (residualVelocityOther.x / residualVelocityOther.mag()), impactVelocityOther.mag() * (residualVelocityOther.y / residualVelocityOther.mag()), impactVelocityOther.mag() * (residualVelocityOther.z / residualVelocityOther.mag()));
 
-                    PVector m1v1i = v_1_i.copy();
-                    m1v1i.mult(mass);//Is what is recommended in the provided link and corroborated by wikipedia & wolfram, but some mass transfers don't seem to conserve the proper amount of energyswap with m1v1i.mult(other.mass/mass); in case of unexpected energy transfer?
+                    PVector momentumSelf = impactVelocitySelf.copy();
+                    momentumSelf.mult(mass);//Is what is recommended in the provided link and corroborated by wikipedia & wolfram, but some mass transfers don't seem to conserve the proper amount of energyswap with m1v1i.mult(other.mass/mass); in case of unexpected energy transfer?
 
-                    PVector m2v2i = v_2_i.copy();
-                    m2v2i.mult(other.mass);
+                    PVector momentumOther = impactVelocityOther.copy();
+                    momentumOther.mult(other.mass);
 
-                    PVector a_part = m1v1i.copy();
-                    a_part.add(m2v2i);
+                    PVector totalMomentum = momentumSelf.copy();
+                    totalMomentum.add(momentumOther);
 
-                    PVector b_v_1_i = v_1_i.copy();
-                    b_v_1_i.mult(bounciness);
-                    PVector b_v_2_i = v_2_i.copy();
-                    b_v_2_i.mult(bounciness);
+                    PVector bounceVelocitySelf = impactVelocitySelf.copy();
+                    bounceVelocitySelf.mult(bounciness);
+                    PVector bounceVelocityOther = impactVelocityOther.copy();
+                    bounceVelocityOther.mult(bounciness);
 
                     //b_part => (((1-bounciness)(v_1_i-v_2_i)+v_1_f)*other.mass)/mass
-                    PVector b_part = b_v_1_i.copy();
-                    b_part.sub(b_v_2_i);
+                    PVector restitutionDelta = bounceVelocitySelf.copy();
+                    restitutionDelta.sub(bounceVelocityOther);
 
                     //v_1_f => (v_1_i*mass+v_2_i*other.mass-(1-bounciness)*(v_1_i-v_2_i))/(mass+1)
-                    PVector v_1_f = a_part.copy();
-                    v_1_f.sub(b_part);
+                    PVector finalVelocitySelf = totalMomentum.copy();
+                    finalVelocitySelf.sub(restitutionDelta);
 
-                    v_1_f.div(mass + 1.0f);
+                    finalVelocitySelf.div(mass + 1.0f);
 
                     //v_2_f => (1-bounciness)*(v_1_i-v_2_i)+v_1_f
-                    PVector v_2_f = v_1_f.copy();
-                    v_2_f.add(b_part);
+                    PVector finalVelocityOther = finalVelocitySelf.copy();
+                    finalVelocityOther.add(restitutionDelta);
 
-                    if (!Float.isNaN(v_1_f.x + v_1_f.y + v_1_f.z)) {
-                        vel = v_1_f;
+                    if (!Float.isNaN(finalVelocitySelf.x + finalVelocitySelf.y + finalVelocitySelf.z)) {
+                        velocity = finalVelocitySelf;
                     }
 
-                    if (!Float.isNaN(v_2_f.x + v_2_f.y + v_2_f.z)) {
-                        other.vel = v_2_f;
+                    if (!Float.isNaN(finalVelocityOther.x + finalVelocityOther.y + finalVelocityOther.z)) {
+                        other.velocity = finalVelocityOther;
                     }
 
                     correctClipping(other);
@@ -235,12 +233,12 @@ public class PhysicSphere extends PApplet {
     }
 
     void correctClipping(PhysicSphere other) {
-        PVector t_corrector = vel.copy();
-        t_corrector.sub(getNormalVector(vel, pos, other.pos));
+        PVector t_corrector = velocity.copy();
+        t_corrector.sub(getNormalVector(velocity, position, other.position));
         t_corrector.mult(.1f);
         int sc = 0;
         while (isCollidingWith(other) && sc < 10000) {
-            pos.add(t_corrector);
+            position.add(t_corrector);
             sc++;
         }
     }
@@ -262,9 +260,9 @@ public class PhysicSphere extends PApplet {
             if (other.index != index) {
                 if (ENABLE_GRAVITY) {
                     float small_g_factor = -other.mass * GravityCollisionApp.G;
-                    small_g_factor /= other.pos.dist(pos) * other.pos.dist(pos);
-                    PVector small_g = pos.copy();
-                    small_g.sub(other.pos);
+                    small_g_factor /= other.position.dist(position) * other.position.dist(position);
+                    PVector small_g = position.copy();
+                    small_g.sub(other.position);
                     small_g.mult(small_g_factor);
                     t_acc = small_g.copy();
                     t_acc.mult(mass);
@@ -272,7 +270,7 @@ public class PhysicSphere extends PApplet {
                 }
             }
             if (!Float.isNaN(t_acc.x + t_acc.y + t_acc.z)) {
-                acc = final_acc.copy();
+                acceleration = final_acc.copy();
             }
         }
     }
@@ -282,33 +280,33 @@ public class PhysicSphere extends PApplet {
      */
     void update() {
         if (FRAMES % (GLOBAL_SPEED + 1) == 0) {
-            prevPos.add(pos.copy());
-            vel.add(acc);
+            prevPos.add(position.copy());
+            velocity.add(acceleration);
             if (ENABLE_BOUNDS) {
-                if (pos.x <= 0 && vel.x < 0) {
-                    vel.x = -vel.x * bounciness;
-                } else if (pos.x >= MAX_WIDTH && vel.x > 0) {
-                    vel.x = -vel.x * bounciness;
+                if (position.x <= 0 && velocity.x < 0) {
+                    velocity.x = -velocity.x * bounciness;
+                } else if (position.x >= MAX_WIDTH && velocity.x > 0) {
+                    velocity.x = -velocity.x * bounciness;
                 }
-                if (pos.y <= 0 && vel.y < 0) {
-                    vel.y = -vel.y * bounciness;
-                } else if (pos.y >= MAX_HEIGHT && vel.y > 0) {
-                    vel.y = -vel.y * bounciness;
+                if (position.y <= 0 && velocity.y < 0) {
+                    velocity.y = -velocity.y * bounciness;
+                } else if (position.y >= MAX_HEIGHT && velocity.y > 0) {
+                    velocity.y = -velocity.y * bounciness;
                 }
-                if (pos.z <= 0 && vel.z < 0) {
-                    vel.z = -vel.z * bounciness;
-                } else if (pos.z >= MAX_DEPTH && vel.z > 0) {
-                    vel.z = -vel.z * bounciness;
+                if (position.z <= 0 && velocity.z < 0) {
+                    velocity.z = -velocity.z * bounciness;
+                } else if (position.z >= MAX_DEPTH && velocity.z > 0) {
+                    velocity.z = -velocity.z * bounciness;
                 }
             }
-            nullifyPVectorNaN(vel);
+            nullifyPVectorNaN(velocity);
             // Note: there *might* be a chance for spheres to get trapped in-between two
             // bouncing spheres that apply opposite forces, which will result in them
             // over-correcting their velocities. This prevents an impossible velocity from
             // being applied to a sphere, which allows them to clip a little bit, but
             // ultimately prevents both crashes and excessive clipping.
-            pos.add(vel);
-            correctPVectorNaN(pos, prevPos);
+            position.add(velocity);
+            correctPVectorNaN(position, prevPos);
             // Note: Prevents the positions from being altered too much from fast-hitting
             // spheres. While very rare, instances where one sphere gets knocked off-screen
             // tend to crash the simulation due to the gravitational forces being skewed
@@ -321,27 +319,27 @@ public class PhysicSphere extends PApplet {
      */
     void display() {
         pushMatrix();
-        translate(pos.x, pos.y, pos.z);
+        translate(position.x, position.y, position.z);
         noStroke();
-        fill(c, 200);
+        fill(sphereColor, 200);
         sphere(radius * 2);
         popMatrix();
-        fill(255 - red(c), 255 - green(c), 255 - blue(c));
+        fill(255 - red(sphereColor), 255 - green(sphereColor), 255 - blue(sphereColor));
         textSize(radius * 3);
         if (DRAW_NAMES) {
-            text((char) (index + 65), lerp(MAX_WIDTH * 0.05f, MAX_WIDTH * 0.95f, (pos.x - radius) / MAX_WIDTH), lerp(MAX_HEIGHT * 0.05f, MAX_HEIGHT * 0.95f, (pos.y + radius) / MAX_HEIGHT) + 100f, pos.z + radius * 2f);
+            text((char) (index + 65), lerp(MAX_WIDTH * 0.05f, MAX_WIDTH * 0.95f, (position.x - radius) / MAX_WIDTH), lerp(MAX_HEIGHT * 0.05f, MAX_HEIGHT * 0.95f, (position.y + radius) / MAX_HEIGHT) + 100f, position.z + radius * 2f);
             // index+65 will print ascii characters starting at 'A'. I am aware that it won't be able to print some of them, but this mostly for debugging.
         }
         if (DRAW_WEIGHTS) {
-            text(floor(mass * 100), lerp(MAX_WIDTH * 0.05f, MAX_WIDTH * 0.95f, (pos.x - radius) / MAX_WIDTH), lerp(MAX_HEIGHT * 0.05f, MAX_HEIGHT * 0.95f, (pos.y + radius) / MAX_HEIGHT), pos.z + radius * 2);
+            text(floor(mass * 100), lerp(MAX_WIDTH * 0.05f, MAX_WIDTH * 0.95f, (position.x - radius) / MAX_WIDTH), lerp(MAX_HEIGHT * 0.05f, MAX_HEIGHT * 0.95f, (position.y + radius) / MAX_HEIGHT), position.z + radius * 2);
         }
         noFill();
         beginShape();
-        curveVertex(pos.x, pos.y, pos.z);
+        curveVertex(position.x, position.y, position.z);
         strokeCap(SQUARE);
         if (DRAW_TRAILS) {//Processing's way of drawing strokes gives them no depth on the Z axis, which makes them look flat when the balls turn at sharp angles or face slightly away from the camera.
             for (int i = !prevPos.isEmpty() ? prevPos.size() - 1 : 0; i > (prevPos.size() > 20 ? prevPos.size() - 20 : 0); i--) {
-                stroke(c, lerp(255f, 25f, ((float) (prevPos.size() < 20 ? i : prevPos.size() - i)) / (Math.min(prevPos.size(), 20))));
+                stroke(sphereColor, lerp(255f, 25f, ((float) (prevPos.size() < 20 ? i : prevPos.size() - i)) / (Math.min(prevPos.size(), 20))));
                 strokeWeight(lerp(0, radius * 2, lerp(1.0f, 0, ((float) (prevPos.size() - i)) / (Math.min(prevPos.size(), 20)))));
                 curveVertex(prevPos.get(i).x, prevPos.get(i).y, prevPos.get(i).z);
             }
@@ -349,7 +347,7 @@ public class PhysicSphere extends PApplet {
         endShape();
 
         if (index >= 0 && DRAW_ARROWS) {
-            drawArrow(pos.x, pos.y, pos.z, radius, vel);
+            drawArrow(position.x, position.y, position.z, radius, velocity);
         }
     }
 }

@@ -20,22 +20,22 @@ interface FloatFunction {
 }
 
 void initGUI() {
-  BOTTOM_INIT_X = 50;
-  BOTTOM_INIT_Y = height-50;
-  TICKBOX_COLOR = color(0);
-  TICKBOX_HIGHLIGHT_COLOR = color(51);
+  bottomInitX = 50;
+  bottomInitY = height-50;
+  tickboxColor = color(0);
+  tickboxHightlightColor = color(51);
   FloatFunction editGLambda = (n) -> {
-    edit_G(n);
+    setGravityConstant(n);
   };
   FloatFunction editGLOBAL_SPEEDLambda = (n) -> {
-    edit_GLOBAL_SPEED(n);
+    setGlobalSpeed(n);
   };
-  gravity_scroll = new HScrollbar(BOTTOM_INIT_X, BOTTOM_INIT_Y-280, width/3, 16, 0, 2, "Global gravity scale", 0.5, editGLambda, true, "0", "2");
-  speed_scroll = new HScrollbar(BOTTOM_INIT_X, BOTTOM_INIT_Y-350, width/3, 16, 0, 100, "Simulation speed scale", 1.0, editGLOBAL_SPEEDLambda, false, "Slow", "Fast");
+  gravity_scroll = new HScrollbar(bottomInitX, bottomInitY-280, width/3, 16, 0, 2, "Global gravity scale", 0.5, editGLambda, true, "0", "2");
+  speed_scroll = new HScrollbar(bottomInitX, bottomInitY-350, width/3, 16, 0, 100, "Simulation speed scale", 1.0, editGLOBAL_SPEEDLambda, false, "Slow", "Fast");
 }
 
 void drawBounds() {
-  if (ENABLE_BOUNDS) {
+  if (boundsEnabled) {
     noFill();
     stroke(255);
     //Box() had issue in processing3, and so is drawn using lines only.
@@ -62,32 +62,32 @@ void drawBounds() {
 }
 
 void hover() {//handles hovers on titles and tickboxes for options
-  if ( overRect(BOTTOM_INIT_X, BOTTOM_INIT_Y, 320, 20) ) {//Arrow tickbox
+  if ( overRect(bottomInitX, bottomInitY, 320, 20) ) {//Arrow tickbox
     arrowEnableOverVel = true;
   } else {
     arrowEnableOverVel = false;
   }
-  if (overRect(BOTTOM_INIT_X, BOTTOM_INIT_Y-50, 295, 20)) {//Name tickbox
+  if (overRect(bottomInitX, bottomInitY-50, 295, 20)) {//Name tickbox
     arrowEnableOverName = true;
   } else {
     arrowEnableOverName = false;
   }
-  if (overRect(BOTTOM_INIT_X, BOTTOM_INIT_Y-100, 270, 20)) {//Weight tickbox
+  if (overRect(bottomInitX, bottomInitY-100, 270, 20)) {//Weight tickbox
     arrowEnableOverWeight = true;
   } else {
     arrowEnableOverWeight = false;
   }
-  if (overRect(BOTTOM_INIT_X, BOTTOM_INIT_Y-150, 220, 20)) {//Trail tickbox
+  if (overRect(bottomInitX, bottomInitY-150, 220, 20)) {//Trail tickbox
     arrowEnableOverTrail = true;
   } else {
     arrowEnableOverTrail = false;
   }
-  if (overRect(BOTTOM_INIT_X, BOTTOM_INIT_Y-200, 220, 20)) {//Gravity tickbox
+  if (overRect(bottomInitX, bottomInitY-200, 220, 20)) {//Gravity tickbox
     arrowEnableOverGravity = true;
   } else {
     arrowEnableOverGravity = false;
   }
-  if (overRect(BOTTOM_INIT_X, BOTTOM_INIT_Y-250, 240, 20)) {//Visible bounds tickbox
+  if (overRect(bottomInitX, bottomInitY-250, 240, 20)) {//Visible bounds tickbox
     arrowEnableOverBounds = true;
   } else {
     arrowEnableOverBounds = false;
@@ -96,9 +96,9 @@ void hover() {//handles hovers on titles and tickboxes for options
 
 void drawMenuElementTickBox(int x, int y, String text, boolean active, boolean hovered) {//draws a checkbox, a tickmark and a label for each element
   if (hovered) {
-    fill(TICKBOX_HIGHLIGHT_COLOR);
+    fill(tickboxHightlightColor);
   } else {
-    fill(TICKBOX_COLOR);
+    fill(tickboxColor);
   }
   rect(x, y, 20, 20);
   if (active) {
@@ -130,7 +130,7 @@ void drawHints() {
   text("Press 'c' to reset camera position.", width-575, height-180);
   text("Press 'h' to hide the interface.", width-575, height-130);
   text("Press 'r' to restart the simulation.", width-575, height-30);
-  if (PAUSED) {
+  if (isPaused) {
     textFont(fontLight);
     text("Press 'p' to unpause the simulation.", width-575, height-80);
     textFont(fontBold);
@@ -146,8 +146,8 @@ void drawHints() {
     text("Press 'p' to pause the simulation.", width-575, height-80);
     textFont(fontBold);
     noStroke();
-    if (millis()-UNPAUSED_TIMER<2000) {
-      fill(0, lerp(255, 0, (float)(millis()-UNPAUSED_TIMER)/2000), 0);
+    if (millis()-unpausedTimer<2000) {
+      fill(0, lerp(255, 0, (float)(millis()-unpausedTimer)/2000), 0);
       triangle(35, 70, 35, 96, 65, 83);
       textSize(50);
       text("RUNNING", 75, 100);
@@ -176,24 +176,24 @@ void drawMouse(){
 }
 
 void drawGUI() {//Handles the display for the Graphical User Intefrace. Is on by default.
-  if (SHOW_INTERFACE) {
+  if (showInterface) {
     //enable velocity arrows display
-    drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y, "Show velocity arrows", DRAW_ARROWS, arrowEnableOverVel);
+    drawMenuElementTickBox(bottomInitX, bottomInitY, "Show velocity arrows", arrowsDisplayed, arrowEnableOverVel);
 
     //enable name display
-    drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-50, "Show sphere names", DRAW_NAMES, arrowEnableOverName);
+    drawMenuElementTickBox(bottomInitX, bottomInitY-50, "Show sphere names", namesDisplayed, arrowEnableOverName);
 
     //enable sphere weights display
-    drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-100, "Show sphere weights", DRAW_WEIGHTS, arrowEnableOverWeight);
+    drawMenuElementTickBox(bottomInitX, bottomInitY-100, "Show sphere weights", weightsDisplayed, arrowEnableOverWeight);
 
     //enable trails display
-    drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-150, "Show sphere trails", DRAW_TRAILS, arrowEnableOverTrail);
+    drawMenuElementTickBox(bottomInitX, bottomInitY-150, "Show sphere trails", tailsDisplayed, arrowEnableOverTrail);
 
     //enable gravity
-    drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-200, "Enable gravity", ENABLE_GRAVITY, arrowEnableOverGravity);
+    drawMenuElementTickBox(bottomInitX, bottomInitY-200, "Enable gravity", gravityEnabled, arrowEnableOverGravity);
 
     //enable bounds
-    drawMenuElementTickBox(BOTTOM_INIT_X, BOTTOM_INIT_Y-250, "Enable boundaries", ENABLE_BOUNDS, arrowEnableOverBounds);
+    drawMenuElementTickBox(bottomInitX, bottomInitY-250, "Enable boundaries", boundsEnabled, arrowEnableOverBounds);
     drawHints();
     gravity_scroll.update();
     gravity_scroll.display();
