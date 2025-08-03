@@ -1,4 +1,4 @@
-class HScrollbar {
+class HScrollBar {
   int swidth, sheight;    // width and height of bar
   float xpos, ypos;       // x and y position of bar
   float spos, newspos;    // x position of slider
@@ -11,7 +11,7 @@ class HScrollbar {
   boolean showValue;
   String minLabelValue, maxLabelValue;
 
-  HScrollbar (float xp, float yp, int sw, int sh, float finalMin, float finalMax, String l, float defaultValue, FloatFunction lambdaController, boolean show, String minLV, String maxLV) {
+  HScrollBar (float xp, float yp, int sw, int sh, float finalMin, float finalMax, String l, float defaultValue, FloatFunction lambdaController, boolean show, String minLV, String maxLV) {
     swidth = sw;
     sheight = sh;
     xpos = xp;

@@ -27,7 +27,7 @@ public class PhysicSphere extends PApplet {
     PVector position;
     PVector velocity;
     ArrayList<PVector> prevPos = new ArrayList<>();
-    int maxSpeed = 5;
+    int maxSpeed = 5; // TODO: implement this.
     float radius;
     float mass;
     float bounciness;
@@ -317,7 +317,7 @@ public class PhysicSphere extends PApplet {
     /**
      * Draws a sphere according to its position radius, color, index (name) and tail effect.
      */
-    void display() {
+    public void display() {
         pushMatrix();
         translate(position.x, position.y, position.z);
         noStroke();

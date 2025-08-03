@@ -1,20 +1,15 @@
 package app;
 
+import events.core.EventManager;
+import events.physics.CameraChangedEvent;
+import events.physics.GravityChangedEvent;
+import events.physics.SpeedChangedEvent;
+import gui.HScrollBar;
+import model.PhysicSphere;
+import model.SphereBatchThread;
 import processing.core.*;
-
 import java.util.ArrayList;
-import java.lang.Object;
-
-import damkjer.ocd.*;
-
-import java.util.function.Consumer;
-import java.awt.im.InputContext;
-import java.util.Locale;
-
 import processing.event.MouseEvent;
-
-import java.util.HashSet;
-import java.util.Set;
 
 public final class GravityCollisionApp extends PApplet {
 
@@ -23,7 +18,7 @@ public final class GravityCollisionApp extends PApplet {
     public static int FRAMES = 0;
     public static float CAM_DOLLY_STEP = 20;
     public static int GLOBAL_SPEED = 0;
-
+    public boolean firstMousePress = false;
     public static float G = 6.6743f;
     public static boolean DRAW_TRAILS = false;
     public static boolean DRAW_ARROWS = false;
@@ -33,15 +28,14 @@ public final class GravityCollisionApp extends PApplet {
     public static boolean ENABLE_BOUNDS = true;
     public static boolean PAUSED = false;
 
-    /* …the rest follow the same pattern … */
+    private EventManager eventManager;
+    private CameraChangedEvent cameraEvent = new CameraChangedEvent();
 
     private ArrayList<PhysicSphere> spheres = new ArrayList<>();
-    private ArrayList<SphereBatchThread> threads = new ArrayList<>();
+    private ArrayList<SphereBatchThread> sphereBatchThreads = new ArrayList<>();
 
-    private HScrollbar gravityScroll;
-    private HScrollbar speedScroll;
-
-    /* === life-cycle methods required by Processing ===================== */
+    private HScrollBar gravityScroll;
+    private HScrollBar speedScroll;
 
     @Override
     public void settings() {
@@ -50,7 +44,9 @@ public final class GravityCollisionApp extends PApplet {
 
     @Override
     public void setup() {
-        cam = new Camera(this, width / 2f, height / 2f, height + 1000, width / 2f, height / 2f, 0);
+        eventManager = new EventManager();
+        setupEventHandlers();
+        cameraEvent.ResetCameraEvent(width, height);
         /* …everything that was in the old setup() stays here … */
         textFont(createFont("Roboto-Black.ttf", 128));
         seed(SPHERE_COUNT);
@@ -62,17 +58,17 @@ public final class GravityCollisionApp extends PApplet {
     public void draw() {
         background(0);
         lights();
-        cam.feed();
+        cameraEvent.FeedEvent();
 
         hover();
         drawBounds();
 
         if (!PAUSED) {
-            threads.forEach(Thread::run);
+            sphereBatchThreads.forEach(Thread::run);
         }
         spheres.forEach(PhysicSphere::display);
 
-        for (Thread t : threads) {
+        for (Thread t : sphereBatchThreads) {
             try {
                 t.join();
             } catch (InterruptedException ex) {
@@ -99,18 +95,39 @@ public final class GravityCollisionApp extends PApplet {
     @Override
     public void keyReleased() { /* … */ }
 
-    /* === tiny setters that other classes can call ====================== */
 
-    void setG(float g) {
-        this.localG = g;
+    /**
+     * Set up event handlers for various events.
+     * <i>The party planning committee.</i>
+     */
+    private void setupEventHandlers() {
+        // Handle gravity changes
+        eventManager.subscribe(GravityChangedEvent.class, event -> {
+            G = event.getNewGravity();
+            System.out.println("Gravity changed to: " + G);
+        });
+
+        // Handle speed changes
+        eventManager.subscribe(SpeedChangedEvent.class, event -> {
+            GLOBAL_SPEED = event.getNewSpeed();
+            System.out.println("Speed changed to: " + GLOBAL_SPEED);
+        });
+
+        // Camera changes.
+        eventManager.subscribe(CameraChangedEvent.class, event -> {
+            System.out.println("Camera updated via event system");
+        });
+
     }
 
-    void setGlobalSpeed(int s) {
-        this.GLOBAL_SPEED = s;
-    }
-    /* add whatever you actually need, nothing more */
 
-    /* === main() so the sketch can be launched from the IDE ============= */
+    /**
+     * Get the event manager.
+     * <i>I want to speak to your manager.</i>
+     */
+    public EventManager getEventManager() {
+        return eventManager;
+    }
 
     public static void main(String[] args) {
         PApplet.main(GravityCollisionApp.class);

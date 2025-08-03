@@ -26,7 +26,7 @@ int sphereCount = 20;//Default amount of spheres, feel free to edit it to try ou
 int threadCount = Runtime.getRuntime().availableProcessors();//Creates as many threads as there are cores available. Should never be less than 1 unless bad things are about to happen.
 boolean showInterface = true;//Handles the display of the GUI.
 int unpausedTimer = -3000;//Handles the fade-out for the "Running" text on unpause action.
-        HScrollbar gravity_scroll, speed_scroll;
+        HScrollBar gravity_scroll, speed_scroll;
 boolean firstMousePress = false;
 int framesElapsed = 0;
 boolean isAzerty = false;
@@ -39,7 +39,7 @@ PFont fontBold, fontLight;//A custom font has to be used otherwise the text appe
 color tickboxColor;//color of the tickboxes
 color tickboxHightlightColor;
 void setup() {
-  size(1000, 1000, P3D);//OpenGL didn't show any significant difference in performance, feel free to use it instead.
+  size(1000, 1000, P3D);//OpenGL didn't show any significant difference in performance.
   cam = new Camera(this, width/2, height/2, height+1000, width/2, height/2, 0);
   fontBold = createFont("Roboto-Black.ttf", 128);
   fontLight = createFont("Roboto-Light.ttf", 30);
