@@ -15,10 +15,6 @@ boolean overRect(int x, int y, int width, int height) {
   }
 }
 
-interface FloatFunction {
-  void update(Float f);
-}
-
 void initGUI() {
   bottomInitX = 50;
   bottomInitY = height-50;
@@ -30,8 +26,8 @@ void initGUI() {
   FloatFunction editGLOBAL_SPEEDLambda = (n) -> {
     setGlobalSpeed(n);
   };
-  gravity_scroll = new HScrollbar(bottomInitX, bottomInitY-280, width/3, 16, 0, 2, "Global gravity scale", 0.5, editGLambda, true, "0", "2");
-  speed_scroll = new HScrollbar(bottomInitX, bottomInitY-350, width/3, 16, 0, 100, "Simulation speed scale", 1.0, editGLOBAL_SPEEDLambda, false, "Slow", "Fast");
+  gravity_scroll = new HScrollBar(bottomInitX, bottomInitY-280, width/3, 16, 0, 2, "Global gravity scale", 0.5, editGLambda, true, "0", "2");
+  speed_scroll = new HScrollBar(bottomInitX, bottomInitY-350, width/3, 16, 0, 100, "Simulation speed scale", 1.0, editGLOBAL_SPEEDLambda, false, "Slow", "Fast");
 }
 
 void drawBounds() {

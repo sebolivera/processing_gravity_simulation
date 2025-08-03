@@ -16,6 +16,10 @@ public class Pair<X, Y> {//Override for equality checking. Definitely not optimi
 }
 
 
+interface FloatFunction {
+  void update(Float f);
+}
+
 boolean ArrayListPairContains(ArrayList<Pair> HS, Pair other, boolean canBeReverse)//is there really no lookup function for ArrayLists in Java? Am I missing something obvious?
 {
   for (int i = 0; i<HS.size(); i++)

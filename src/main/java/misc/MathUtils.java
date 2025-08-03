@@ -13,6 +13,16 @@ public final class MathUtils extends PApplet {
      */
     private MathUtils() {}
 
+
+    /**
+     * Represents a functional interface for operations that take a {@code Float} value and perform an update or action
+     * with it.
+     * <i>A truly titanic function.</i>
+     */
+    public interface FloatFunction {
+        void update(Float f);
+    }
+
     /**
      * Gets xyz angle between the direction of an object and the vector between it and the other ball.
      * Note: PVector.angleBetween function gave odd results in processing 3.

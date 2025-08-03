@@ -1,5 +1,5 @@
 Set<String> keysDown = new HashSet<>();
-Set<String> moveKeys = Set.of();
+Set<String> moveKeys = Set.of("z", "q", "s", "d", "w", "a");
 float speedMult;
 boolean isShiftDown = false;
 float yaw, pitch;
@@ -67,7 +67,6 @@ void move(){
               break;
       
           default:
-              // no-op
       }
     }
   }
