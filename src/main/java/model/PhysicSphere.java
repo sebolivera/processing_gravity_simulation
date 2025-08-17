@@ -24,7 +24,7 @@ public class PhysicSphere extends PApplet {
     float MAX_HEIGHT = 1000.0f;
     float MAX_DEPTH = 1000.0f;
     int sphereColor;
-    PVector position;
+    public PVector position;
     PVector velocity;
     ArrayList<PVector> prevPos = new ArrayList<>();
     int maxSpeed = 5; // TODO: implement this.
@@ -44,7 +44,7 @@ public class PhysicSphere extends PApplet {
      * @param radius Sphere radius.
      * @param mass Sphere mass.
      */
-    PhysicSphere(int index, int sphereColor, PVector position, PVector velocity, float radius, float mass) {//Bounciness is optional and has been known to cause some issues when too many spheres are colliding, so it is 1 by default (perfect bounciness)
+    public PhysicSphere(int index, int sphereColor, PVector position, PVector velocity, float radius, float mass) {//Bounciness is optional and has been known to cause some issues when too many spheres are colliding, so it is 1 by default (perfect bounciness)
         this.index = index;
         this.sphereColor = sphereColor;
         this.position = position;

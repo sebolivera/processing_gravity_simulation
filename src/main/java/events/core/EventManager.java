@@ -11,7 +11,7 @@ public final class EventManager {
 
     /**
      * Subscribe to an event.
-     * <i>Don't forget to like!</i>
+     * <i>Don't forget to leave a like!</i>
      */
     public <T extends Event> void subscribe(Class<T> eventType, EventHandler<T> handler) {
         handlers.computeIfAbsent(eventType, k -> new ArrayList<>()).add(handler);
