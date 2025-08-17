@@ -3,6 +3,9 @@ package events.physics;
 import damkjer.ocd.Camera;
 import events.core.Event;
 
+/**
+ * Event indicating changes in the camera's state.
+ */
 public class CameraChangedEvent implements Event {
     public static final Camera camera = new Camera(
             null,

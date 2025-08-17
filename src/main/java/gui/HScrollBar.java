@@ -1,112 +1,183 @@
 package gui;
 
+import events.core.EventManager;
+import events.gui.GUIHoverEvent;
+import events.gui.GUIManager;
 import misc.MathUtils;
+import processing.core.PApplet;
 
 /**
  * Custom horizontal scroll bar GUI element that I probably stole from stackoverflow at some point, but I can't be sure.
  * <i>The 'H' stands for 'vertical'.</i>
  */
 public class HScrollBar {
-    int swidth, sheight;    // width and height of bar
-    float xpos, ypos;       // x and y position of bar
-    float spos, newspos;    // x position of slider
-    float sposMin, sposMax; // max and min values of slider
-    boolean over;           // is the mouse over the slider?
-    boolean locked;
-    float lerpedMinValue, lerpedMaxValue;
-    String label;
-    MathUtils.FloatFunction controller;
-    boolean showValue;
-    String minLabelValue, maxLabelValue;
+    private final int sliderWidth;
+    private final int sliderHeight;
+    private final float xPosition;
+    private final float yPosition;
+    private float sliderPosition;
+    private final float sliderPositionMin;
+    private final float sliderPositionMax;
+    private boolean isHovered;
+    private boolean isLocked;
+    private final float lerpedMinValue;
+    private final float lerpedMaxValue;
+    private final String label;
+    private MathUtils.FloatFunction lambdaController;
+    private boolean valueShown;
+    private final String minLabelValue;
+    private final String maxLabelValue;
+    private final PApplet parent;
+    private final EventManager eventManager;
+    private final GUIManager guiEventManager;
+    private final String scrollBarId;
 
-    HScrollBar (float xp, float yp, int sw, int sh, float finalMin, float finalMax, String l, float defaultValue, MathUtils.FloatFunction lambdaController, boolean show, String minLV, String maxLV) {
-        swidth = sw;
-        sheight = sh;
-        xpos = xp;
-        ypos = yp-sheight/2;
-        spos = defaultValue*(swidth-sheight)+xpos;
-        newspos = spos;
-        sposMin = xpos;
-        sposMax = xpos + swidth - sheight;
-        lerpedMinValue = finalMin;
-        lerpedMaxValue = finalMax;
-        label = l;
-        controller = lambdaController;
-        showValue = show;
-        minLabelValue = minLV;
-        maxLabelValue = maxLV;
+    HScrollBar(
+            float xPosition,
+            float yPosition,
+            int sliderWidth,
+            int sliderHeight,
+            float lerpedMinValue,
+            float lerpedMaxValue,
+            String label,
+            float defaultValue,
+            MathUtils.FloatFunction lambdaController,
+            boolean valueShown,
+            String minLabelValue,
+            String maxLabelValue,
+            PApplet parent,
+            EventManager eventManager,
+            GUIManager guiEventManager,
+            String scrollBarId
+    ) {
+        this.sliderWidth = sliderWidth;
+        this.sliderHeight = sliderHeight;
+        this.xPosition = xPosition;
+        this.yPosition = yPosition - this.sliderHeight / 2.0f;
+        this.sliderPosition = defaultValue * (this.sliderWidth - this.sliderHeight) + this.xPosition;
+        this.sliderPositionMin = this.xPosition;
+        this.sliderPositionMax = this.xPosition + this.sliderWidth - this.sliderHeight;
+        this.lerpedMinValue = lerpedMinValue;
+        this.lerpedMaxValue = lerpedMaxValue;
+        this.label = label;
+        this.lambdaController = lambdaController;
+        this.valueShown = valueShown;
+        this.minLabelValue = minLabelValue;
+        this.maxLabelValue = maxLabelValue;
+        this.parent = parent;
+        this.eventManager = eventManager;
+        this.guiEventManager = guiEventManager;
+        this.scrollBarId = scrollBarId;
     }
 
-    void update() {
-        if (overEvent()) {
-            over = true;
+    public void update() {
+        boolean wasHovered = isHovered;
+        isHovered = overEvent();
+
+        if (isHovered != wasHovered) {
+            eventManager.publish(
+                    new GUIHoverEvent(
+                            scrollBarId,
+                            isHovered,
+                            parent.mouseX,
+                            parent.mouseY
+                    )
+            );
+        }
+
+        if (parent.mousePressed && isHovered && !isLocked) {
+            isLocked = true;
+        }
+        if (!parent.mousePressed) {
+            isLocked = false;
+        }
+        if (isLocked) {
+            sliderPosition = constrain(parent.mouseX - sliderHeight / 2.0f, sliderPositionMin, sliderPositionMax);
+        }
+
+        float currentValue = getValue();
+        lambdaController.update(currentValue);
+    }
+
+    /**
+     * Displays the element on the GUI.
+     * <i>Well, there it is.</i>
+     */
+    public void display() {
+        parent.noStroke();
+
+        if (guiEventManager.isFreeCamEnabled()) {
+            parent.fill(50);
+        } else if (isHovered || isLocked) {
+            parent.fill(150);
         } else {
-            over = false;
+            parent.fill(100);
         }
-        if (firstMousePress && over) {
-            locked = true;
-        }
-        if (!mousePressed) {
-            locked = false;
-        }
-        if (locked) {
-            spos = constrain(mouseX-sheight/2, sposMin, sposMax);
-        }
-        controller.update(getValue());
-    }
+        parent.rect(xPosition, yPosition, sliderWidth, sliderHeight);
+        parent.textSize(10);
+        parent.fill(255);
+        parent.text(minLabelValue, xPosition, yPosition + sliderHeight + 10);
+        parent.text(maxLabelValue, xPosition + sliderWidth - (minLabelValue.length() * 5), yPosition + sliderHeight + 10);
 
-
-    void display() {
-        noStroke();
-
-        if (toggledFreeCam) {
-            fill(50);
-        }
-        else if (over || locked) {
-            fill(150);
+        if (isHovered || isLocked) {
+            parent.fill(255);
         } else {
-            fill(100);
+            parent.fill(150);
         }
-        rect(xpos, ypos, swidth, sheight);
-        textSize(10);
-        fill(255);
-        text(minLabelValue, xpos, ypos+sheight+10);
-        text(maxLabelValue, xpos+swidth-(maxLabelValue.length()*5), ypos+sheight+10);
-        if (over || locked) {
-            fill(255);
+        parent.rect(sliderPosition, yPosition, sliderHeight, sliderHeight);
+        parent.textSize(30);
+
+        if (guiEventManager.isFreeCamEnabled()) {
+            parent.fill(128);
         } else {
-            fill(150);
+            parent.fill(255);
         }
-        rect(spos, ypos, sheight, sheight);
-        textSize(30);
-        if (toggledFreeCam) {
-            fill(128);
-        }
-        else {
-            fill(255);
-        }
-        text(label, xpos, ypos-sheight+10);
-        if (showValue) {
-            textSize(10);
-            fill(255);
-            text(getValue(), spos-5, ypos+sheight+15);
+        parent.text(label, xPosition, yPosition - sliderHeight + 10);
+
+        if (valueShown) {
+            parent.textSize(10);
+            parent.fill(255);
+            parent.text(getValue(), sliderPosition - 5, yPosition + sliderHeight + 15);
         }
     }
 
-    float getValue()
-    {
-        return lerp(lerpedMinValue, lerpedMaxValue, Math.round((float)(spos-xpos)/(sposMax-sposMin) * 100.0) / 100.0);
-    }
-    float constrain(float val, float minv, float maxv) {
-        return min(max(val, minv), maxv);
+    /**
+     * Returns the slider's value.
+     * <i>Show me what you're worth.</i>
+     * @return The slider value.
+     */
+    public float getValue() {
+        return PApplet.lerp(
+                lerpedMinValue,
+                lerpedMaxValue,
+                (float) (Math.round(
+                        (sliderPosition - xPosition) / (sliderPositionMax - sliderPositionMin) * 100.0) / 100.0)
+        );
     }
 
-    boolean overEvent() {
-        if (mouseX > xpos && mouseX < xpos+swidth &&
-                mouseY > ypos && mouseY < ypos+sheight) {
-            return true;
-        } else {
-            return false;
-        }
+    private float constrain(float value, float minValue, float maxValue) {
+        return Math.min(Math.max(value, minValue), maxValue);
+    }
+
+
+    public boolean overEvent() {
+        return parent.mouseX > xPosition && parent.mouseX < xPosition + sliderWidth &&
+                parent.mouseY > yPosition && parent.mouseY < yPosition + sliderHeight;
+    }
+
+    public String getId() {
+        return scrollBarId;
+    }
+
+    public boolean isHovered() {
+        return isHovered;
+    }
+
+    public void setValueShown(boolean value) {
+        this.valueShown = value;
+    }
+
+    public boolean getvalueShown() {
+        return valueShown;
     }
 }
