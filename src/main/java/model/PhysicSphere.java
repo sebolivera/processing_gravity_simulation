@@ -258,7 +258,7 @@ public class PhysicSphere extends PApplet {
         for (PhysicSphere other : others) {
             collideWith(other);
             if (other.index != index) {
-                if (ENABLE_GRAVITY) {
+                if (gravityEnabled) {
                     float small_g_factor = -other.mass * GravityCollisionApp.G;
                     small_g_factor /= other.position.dist(position) * other.position.dist(position);
                     PVector small_g = position.copy();
@@ -282,7 +282,7 @@ public class PhysicSphere extends PApplet {
         if (FRAMES % (GLOBAL_SPEED + 1) == 0) {
             prevPos.add(position.copy());
             velocity.add(acceleration);
-            if (ENABLE_BOUNDS) {
+            if (boundsEnabled) {
                 if (position.x <= 0 && velocity.x < 0) {
                     velocity.x = -velocity.x * bounciness;
                 } else if (position.x >= MAX_WIDTH && velocity.x > 0) {
@@ -326,18 +326,18 @@ public class PhysicSphere extends PApplet {
         popMatrix();
         fill(255 - red(sphereColor), 255 - green(sphereColor), 255 - blue(sphereColor));
         textSize(radius * 3);
-        if (DRAW_NAMES) {
+        if (drawNames) {
             text((char) (index + 65), lerp(MAX_WIDTH * 0.05f, MAX_WIDTH * 0.95f, (position.x - radius) / MAX_WIDTH), lerp(MAX_HEIGHT * 0.05f, MAX_HEIGHT * 0.95f, (position.y + radius) / MAX_HEIGHT) + 100f, position.z + radius * 2f);
             // index+65 will print ascii characters starting at 'A'. I am aware that it won't be able to print some of them, but this mostly for debugging.
         }
-        if (DRAW_WEIGHTS) {
+        if (drawWeights) {
             text(floor(mass * 100), lerp(MAX_WIDTH * 0.05f, MAX_WIDTH * 0.95f, (position.x - radius) / MAX_WIDTH), lerp(MAX_HEIGHT * 0.05f, MAX_HEIGHT * 0.95f, (position.y + radius) / MAX_HEIGHT), position.z + radius * 2);
         }
         noFill();
         beginShape();
         curveVertex(position.x, position.y, position.z);
         strokeCap(SQUARE);
-        if (DRAW_TRAILS) {//Processing's way of drawing strokes gives them no depth on the Z axis, which makes them look flat when the balls turn at sharp angles or face slightly away from the camera.
+        if (drawTrails) {//Processing's way of drawing strokes gives them no depth on the Z axis, which makes them look flat when the balls turn at sharp angles or face slightly away from the camera.
             for (int i = !prevPos.isEmpty() ? prevPos.size() - 1 : 0; i > (prevPos.size() > 20 ? prevPos.size() - 20 : 0); i--) {
                 stroke(sphereColor, lerp(255f, 25f, ((float) (prevPos.size() < 20 ? i : prevPos.size() - i)) / (Math.min(prevPos.size(), 20))));
                 strokeWeight(lerp(0, radius * 2, lerp(1.0f, 0, ((float) (prevPos.size() - i)) / (Math.min(prevPos.size(), 20)))));
@@ -346,7 +346,7 @@ public class PhysicSphere extends PApplet {
         }
         endShape();
 
-        if (index >= 0 && DRAW_ARROWS) {
+        if (index >= 0 && drawArrows) {
             drawArrow(position.x, position.y, position.z, radius, velocity);
         }
     }
