@@ -32,7 +32,7 @@ public class HScrollBar {
     private final GUIManager guiEventManager;
     private final String scrollBarId;
 
-    HScrollBar(
+    public HScrollBar(
             float xPosition,
             float yPosition,
             int sliderWidth,
