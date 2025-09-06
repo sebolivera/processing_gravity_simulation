@@ -2,19 +2,25 @@ package events.physics;
 
 import damkjer.ocd.Camera;
 import events.core.Event;
+import processing.core.PApplet;
 
 /**
  * Event indicating changes in the camera's state.
  */
 public class CameraChangedEvent implements Event {
-    public static final Camera camera = new Camera(
-            null,
-            0,
-            0,
-            0,
-            0,
-            0
-    );
+    public final Camera camera;
+
+    public CameraChangedEvent(PApplet parent) {
+        this.camera = new Camera(
+                parent,
+                parent.width / 2.0f,
+                parent.height / 2.0f,
+                1000.0f,
+                parent.width / 2.0f,
+                parent.height / 2.0f,
+                0.0f
+        );
+    }
 
     public Camera getCamera() {
         return camera;

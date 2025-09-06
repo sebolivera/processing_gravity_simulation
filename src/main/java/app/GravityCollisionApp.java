@@ -26,7 +26,7 @@ public final class GravityCollisionApp extends PApplet {
     public static float CAM_PAN_STEP = 20;
     public static int FRAMES = 0;
     public static float CAM_DOLLY_STEP = 20;
-    public static int GLOBAL_SPEED = 0;
+    public static int GLOBAL_SPEED = 1;
     private final int SPHERE_COUNT = 20;
     public boolean firstMousePress = false;
     public static float G = 6.6743f;
@@ -47,7 +47,7 @@ public final class GravityCollisionApp extends PApplet {
     private boolean isAzerty = false; // For keyboard layout toggle
 
     private EventManager eventManager;
-    private final CameraChangedEvent cameraEvent = new CameraChangedEvent();
+    private final CameraChangedEvent cameraEvent = new CameraChangedEvent(this);
 
     private ArrayList<PhysicSphere> spheres = new ArrayList<>();
     private ArrayList<SphereBatchThread> sphereBatchThreads = new ArrayList<>();
@@ -70,7 +70,7 @@ public final class GravityCollisionApp extends PApplet {
         seed(SPHERE_COUNT);
         guiManager = new GUIManager(eventManager, this);
         initGUI();
-        noCursor();
+        // noCursor();
     }
 
     private void initGUI() {
@@ -104,14 +104,14 @@ public final class GravityCollisionApp extends PApplet {
                 bottomInitY - 350,
                 width / 3,
                 16,
-                0,
-                100,
-                "Simulation speed scale",
-                1.0f,
+                1.0f/600.0f,  // Min: 1 update every 60 frames (very slow)
+                50.0f,       // Max: 50 updates per frame (very fast)
+                "Simulation speed multiplier",
+                0.01f,        // Default: normal speed (1 update per frame)
                 editGLOBAL_SPEEDLambda,
-                false,
-                "Slow",
-                "Fast",
+                true,        // Show the value
+                "1/60x",     // Slowest label
+                "50x",       // Fastest label
                 this,
                 eventManager,
                 guiManager,
@@ -132,6 +132,7 @@ public final class GravityCollisionApp extends PApplet {
      * <i>Wilson's not on anti-depressants.</i>
      */
     private void setGlobalSpeed(float newSpeed) {
+        System.out.println("SPEED: " + newSpeed);
         eventManager.publish(new SpeedChangedEvent((int) newSpeed));
     }
 
@@ -262,6 +263,7 @@ public final class GravityCollisionApp extends PApplet {
     @Override
     public void draw() {
         background(0);
+
         lights();
         cameraEvent.FeedEvent();
 
@@ -439,7 +441,8 @@ public final class GravityCollisionApp extends PApplet {
                     System.out.println("Sphere trails " + (drawTrails ? "enabled" : "disabled"));
                 }
                 case FREE_CAM -> System.out.println("Free cam " + (event.getNewState() ? "enabled" : "disabled"));
-                case INTERFACE_VISIBLE -> System.out.println("Interface " + (event.getNewState() ? "visible" : "hidden"));
+                case INTERFACE_VISIBLE ->
+                        System.out.println("Interface " + (event.getNewState() ? "visible" : "hidden"));
             }
         });
     }
@@ -473,6 +476,7 @@ public final class GravityCollisionApp extends PApplet {
             }
             spheres.add(
                     new PhysicSphere(
+                            this,
                             i,
                             randColor,
                             new PVector(

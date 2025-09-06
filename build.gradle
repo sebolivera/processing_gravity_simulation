@@ -1,8 +1,13 @@
+import org.gradle.internal.os.OperatingSystem
+
 plugins {
     id 'java'
     id 'application'
 }
 
+
+ext.joglVersion = '2.5.0'
+ext.processingVersion = '4.4.7'
 def useJar = false
 
 repositories {
@@ -15,8 +20,31 @@ repositories {
 
 }
 
+ext {
+    def os = OperatingSystem.current()
+    nativesClassifier = {
+        if (os.isWindows()) {
+            return "natives-windows-amd64"
+        } else if (os.isMacOsX()) {
+            return "natives-macosx-universal"
+        } else {
+            return "natives-linux-amd64"
+        }
+    }.call()
+}
+
 dependencies {
-    implementation 'org.processing:core:4.4.4'
+    implementation("org.processing:core:${processingVersion}")
+
+    // implementation("org.processing:core:${processingVersion}")
+
+    implementation "org.jogamp.jogl:jogl-all:${joglVersion}"
+    implementation "org.jogamp.gluegen:gluegen-rt:${joglVersion}"
+    // implementation "org.jogamp.jogl:nativewindow-main:${joglVersion}"
+
+    runtimeOnly "org.jogamp.jogl:jogl-all:${joglVersion}:${nativesClassifier}"
+    runtimeOnly "org.jogamp.gluegen:gluegen-rt:${joglVersion}:${nativesClassifier}"
+
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
 }
 
@@ -38,5 +66,11 @@ sourceSets {
 dependencies {
     if (useJar) {
         implementation files('vendor/ocd/library/ocd.jar')
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }

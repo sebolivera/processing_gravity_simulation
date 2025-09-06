@@ -21,6 +21,7 @@ public final class EventManager {
      * Publish an event to all subscribers.
      * <i>Sending spam to all my subscribers 🥰.</i>
      */
+    @SuppressWarnings("unchecked")
     public <T extends Event> void publish(T event) {
         List<EventHandler<? extends Event>> eventHandlers = handlers.get(event.getClass());
         if (eventHandlers != null) {

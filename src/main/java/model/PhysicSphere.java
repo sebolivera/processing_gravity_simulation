@@ -19,7 +19,7 @@ import static misc.VectorUtils.nullifyPVectorNaN;
  * (float>0), an acceleration (3D vector), a color (processing Color>=(255, 255, 255)),
  * an index (int>=0) and a bounciness (0<=float<=1).
  */
-public class PhysicSphere extends PApplet {
+public class PhysicSphere {
     float MAX_WIDTH = 1000.0f;
     float MAX_HEIGHT = 1000.0f;
     float MAX_DEPTH = 1000.0f;
@@ -33,6 +33,7 @@ public class PhysicSphere extends PApplet {
     float bounciness;
     int index;
     public PVector acceleration;
+    public static PApplet app;
 
     /**
      * Overload for normal bounciness sphere.
@@ -44,7 +45,7 @@ public class PhysicSphere extends PApplet {
      * @param radius Sphere radius.
      * @param mass Sphere mass.
      */
-    public PhysicSphere(int index, int sphereColor, PVector position, PVector velocity, float radius, float mass) {//Bounciness is optional and has been known to cause some issues when too many spheres are colliding, so it is 1 by default (perfect bounciness)
+    public PhysicSphere(PApplet app, int index, int sphereColor, PVector position, PVector velocity, float radius, float mass) {//Bounciness is optional and has been known to cause some issues when too many spheres are colliding, so it is 1 by default (perfect bounciness)
         this.index = index;
         this.sphereColor = sphereColor;
         this.position = position;
@@ -53,6 +54,7 @@ public class PhysicSphere extends PApplet {
         this.mass = mass;
         this.acceleration = new PVector(0.0f, 0.0f, 0.0f);
         this.bounciness = 1.0f;
+        PhysicSphere.app = app;
     }
 
     /**
@@ -87,44 +89,44 @@ public class PhysicSphere extends PApplet {
      * @param targetDirection Target direction, expressed as a PVector.
      */
     void drawArrow(float originX, float originY, float originZ, float lengthScalar, PVector targetDirection) {//
-        pushMatrix();
-        strokeWeight(radius / 2);
-        translate(originX, originY, originZ);
+        app.pushMatrix();
+        app.strokeWeight(radius / 2);
+        app.translate(originX, originY, originZ);
         targetDirection = targetDirection.copy();
         targetDirection.normalize();
         targetDirection.mult(lengthScalar * targetDirection.mag() * 10);
 
-        stroke(255 - red(sphereColor), 255 - green(sphereColor), 255 - blue(sphereColor));
-        line(0, 0, 0, targetDirection.x, targetDirection.y, targetDirection.z);
-        fill(255 - red(sphereColor), 255 - green(sphereColor), 255 - blue(sphereColor));
+        app.stroke(255 - app.red(sphereColor), 255 - app.green(sphereColor), 255 - app.blue(sphereColor));
+        app.line(0, 0, 0, targetDirection.x, targetDirection.y, targetDirection.z);
+        app.fill(255 - app.red(sphereColor), 255 - app.green(sphereColor), 255 - app.blue(sphereColor));
         float halfBaseSize = radius / 2;
         float tipLength = radius;
-        translate(targetDirection.x, targetDirection.y, targetDirection.z);
-        noStroke();
-        beginShape();
-        vertex(-halfBaseSize, -halfBaseSize, -halfBaseSize);
-        vertex(halfBaseSize, -halfBaseSize, -halfBaseSize);
-        vertex(tipLength * targetDirection.x / 100, tipLength * targetDirection.y / 100, tipLength * targetDirection.z / 100);
-        endShape();
-        beginShape();
-        vertex(halfBaseSize, -halfBaseSize, -halfBaseSize);
-        vertex(halfBaseSize, halfBaseSize, -halfBaseSize);
-        vertex(tipLength * targetDirection.x / 100, tipLength * targetDirection.y / 100, tipLength * targetDirection.z / 100);
-        endShape();
+        app.translate(targetDirection.x, targetDirection.y, targetDirection.z);
+        app.noStroke();
+        app.beginShape();
+        app.vertex(-halfBaseSize, -halfBaseSize, -halfBaseSize);
+        app.vertex(halfBaseSize, -halfBaseSize, -halfBaseSize);
+        app.vertex(tipLength * targetDirection.x / 100, tipLength * targetDirection.y / 100, tipLength * targetDirection.z / 100);
+        app.endShape();
+        app.beginShape();
+        app.vertex(halfBaseSize, -halfBaseSize, -halfBaseSize);
+        app.vertex(halfBaseSize, halfBaseSize, -halfBaseSize);
+        app.vertex(tipLength * targetDirection.x / 100, tipLength * targetDirection.y / 100, tipLength * targetDirection.z / 100);
+        app.endShape();
 
-        beginShape();
-        vertex(halfBaseSize, halfBaseSize, -halfBaseSize);
-        vertex(-halfBaseSize, halfBaseSize, -halfBaseSize);
-        vertex(tipLength * targetDirection.x / 100, tipLength * targetDirection.y / 100, tipLength * targetDirection.z / 100);
-        endShape();
+        app.beginShape();
+        app.vertex(halfBaseSize, halfBaseSize, -halfBaseSize);
+        app.vertex(-halfBaseSize, halfBaseSize, -halfBaseSize);
+        app.vertex(tipLength * targetDirection.x / 100, tipLength * targetDirection.y / 100, tipLength * targetDirection.z / 100);
+        app.endShape();
 
-        beginShape();
-        vertex(-halfBaseSize, halfBaseSize, -halfBaseSize);
-        vertex(-halfBaseSize, -halfBaseSize, -halfBaseSize);
-        vertex(tipLength * targetDirection.x / 100, tipLength * targetDirection.y / 100, tipLength * targetDirection.z / 100);
-        endShape();
+        app.beginShape();
+        app.vertex(-halfBaseSize, halfBaseSize, -halfBaseSize);
+        app.vertex(-halfBaseSize, -halfBaseSize, -halfBaseSize);
+        app.vertex(tipLength * targetDirection.x / 100, tipLength * targetDirection.y / 100, tipLength * targetDirection.z / 100);
+        app.endShape();
 
-        popMatrix();
+        app.popMatrix();
     }
 
 
@@ -279,72 +281,78 @@ public class PhysicSphere extends PApplet {
      * Updates the position of the sphere.
      */
     void update() {
-        if (FRAMES % (GLOBAL_SPEED + 1) == 0) {
-            prevPos.add(position.copy());
-            velocity.add(acceleration);
-            if (boundsEnabled) {
-                if (position.x <= 0 && velocity.x < 0) {
-                    velocity.x = -velocity.x * bounciness;
-                } else if (position.x >= MAX_WIDTH && velocity.x > 0) {
-                    velocity.x = -velocity.x * bounciness;
-                }
-                if (position.y <= 0 && velocity.y < 0) {
-                    velocity.y = -velocity.y * bounciness;
-                } else if (position.y >= MAX_HEIGHT && velocity.y > 0) {
-                    velocity.y = -velocity.y * bounciness;
-                }
-                if (position.z <= 0 && velocity.z < 0) {
-                    velocity.z = -velocity.z * bounciness;
-                } else if (position.z >= MAX_DEPTH && velocity.z > 0) {
-                    velocity.z = -velocity.z * bounciness;
-                }
+
+        if (GLOBAL_SPEED <= 1) {
+            int updatesThisFrame = GLOBAL_SPEED;
+            for (int i = 0; i < updatesThisFrame; i++) {
+                updatePhysics();
             }
-            nullifyPVectorNaN(velocity);
-            // Note: there *might* be a chance for spheres to get trapped in-between two
-            // bouncing spheres that apply opposite forces, which will result in them
-            // over-correcting their velocities. This prevents an impossible velocity from
-            // being applied to a sphere, which allows them to clip a little bit, but
-            // ultimately prevents both crashes and excessive clipping.
-            position.add(velocity);
-            correctPVectorNaN(position, prevPos);
-            // Note: Prevents the positions from being altered too much from fast-hitting
-            // spheres. While very rare, instances where one sphere gets knocked off-screen
-            // tend to crash the simulation due to the gravitational forces being skewed
-            // toward it after a while.
         }
+        else {
+            int frameInterval = Math.round(1.0f / GLOBAL_SPEED) + 1;
+            if ((FRAMES * 10) % frameInterval == 0) {
+                updatePhysics();
+            }
+        }
+    }
+
+    private void updatePhysics() {
+        prevPos.add(position.copy());
+        velocity.add(acceleration);
+        if (boundsEnabled) {
+            if (position.x <= 0 && velocity.x < 0) {
+                velocity.x = -velocity.x * bounciness;
+            } else if (position.x >= MAX_WIDTH && velocity.x > 0) {
+                velocity.x = -velocity.x * bounciness;
+            }
+            if (position.y <= 0 && velocity.y < 0) {
+                velocity.y = -velocity.y * bounciness;
+            } else if (position.y >= MAX_HEIGHT && velocity.y > 0) {
+                velocity.y = -velocity.y * bounciness;
+            }
+            if (position.z <= 0 && velocity.z < 0) {
+                velocity.z = -velocity.z * bounciness;
+            } else if (position.z >= MAX_DEPTH && velocity.z > 0) {
+                velocity.z = -velocity.z * bounciness;
+            }
+        }
+        nullifyPVectorNaN(velocity);
+        position.add(velocity);
+        correctPVectorNaN(position, prevPos);
     }
 
     /**
      * Draws a sphere according to its position radius, color, index (name) and tail effect.
      */
     public void display() {
-        pushMatrix();
-        translate(position.x, position.y, position.z);
-        noStroke();
-        fill(sphereColor, 200);
-        sphere(radius * 2);
-        popMatrix();
-        fill(255 - red(sphereColor), 255 - green(sphereColor), 255 - blue(sphereColor));
-        textSize(radius * 3);
+        System.out.println("displaying sphere " + index);
+        app.pushMatrix();
+        app.translate(position.x, position.y, position.z);
+        app.noStroke();
+        app.fill(sphereColor, 200);
+        app.sphere(radius * 2);
+        app.popMatrix();
+        app.fill(255 - app.red(sphereColor), 255 - app.green(sphereColor), 255 - app.blue(sphereColor));
+        app.textSize(radius * 3);
         if (drawNames) {
-            text((char) (index + 65), lerp(MAX_WIDTH * 0.05f, MAX_WIDTH * 0.95f, (position.x - radius) / MAX_WIDTH), lerp(MAX_HEIGHT * 0.05f, MAX_HEIGHT * 0.95f, (position.y + radius) / MAX_HEIGHT) + 100f, position.z + radius * 2f);
+            app.text((char) (index + 65), lerp(MAX_WIDTH * 0.05f, MAX_WIDTH * 0.95f, (position.x - radius) / MAX_WIDTH), lerp(MAX_HEIGHT * 0.05f, MAX_HEIGHT * 0.95f, (position.y + radius) / MAX_HEIGHT) + 100f, position.z + radius * 2f);
             // index+65 will print ascii characters starting at 'A'. I am aware that it won't be able to print some of them, but this mostly for debugging.
         }
         if (drawWeights) {
-            text(floor(mass * 100), lerp(MAX_WIDTH * 0.05f, MAX_WIDTH * 0.95f, (position.x - radius) / MAX_WIDTH), lerp(MAX_HEIGHT * 0.05f, MAX_HEIGHT * 0.95f, (position.y + radius) / MAX_HEIGHT), position.z + radius * 2);
+            app.text(floor(mass * 100), lerp(MAX_WIDTH * 0.05f, MAX_WIDTH * 0.95f, (position.x - radius) / MAX_WIDTH), lerp(MAX_HEIGHT * 0.05f, MAX_HEIGHT * 0.95f, (position.y + radius) / MAX_HEIGHT), position.z + radius * 2);
         }
-        noFill();
-        beginShape();
-        curveVertex(position.x, position.y, position.z);
-        strokeCap(SQUARE);
+        app.noFill();
+        app.beginShape();
+        app.curveVertex(position.x, position.y, position.z);
+        app.strokeCap(SQUARE);
         if (drawTrails) {//Processing's way of drawing strokes gives them no depth on the Z axis, which makes them look flat when the balls turn at sharp angles or face slightly away from the camera.
             for (int i = !prevPos.isEmpty() ? prevPos.size() - 1 : 0; i > (prevPos.size() > 20 ? prevPos.size() - 20 : 0); i--) {
-                stroke(sphereColor, lerp(255f, 25f, ((float) (prevPos.size() < 20 ? i : prevPos.size() - i)) / (Math.min(prevPos.size(), 20))));
-                strokeWeight(lerp(0, radius * 2, lerp(1.0f, 0, ((float) (prevPos.size() - i)) / (Math.min(prevPos.size(), 20)))));
-                curveVertex(prevPos.get(i).x, prevPos.get(i).y, prevPos.get(i).z);
+                app.stroke(sphereColor, lerp(255f, 25f, ((float) (prevPos.size() < 20 ? i : prevPos.size() - i)) / (Math.min(prevPos.size(), 20))));
+                app.strokeWeight(lerp(0, radius * 2, lerp(1.0f, 0, ((float) (prevPos.size() - i)) / (Math.min(prevPos.size(), 20)))));
+                app.curveVertex(prevPos.get(i).x, prevPos.get(i).y, prevPos.get(i).z);
             }
         }
-        endShape();
+        app.endShape();
 
         if (index >= 0 && drawArrows) {
             drawArrow(position.x, position.y, position.z, radius, velocity);

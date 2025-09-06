@@ -31,6 +31,8 @@ public class HScrollBar {
     private final EventManager eventManager;
     private final GUIManager guiEventManager;
     private final String scrollBarId;
+    private float lastValue = Float.NaN;
+
 
     public HScrollBar(
             float xPosition,
@@ -96,7 +98,11 @@ public class HScrollBar {
         }
 
         float currentValue = getValue();
-        lambdaController.update(currentValue);
+        if (Float.isNaN(lastValue) || Math.abs(currentValue - lastValue) > 0.001f) {
+            lambdaController.update(currentValue);
+            lastValue = currentValue;
+        }
+
     }
 
     /**

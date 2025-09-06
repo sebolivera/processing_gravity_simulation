@@ -61,11 +61,6 @@ public class GUIManager {
 
     private void handleStateChange(GUIStateChangedEvent event) {
         uiStates.put(event.getElement(), event.getNewState());
-        applyState(event.getElement(), event.getNewState());
-    }
-
-    private void applyState(UIElement element, boolean newState) {
-        eventManager.publish(new GUIStateChangedEvent(element, newState));
     }
 
 
@@ -121,6 +116,7 @@ public class GUIManager {
     private void toggleSetting(UIElement element) {
         boolean newValue = !uiStates.get(element);
         uiStates.put(element, newValue);
+        eventManager.publish(new GUIStateChangedEvent(element, newValue));
     }
 
 
