@@ -18,8 +18,8 @@ public class GUIManager {
 
     private final int bottomInitX = 50;
     private final int bottomInitY;
-    private final int ITEM_HEIGHT = 20;
-    private final int ITEM_SPACING = 50;
+    private final int itemHeight = 20;
+    private final int itemSpacing = 50;
 
 
     public GUIManager(EventManager eventManager, PApplet parent) {
@@ -65,11 +65,12 @@ public class GUIManager {
 
 
     public void updateHoverStates() {
-        updateHoverState("velocity_arrows", bottomInitX, bottomInitY, 320, ITEM_HEIGHT);
-        updateHoverState("sphere_names", bottomInitX, bottomInitY - ITEM_SPACING, 295, ITEM_HEIGHT);
-        updateHoverState("sphere_weights", bottomInitX, bottomInitY - ITEM_SPACING * 2, 270, ITEM_HEIGHT);
-        updateHoverState("sphere_trails", bottomInitX, bottomInitY - ITEM_SPACING * 3, 220, ITEM_HEIGHT);
-        updateHoverState("bounds_visible", bottomInitX, bottomInitY - ITEM_SPACING * 5, 240, ITEM_HEIGHT);
+        updateHoverState("velocity_arrows", bottomInitX, bottomInitY, 320, itemHeight);
+        updateHoverState("sphere_names", bottomInitX, bottomInitY - itemSpacing, 295, itemHeight);
+        updateHoverState("sphere_weights", bottomInitX, bottomInitY - itemSpacing * 2, 270, itemHeight);
+        updateHoverState("sphere_trails", bottomInitX, bottomInitY - itemSpacing * 3, 220, itemHeight);
+        updateHoverState("gravity_enabled", bottomInitX, bottomInitY - itemSpacing * 4, 280, itemHeight);
+        updateHoverState("bounds_visible", bottomInitX, bottomInitY - itemSpacing * 5, 240, itemHeight);
     }
 
     private void updateHoverState(String elementId, int x, int y, int width, int height) {
@@ -96,16 +97,16 @@ public class GUIManager {
         if (hoverStates.getOrDefault("sphere_trails", false)) {
             toggleSetting(UIElement.SPHERE_TRAILS);
         }
-        if (hoverStates.getOrDefault("gravity_enabled", true)) {
+        if (hoverStates.getOrDefault("gravity_enabled", false)) {
             toggleSetting(UIElement.GRAVITY_ENABLED);
         }
-        if (hoverStates.getOrDefault("bounds_enabled", true)) {
+        if (hoverStates.getOrDefault("bounds_enabled", false)) {
             toggleSetting(UIElement.BOUNDS_ENABLED);
         }
         if (hoverStates.getOrDefault("free_cam", false)) {
             toggleSetting(UIElement.FREE_CAM);
         }
-        if (hoverStates.getOrDefault("interface_visible", true)) {
+        if (hoverStates.getOrDefault("interface_visible", false)) {
             toggleSetting(UIElement.INTERFACE_VISIBLE);
         }
         if (hoverStates.getOrDefault("simulation_paused", false)) {
@@ -127,23 +128,23 @@ public class GUIManager {
 
         drawTickbox("sphere_names", "Show sphere names",
                 uiStates.get(UIElement.SPHERE_NAMES),
-                bottomInitX, bottomInitY - ITEM_SPACING);
+                bottomInitX, bottomInitY - itemSpacing);
 
         drawTickbox("sphere_weights", "Show sphere weights",
                 uiStates.get(UIElement.SPHERE_WEIGHTS),
-                bottomInitX, bottomInitY - ITEM_SPACING * 2);
+                bottomInitX, bottomInitY - itemSpacing * 2);
 
         drawTickbox("sphere_trails", "Show sphere trails",
                 uiStates.get(UIElement.SPHERE_TRAILS),
-                bottomInitX, bottomInitY - ITEM_SPACING * 3);
+                bottomInitX, bottomInitY - itemSpacing * 3);
 
         drawTickbox("gravity_enabled", "Enable gravity",
                 uiStates.get(UIElement.GRAVITY_ENABLED),
-                bottomInitX, bottomInitY - ITEM_SPACING * 4);
+                bottomInitX, bottomInitY - itemSpacing * 4);
 
         drawTickbox("bounds_enabled", "Enable boundaries",
                 uiStates.get(UIElement.BOUNDS_ENABLED),
-                bottomInitX, bottomInitY - ITEM_SPACING * 5);
+                bottomInitX, bottomInitY - itemSpacing * 5);
 
     }
 
@@ -170,7 +171,10 @@ public class GUIManager {
 
         if (active) {
             parent.fill(255, 255, 0);
+            parent.pushMatrix();
+            parent.translate(0, 0, 1);
             parent.text("X", xPosition, yPosition + 20);
+            parent.popMatrix();
         }
 
         if (hovered) {
@@ -181,16 +185,8 @@ public class GUIManager {
         parent.text(elementLabel, xPosition + 30, yPosition + 20);
     }
 
-    public boolean isHovered(String elementId) {
-        return hoverStates.getOrDefault(elementId, false);
-    }
-
     public boolean getDisplaySetting(UIElement element) {
         return uiStates.getOrDefault(element, false);
-    }
-
-    public boolean isGravityEnabled(){
-        return uiStates.get(UIElement.GRAVITY_ENABLED);
     }
 
     public boolean isFreeCamEnabled() {

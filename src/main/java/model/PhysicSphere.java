@@ -27,7 +27,7 @@ public class PhysicSphere {
     public PVector position;
     PVector velocity;
     ArrayList<PVector> prevPos = new ArrayList<>();
-    int maxSpeed = 5; // TODO: implement this.
+    // int maxSpeed = 5; // TODO: implement this.
     float radius;
     float mass;
     float bounciness;
@@ -37,6 +37,8 @@ public class PhysicSphere {
 
     /**
      * Overload for normal bounciness sphere.
+     * Bounciness is optional and has been known to cause some issues when too many spheres are colliding,
+     * so it is 1 by default (perfect bounciness)
      * TODO: Switch to builder pattern, this is going to be a nightmare soon enough.
      * @param index Sphere index.
      * @param sphereColor Sphere color.
@@ -45,7 +47,7 @@ public class PhysicSphere {
      * @param radius Sphere radius.
      * @param mass Sphere mass.
      */
-    public PhysicSphere(PApplet app, int index, int sphereColor, PVector position, PVector velocity, float radius, float mass) {//Bounciness is optional and has been known to cause some issues when too many spheres are colliding, so it is 1 by default (perfect bounciness)
+    public PhysicSphere(PApplet app, int index, int sphereColor, PVector position, PVector velocity, float radius, float mass) {
         this.index = index;
         this.sphereColor = sphereColor;
         this.position = position;
@@ -153,6 +155,14 @@ public class PhysicSphere {
     /**
      * Handles collision detection and resolution between the current PhysicSphere
      * instance and the provided PhysicSphere instance.
+     * See:
+     *  - Momentum conservation in angle collisions between two spherical bodies:
+     *      <a href="https://atmos.illinois.edu/courses/atmos100/userdocs/3Dcollisions.html">here</a>
+     *  - Elastic collision and exchange of momentum between two bodies with different masses:
+     *      <a href="https://physics.stackexchange.com/questions/681396/elastic-collision-3d-eqaution">here</a>
+     *  - TODO: add rotation to the equation (check
+     *  <a href="https://www.euclideanspace.com/physics/dynamics/collision/threed/index.htm">here</a>).
+     * ISSUE: don't know how to handle rotation of objects yet
      * <i>Are you insured?</i>
      *
      * @param other The other sphere involved in the collision.
@@ -161,17 +171,8 @@ public class PhysicSphere {
         if (isCollidingWith(other)) {
             if (CollisionIndex.tryLock(this.index, other.index)) {
                 try {
-                    // Safety copies of the velocities in case of large clumping of objects
-                    // Cumulative implementation of angle collisions and massed elastic collisions
-                    // See:
-                    // - Momentum conservation in angle collisions between two spherical bodies : https://atmos.illinois.edu/courses/atmos100/userdocs/3Dcollisions.html
-                    // - Elastic collision and exchange of momentum between two bodies with different masses : https://physics.stackexchange.com/questions/681396/elastic-collision-3d-eqaution
-                    // - TODO: add rotation to the equation (check https://www.euclideanspace.com/physics/dynamics/collision/threed/index.htm). ISSUE: don't know how to get rotation of object in processing 3
-
                     PVector impulseSelf = getNormalVector(velocity, position, other.position);//selfImpulseVector & v_imp_1 are swapped
                     PVector impulseOther = getNormalVector(other.velocity, other.position, position);
-
-                    // Apply the normal vectors to the velocity.
 
                     PVector residualVelocityOther = velocity.copy();
                     residualVelocityOther.sub(impulseOther);
@@ -179,18 +180,14 @@ public class PhysicSphere {
                     PVector residualVelocitySelf = other.velocity.copy();
                     residualVelocitySelf.sub(impulseSelf);
 
-                    //elastic collision part (or how to account for mass)
-
-                    // apply the normals to the movement vectors by accounting for the mass (see second link)
                     PVector impactVelocitySelf = velocity.copy();
                     PVector impactVelocityOther;
 
-                    //Takes the normal impulse vector and applies it to the opposite force's magnitude. Since I couldn't find a simulation where accounted for both angle as well as mass, I had to improvise
                     impactVelocityOther = new PVector(impactVelocitySelf.mag() * (residualVelocitySelf.x / residualVelocitySelf.mag()), impactVelocitySelf.mag() * (residualVelocitySelf.y / residualVelocitySelf.mag()), impactVelocitySelf.mag() * (residualVelocitySelf.z / residualVelocitySelf.mag()));
                     impactVelocitySelf = new PVector(impactVelocityOther.mag() * (residualVelocityOther.x / residualVelocityOther.mag()), impactVelocityOther.mag() * (residualVelocityOther.y / residualVelocityOther.mag()), impactVelocityOther.mag() * (residualVelocityOther.z / residualVelocityOther.mag()));
 
                     PVector momentumSelf = impactVelocitySelf.copy();
-                    momentumSelf.mult(mass);//Is what is recommended in the provided link and corroborated by wikipedia & wolfram, but some mass transfers don't seem to conserve the proper amount of energyswap with m1v1i.mult(other.mass/mass); in case of unexpected energy transfer?
+                    momentumSelf.mult(mass);
 
                     PVector momentumOther = impactVelocityOther.copy();
                     momentumOther.mult(other.mass);
@@ -234,7 +231,12 @@ public class PhysicSphere {
         }
     }
 
-    void correctClipping(PhysicSphere other) {
+    /**
+     * Attempts to correct some of the clipping issues.
+     * Note: very unoptimal.
+     * @param other Other sphere involved in the collision.
+     */
+    private void correctClipping(PhysicSphere other) {
         PVector t_corrector = velocity.copy();
         t_corrector.sub(getNormalVector(velocity, position, other.position));
         t_corrector.mult(.1f);
@@ -279,23 +281,29 @@ public class PhysicSphere {
 
     /**
      * Updates the position of the sphere.
+     * <i>Take care of them.</i>
      */
     void update() {
-
-        if (GLOBAL_SPEED <= 1) {
-            int updatesThisFrame = GLOBAL_SPEED;
-            for (int i = 0; i < updatesThisFrame; i++) {
+        float targetPhysicsFPS = GravityCollisionApp.targetPhysicsFPS;
+        if (targetPhysicsFPS < 60.0f) {
+            int frameInterval = Math.round(60.0f / targetPhysicsFPS);
+            if (FRAMES % frameInterval == 0) {
                 updatePhysics();
             }
-        }
-        else {
-            int frameInterval = Math.round(1.0f / GLOBAL_SPEED) + 1;
-            if ((FRAMES * 10) % frameInterval == 0) {
+        } else {
+            int physicsStepsThisFrame = Math.round(targetPhysicsFPS / 60.0f);
+            physicsStepsThisFrame = Math.max(1, Math.min(physicsStepsThisFrame, 10));
+
+            for (int i = 0; i < physicsStepsThisFrame; i++) {
                 updatePhysics();
             }
         }
     }
 
+    /**
+     * Updates the position and the velocity of the sphere.
+     * <i>I'm not defying the laws of physics - merely updating them.</i>
+     */
     private void updatePhysics() {
         prevPos.add(position.copy());
         velocity.add(acceleration);
@@ -323,9 +331,9 @@ public class PhysicSphere {
 
     /**
      * Draws a sphere according to its position radius, color, index (name) and tail effect.
+     * <i>Datnoplay.</i>
      */
     public void display() {
-        System.out.println("displaying sphere " + index);
         app.pushMatrix();
         app.translate(position.x, position.y, position.z);
         app.noStroke();
@@ -336,7 +344,6 @@ public class PhysicSphere {
         app.textSize(radius * 3);
         if (drawNames) {
             app.text((char) (index + 65), lerp(MAX_WIDTH * 0.05f, MAX_WIDTH * 0.95f, (position.x - radius) / MAX_WIDTH), lerp(MAX_HEIGHT * 0.05f, MAX_HEIGHT * 0.95f, (position.y + radius) / MAX_HEIGHT) + 100f, position.z + radius * 2f);
-            // index+65 will print ascii characters starting at 'A'. I am aware that it won't be able to print some of them, but this mostly for debugging.
         }
         if (drawWeights) {
             app.text(floor(mass * 100), lerp(MAX_WIDTH * 0.05f, MAX_WIDTH * 0.95f, (position.x - radius) / MAX_WIDTH), lerp(MAX_HEIGHT * 0.05f, MAX_HEIGHT * 0.95f, (position.y + radius) / MAX_HEIGHT), position.z + radius * 2);
@@ -345,7 +352,8 @@ public class PhysicSphere {
         app.beginShape();
         app.curveVertex(position.x, position.y, position.z);
         app.strokeCap(SQUARE);
-        if (drawTrails) {//Processing's way of drawing strokes gives them no depth on the Z axis, which makes them look flat when the balls turn at sharp angles or face slightly away from the camera.
+        if (drawTrails) {
+            // Note: Processing's way of drawing strokes gives them no depth on the Z axis, which makes them look flat when the balls turn at sharp angles or face slightly away from the camera.
             for (int i = !prevPos.isEmpty() ? prevPos.size() - 1 : 0; i > (prevPos.size() > 20 ? prevPos.size() - 20 : 0); i--) {
                 app.stroke(sphereColor, lerp(255f, 25f, ((float) (prevPos.size() < 20 ? i : prevPos.size() - i)) / (Math.min(prevPos.size(), 20))));
                 app.strokeWeight(lerp(0, radius * 2, lerp(1.0f, 0, ((float) (prevPos.size() - i)) / (Math.min(prevPos.size(), 20)))));

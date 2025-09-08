@@ -7,23 +7,17 @@ import processing.core.PApplet;
 /**
  * Event indicating changes in the camera's state.
  */
-public class CameraChangedEvent implements Event {
-    public final Camera camera;
-
-    public CameraChangedEvent(PApplet parent) {
-        this.camera = new Camera(
-                parent,
-                parent.width / 2.0f,
-                parent.height / 2.0f,
+public record CameraChangedEvent(Camera camera) implements Event {
+    public CameraChangedEvent(PApplet pApplet) {
+        this(new Camera(
+                pApplet,
+                pApplet.width / 2.0f,
+                pApplet.height / 2.0f,
                 1000.0f,
-                parent.width / 2.0f,
-                parent.height / 2.0f,
+                pApplet.width / 2.0f,
+                pApplet.height / 2.0f,
                 0.0f
-        );
-    }
-
-    public Camera getCamera() {
-        return camera;
+        ));
     }
 
     public void ResetCameraEvent(float width, float height) {

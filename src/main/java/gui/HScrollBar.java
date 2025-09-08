@@ -1,5 +1,6 @@
 package gui;
 
+import app.GravityCollisionApp;
 import events.core.EventManager;
 import events.gui.GUIHoverEvent;
 import events.gui.GUIManager;
@@ -23,8 +24,8 @@ public class HScrollBar {
     private final float lerpedMinValue;
     private final float lerpedMaxValue;
     private final String label;
-    private MathUtils.FloatFunction lambdaController;
-    private boolean valueShown;
+    private final MathUtils.FloatFunction lambdaController;
+    private final boolean valueShown;
     private final String minLabelValue;
     private final String maxLabelValue;
     private final PApplet parent;
@@ -32,6 +33,8 @@ public class HScrollBar {
     private final GUIManager guiEventManager;
     private final String scrollBarId;
     private float lastValue = Float.NaN;
+    private final boolean useExponentialScale;
+    private final float exponentialBase;
 
 
     public HScrollBar(
@@ -52,11 +55,35 @@ public class HScrollBar {
             GUIManager guiEventManager,
             String scrollBarId
     ) {
+        this(xPosition, yPosition, sliderWidth, sliderHeight, lerpedMinValue, lerpedMaxValue,
+                label, defaultValue, lambdaController, valueShown, minLabelValue, maxLabelValue,
+                parent, eventManager, guiEventManager, scrollBarId, false, 2.0f);
+    }
+
+    public HScrollBar(
+            float xPosition,
+            float yPosition,
+            int sliderWidth,
+            int sliderHeight,
+            float lerpedMinValue,
+            float lerpedMaxValue,
+            String label,
+            float defaultValue,
+            MathUtils.FloatFunction lambdaController,
+            boolean valueShown,
+            String minLabelValue,
+            String maxLabelValue,
+            PApplet parent,
+            EventManager eventManager,
+            GUIManager guiEventManager,
+            String scrollBarId,
+            boolean useExponentialScale,
+            float exponentialBase
+    ) {
         this.sliderWidth = sliderWidth;
         this.sliderHeight = sliderHeight;
         this.xPosition = xPosition;
         this.yPosition = yPosition - this.sliderHeight / 2.0f;
-        this.sliderPosition = defaultValue * (this.sliderWidth - this.sliderHeight) + this.xPosition;
         this.sliderPositionMin = this.xPosition;
         this.sliderPositionMax = this.xPosition + this.sliderWidth - this.sliderHeight;
         this.lerpedMinValue = lerpedMinValue;
@@ -70,7 +97,18 @@ public class HScrollBar {
         this.eventManager = eventManager;
         this.guiEventManager = guiEventManager;
         this.scrollBarId = scrollBarId;
+        this.useExponentialScale = useExponentialScale;
+        this.exponentialBase = exponentialBase;
+
+        if (useExponentialScale) {
+            float normalizedValue = (defaultValue - lerpedMinValue) / (lerpedMaxValue - lerpedMinValue);
+            float linearPosition = (float) (Math.log(normalizedValue * (exponentialBase - 1) + 1) / Math.log(exponentialBase));
+            this.sliderPosition = linearPosition * (this.sliderWidth - this.sliderHeight) + this.xPosition;
+        } else {
+            this.sliderPosition = defaultValue * (this.sliderWidth - this.sliderHeight) + this.xPosition;
+        }
     }
+
 
     public void update() {
         boolean wasHovered = isHovered;
@@ -120,46 +158,54 @@ public class HScrollBar {
             parent.fill(100);
         }
         parent.rect(xPosition, yPosition, sliderWidth, sliderHeight);
-        parent.textSize(10);
         parent.fill(255);
-        parent.text(minLabelValue, xPosition, yPosition + sliderHeight + 10);
-        parent.text(maxLabelValue, xPosition + sliderWidth - (minLabelValue.length() * 5), yPosition + sliderHeight + 10);
+        parent.text(minLabelValue, xPosition, yPosition + sliderHeight + GravityCollisionApp.DEFAULT_FONT_SIZE);
+        parent.text(maxLabelValue, xPosition + sliderWidth - (minLabelValue.length() * 5), yPosition + sliderHeight + GravityCollisionApp.DEFAULT_FONT_SIZE);
 
         if (isHovered || isLocked) {
             parent.fill(255);
         } else {
             parent.fill(150);
         }
+        parent.pushMatrix();
+        parent.translate(0, 0, 1);
+
         parent.rect(sliderPosition, yPosition, sliderHeight, sliderHeight);
-        parent.textSize(30);
+        parent.popMatrix();
+
 
         if (guiEventManager.isFreeCamEnabled()) {
             parent.fill(128);
         } else {
             parent.fill(255);
         }
-        parent.text(label, xPosition, yPosition - sliderHeight + 10);
+        parent.text(label, xPosition, yPosition - (sliderHeight + GravityCollisionApp.DEFAULT_FONT_SIZE) / 2f);
 
         if (valueShown) {
-            parent.textSize(10);
-            parent.fill(255);
-            parent.text(getValue(), sliderPosition - 5, yPosition + sliderHeight + 15);
+            parent.fill(255, 200, 200);
+            parent.textSize(GravityCollisionApp.DEFAULT_FONT_SIZE * 0.5f);
+            parent.text(getValue(), xPosition + sliderWidth, yPosition + GravityCollisionApp.DEFAULT_FONT_SIZE / 2f);
+            parent.textSize(GravityCollisionApp.DEFAULT_FONT_SIZE);
         }
     }
 
     /**
-     * Returns the slider's value.
+     * Returns the slider's value, either linear or exponential.
      * <i>Show me what you're worth.</i>
      * @return The slider value.
      */
     public float getValue() {
-        return PApplet.lerp(
-                lerpedMinValue,
-                lerpedMaxValue,
-                (float) (Math.round(
-                        (sliderPosition - xPosition) / (sliderPositionMax - sliderPositionMin) * 100.0) / 100.0)
-        );
+        float normalizedPosition = (float) (Math.round(
+                (sliderPosition - xPosition) / (sliderPositionMax - sliderPositionMin) * 100.0) / 100.0);
+
+        if (useExponentialScale) {
+            float exponentialValue = (float) ((Math.pow(exponentialBase, normalizedPosition) - 1) / (exponentialBase - 1));
+            return PApplet.lerp(lerpedMinValue, lerpedMaxValue, exponentialValue);
+        } else {
+            return PApplet.lerp(lerpedMinValue, lerpedMaxValue, normalizedPosition);
+        }
     }
+
 
     private float constrain(float value, float minValue, float maxValue) {
         return Math.min(Math.max(value, minValue), maxValue);
@@ -169,21 +215,5 @@ public class HScrollBar {
     public boolean overEvent() {
         return parent.mouseX > xPosition && parent.mouseX < xPosition + sliderWidth &&
                 parent.mouseY > yPosition && parent.mouseY < yPosition + sliderHeight;
-    }
-
-    public String getId() {
-        return scrollBarId;
-    }
-
-    public boolean isHovered() {
-        return isHovered;
-    }
-
-    public void setValueShown(boolean value) {
-        this.valueShown = value;
-    }
-
-    public boolean getvalueShown() {
-        return valueShown;
     }
 }

@@ -14,6 +14,7 @@ import model.PhysicSphere;
 import model.SphereBatchThread;
 import processing.core.*;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -26,7 +27,7 @@ public final class GravityCollisionApp extends PApplet {
     public static float CAM_PAN_STEP = 20;
     public static int FRAMES = 0;
     public static float CAM_DOLLY_STEP = 20;
-    public static int GLOBAL_SPEED = 1;
+    public static float targetPhysicsFPS = 60.0f;
     private final int SPHERE_COUNT = 20;
     public boolean firstMousePress = false;
     public static float G = 6.6743f;
@@ -37,6 +38,15 @@ public final class GravityCollisionApp extends PApplet {
     public static boolean gravityEnabled = true;
     public static boolean boundsEnabled = true;
     public static boolean isPaused = false;
+    private PFont fontLight;
+    private PFont fontBold;
+    private long unpausedTimer = 0;
+    float lastCursorX;
+    float lastCursorY;
+    private Robot robot;
+    private int robotMoveBuffer = 0;
+    public static int DEFAULT_FONT_SIZE = 28;
+
 
     int threadCount = Runtime.getRuntime().availableProcessors();
 
@@ -44,7 +54,7 @@ public final class GravityCollisionApp extends PApplet {
     private final Set<String> keysDown = new HashSet<>();
     private final Set<String> moveKeys = Set.of("z", "q", "s", "d", "w", "a");
     private boolean isShiftDown = false;
-    private boolean isAzerty = false; // For keyboard layout toggle
+    private boolean isAzerty = false;
 
     private EventManager eventManager;
     private final CameraChangedEvent cameraEvent = new CameraChangedEvent(this);
@@ -66,11 +76,20 @@ public final class GravityCollisionApp extends PApplet {
         eventManager = new EventManager();
         setupEventHandlers();
         cameraEvent.ResetCameraEvent(width, height);
-        textFont(createFont("Roboto-Black.ttf", 128));
+        fontLight = createFont("Roboto-Light.ttf", DEFAULT_FONT_SIZE);
+        fontBold = createFont("Roboto-Black.ttf", DEFAULT_FONT_SIZE);
+
         seed(SPHERE_COUNT);
         guiManager = new GUIManager(eventManager, this);
         initGUI();
-        // noCursor();
+        lastCursorX = mouseX;
+        lastCursorY = mouseY;
+        noCursor();
+        try {
+            robot = new Robot();
+        } catch (AWTException e) {
+            System.err.println("Could not create Robot for mouse binding: " + e.getMessage());
+        }
     }
 
     private void initGUI() {
@@ -78,15 +97,15 @@ public final class GravityCollisionApp extends PApplet {
         int bottomInitY = height - 50;
 
         MathUtils.FloatFunction editGLambda = this::setGravityConstant;
-        MathUtils.FloatFunction editGLOBAL_SPEEDLambda = this::setGlobalSpeed;
+        MathUtils.FloatFunction editPhysicsFPS = this::setGlobalSpeed;
 
         gravityScroll = new HScrollBar(
                 bottomInitX,
-                bottomInitY - 280,
+                bottomInitY - 330,
                 width / 3,
                 16,
                 0,
-                2,
+                20,
                 "Global gravity scale",
                 0.5f,
                 editGLambda,
@@ -101,21 +120,23 @@ public final class GravityCollisionApp extends PApplet {
 
         speedScroll = new HScrollBar(
                 bottomInitX,
-                bottomInitY - 350,
+                bottomInitY - 420,
                 width / 3,
                 16,
-                1.0f/600.0f,  // Min: 1 update every 60 frames (very slow)
-                50.0f,       // Max: 50 updates per frame (very fast)
+                1f,
+                3000.0f,
                 "Simulation speed multiplier",
-                0.01f,        // Default: normal speed (1 update per frame)
-                editGLOBAL_SPEEDLambda,
-                true,        // Show the value
-                "1/60x",     // Slowest label
-                "50x",       // Fastest label
+                0.01f,
+                editPhysicsFPS,
+                true,
+                "1/60x",
+                "50x",
                 this,
                 eventManager,
                 guiManager,
-                "speed_scroll"
+                "speed_scroll",
+                true,
+                30.0f
         );
     }
 
@@ -129,10 +150,9 @@ public final class GravityCollisionApp extends PApplet {
 
     /**
      * Set the global speed.
-     * <i>Wilson's not on anti-depressants.</i>
+     * <i>What James Wilson's probably on.</i>
      */
     private void setGlobalSpeed(float newSpeed) {
-        System.out.println("SPEED: " + newSpeed);
         eventManager.publish(new SpeedChangedEvent((int) newSpeed));
     }
 
@@ -141,9 +161,12 @@ public final class GravityCollisionApp extends PApplet {
      * <i>Draw me like one of your French GUIs.</i>
      */
     private void drawGUI() {
+        drawHints();
+        drawMouse();
         if (gravityScroll != null) {
             gravityScroll.update();
             gravityScroll.display();
+
         }
         if (speedScroll != null) {
             speedScroll.update();
@@ -156,12 +179,73 @@ public final class GravityCollisionApp extends PApplet {
         }
     }
 
+
+    void drawMouse() {
+        strokeWeight(2);
+        if (guiManager.getDisplaySetting(GUIStateChangedEvent.UIElement.FREE_CAM)) {
+            stroke(128);
+        } else {
+            stroke(0, 0, 255);
+        }
+        if (!guiManager.getDisplaySetting(GUIStateChangedEvent.UIElement.FREE_CAM)) {
+            lastCursorX = mouseX;
+            lastCursorY = mouseY;
+        }
+        line(lastCursorX - 25, lastCursorY, lastCursorX + 25, lastCursorY);
+        line(lastCursorX, lastCursorY - 25, lastCursorX, lastCursorY + 25);
+        strokeWeight(1);
+    }
+
+    /**
+     * Draw hints and UI overlays.
+     * <i>This really tipped me off.</i>
+     */
+    void drawHints() {
+        if (!guiManager.getDisplaySetting(GUIStateChangedEvent.UIElement.INTERFACE_VISIBLE)) {
+            return;
+        }
+
+        textFont(fontLight);
+        fill(255, 255, 0);
+
+        if (guiManager.isFreeCamEnabled()) {
+            text("Use wasd/zqsd to move around.", width - 575, height - 330);
+            text("Use right-click to move the camera laterally.", width - 575, height - 280);
+        }
+
+        text("Press 'f' to toggle freecam", width - 575, height - 230);
+        text("Press 'c' to reset camera position.", width - 575, height - 180);
+        text("Press 'h' to hide the interface.", width - 575, height - 130);
+        text("Press 'r' to restart the simulation.", width - 575, height - 30);
+
+        if (guiManager.getDisplaySetting(GUIStateChangedEvent.UIElement.SIMULATION_PAUSED)) {
+            textFont(fontLight);
+            text("Press 'p' to unpause the simulation.", width - 575, height - 80);
+            textFont(fontBold);
+            noStroke();
+            fill(255, 0, 0);
+            rect(35, 68, 10, 30);
+            rect(50, 68, 10, 30);
+            text("PAUSED", 75, 100);
+        } else {
+            textFont(fontLight);
+            text("Press 'p' to pause the simulation.", width - 575, height - 80);
+            textFont(fontBold);
+            noStroke();
+            if (millis() - unpausedTimer < 2000) {
+                fill(0, lerp(255, 0, (float) (millis() - unpausedTimer) / 2000), 0);
+                triangle(35, 70, 35, 96, 65, 83);
+                text("RUNNING", 75, 100);
+            }
+        }
+    }
+
+
     /**
      * Handle hovering effects.
      * <i>It's hover Hanakin, I ave the igh ground!</i>
      */
     private void hover() {
-        // The GUIManager handles all hover detection and publishes hover events
         if (guiManager != null) {
             guiManager.updateHoverStates();
         }
@@ -203,6 +287,11 @@ public final class GravityCollisionApp extends PApplet {
      * <i>Get out the way!</i>
      */
     private void move() {
+        if (robotMoveBuffer > 0) {
+            robotMoveBuffer--;
+            return;
+        }
+
         float yaw = radians(mouseX - pmouseX) * 0.125f;
         float pitch = radians(mouseY - pmouseY) * 0.125f;
 
@@ -221,14 +310,12 @@ public final class GravityCollisionApp extends PApplet {
                     cameraChanged = true;
                 }
             } else if (yaw != 0 || pitch != 0) {
-                // Pan and tilt with mouse movement
                 cameraEvent.CameraPanEvent(yaw);
                 cameraEvent.CameraTiltEvent(pitch);
                 cameraEvent.CameraRollEvent(0);
                 cameraChanged = true;
             }
 
-            // Handle keyboard-based camera movement
             float speedMult = isShiftDown ? 4 : 1;
 
             for (String currentKey : keysDown) {
@@ -252,18 +339,81 @@ public final class GravityCollisionApp extends PApplet {
                 }
             }
 
-            // Publish camera event if any changes were made
             if (cameraChanged) {
                 eventManager.publish(cameraEvent);
             }
         }
     }
 
+    /**
+     * Bind the mouse position to the area inside the window.
+     * <i>Some kind of mousetrap, if you will.</i>
+     */
+    private void bindMousePositionInWindow() {
+        if (robot == null || width <= 0 || height <= 0) return;
+        if (isPaused) return;
+
+        try {
+            PSurface surface = getSurface();
+            // 'Kay full disclaimer this line is from Claude bc wtf is this cast???
+            com.jogamp.newt.opengl.GLWindow glWindow = (com.jogamp.newt.opengl.GLWindow) surface.getNative();
+            if (!glWindow.hasFocus()) {
+                return;
+            }
+
+
+            int windowScreenX = glWindow.getX();
+            int windowScreenY = glWindow.getY();
+
+            PointerInfo pointerInfo = MouseInfo.getPointerInfo();
+            if (pointerInfo == null) return;
+
+            int mouseScreenX = (int) pointerInfo.getLocation().getX();
+            int mouseScreenY = (int) pointerInfo.getLocation().getY();
+
+            int windowRight = windowScreenX + width;
+            int windowBottom = windowScreenY + height;
+
+            if (!guiManager.isFreeCamEnabled()) {
+                if (mouseScreenX < windowScreenX + 2) {
+                    robot.mouseMove(windowScreenX + 1, mouseScreenY);
+                }
+                if (mouseScreenX > windowRight - 3) {
+                    robot.mouseMove(windowRight - 3, mouseScreenY);
+                }
+                if (mouseScreenY < windowScreenY + 2) {
+                    robot.mouseMove(mouseScreenX, windowScreenY + 2);
+                }
+                if (mouseScreenY > windowBottom - 3) {
+                    robot.mouseMove(mouseScreenX, windowBottom - 3);
+                }
+            } else {
+                if (mouseScreenX < windowScreenX + 1) {
+                    robot.mouseMove(windowRight - 2, mouseScreenY);
+                    robotMoveBuffer = 3;
+                }
+                if (mouseScreenX > windowRight - 2) {
+                    robot.mouseMove(windowScreenX + 1, mouseScreenY);
+                    robotMoveBuffer = 3;
+                }
+                if (mouseScreenY < windowScreenY + 1) {
+                    robot.mouseMove(mouseScreenX, windowBottom - 2);
+                    robotMoveBuffer = 3;
+                }
+                if (mouseScreenY > windowBottom - 2) {
+                    robot.mouseMove(mouseScreenX, windowScreenY + 1);
+                    robotMoveBuffer = 3;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Mouse centering error: " + e.getMessage());
+        }
+    }
 
     @Override
     public void draw() {
         background(0);
-
+        bindMousePositionInWindow();
         lights();
         cameraEvent.FeedEvent();
 
@@ -307,7 +457,6 @@ public final class GravityCollisionApp extends PApplet {
 
     @Override
     public void mouseWheel(MouseEvent evt) {
-        // Handle camera dolly in both free cam and regular mode for consistency with Processing
         float dollyAmount = evt.getCount() * CAM_DOLLY_STEP;
         cameraEvent.CameraDollyEvent(-dollyAmount);
         eventManager.publish(cameraEvent);
@@ -386,15 +535,15 @@ public final class GravityCollisionApp extends PApplet {
         });
 
         eventManager.subscribe(SpeedChangedEvent.class, event -> {
-            GLOBAL_SPEED = event.newSpeed();
-            System.out.println("Speed changed to: " + GLOBAL_SPEED);
+            targetPhysicsFPS = event.newSpeed();
+            System.out.println("Speed changed to: " + targetPhysicsFPS);
         });
 
         eventManager.subscribe(CameraChangedEvent.class, event ->
                 System.out.println("Camera updated via event system"));
 
         eventManager.subscribe(SimulationPausedEvent.class, event -> {
-            isPaused = event.isPaused();
+            isPaused = event.paused();
             System.out.println("Simulation " + (isPaused ? "paused" : "unpaused"));
         });
 
@@ -409,12 +558,14 @@ public final class GravityCollisionApp extends PApplet {
             System.out.println("Display setting " + event.getSetting() + " changed to: " + event.isEnabled());
         });
 
-        // Handle GUI state changes (new event handler)
         eventManager.subscribe(GUIStateChangedEvent.class, event -> {
             switch (event.getElement()) {
                 case SIMULATION_PAUSED -> {
                     isPaused = event.getNewState();
                     System.out.println("Simulation " + (isPaused ? "paused" : "unpaused"));
+                    if (!isPaused) {
+                        unpausedTimer = millis();
+                    }
                 }
                 case GRAVITY_ENABLED -> {
                     gravityEnabled = event.getNewState();
@@ -524,15 +675,6 @@ public final class GravityCollisionApp extends PApplet {
                 spheresIdxBatch.clear();
             }
         }
-    }
-
-
-    /**
-     * Get the event manager.
-     * <i>I want to speak to your manager.</i>
-     */
-    public EventManager getEventManager() {
-        return eventManager;
     }
 
     public static void main(String[] args) {

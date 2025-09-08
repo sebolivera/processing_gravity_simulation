@@ -2,11 +2,11 @@ package model;
 
 import java.util.ArrayList;
 
+/**
+ * Thread wrapper for batches of sphere objects
+ * Spheres are distributed as evenly as possible in the threads so that the balancing is somewhat reasonable.
+ */
 public class SphereBatchThread extends Thread {
-    /*
-     * Thread wrapper for batches of sphere objects
-     * Spheres are distributed as evenly as possible in the threads so that the balancing is somewhat reasonable.
-     */
     ArrayList<Integer> objectIndexList;
     ArrayList<PhysicSphere> colliderList;
     ArrayList<Integer> indexes = new ArrayList<>();
@@ -29,9 +29,9 @@ public class SphereBatchThread extends Thread {
 
     @Override
     public void run() {
-        for (int i = 0; i < objectIndexList.size(); i++) {
-            colliderList.get(objectIndexList.get(i)).applyAttraction(colliderList);
-            colliderList.get(objectIndexList.get(i)).update();
+        for (Integer integer : objectIndexList) {
+            colliderList.get(integer).applyAttraction(colliderList);
+            colliderList.get(integer).update();
         }
     }
 }

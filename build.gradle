@@ -40,7 +40,7 @@ dependencies {
 
     implementation "org.jogamp.jogl:jogl-all:${joglVersion}"
     implementation "org.jogamp.gluegen:gluegen-rt:${joglVersion}"
-    // implementation "org.jogamp.jogl:nativewindow-main:${joglVersion}"
+    implementation "org.jogamp.jogl:nativewindow-main:${joglVersion}"
 
     runtimeOnly "org.jogamp.jogl:jogl-all:${joglVersion}:${nativesClassifier}"
     runtimeOnly "org.jogamp.gluegen:gluegen-rt:${joglVersion}:${nativesClassifier}"
@@ -68,6 +68,84 @@ dependencies {
         implementation files('vendor/ocd/library/ocd.jar')
     }
 }
+
+
+tasks.register('extractNatives') {
+    doLast {
+        def nativesDir = file("${layout.buildDirectory.get().asFile}/natives")
+        nativesDir.mkdirs()
+
+        println "Checking runtimeClasspath for native JARs..."
+
+        configurations.runtimeClasspath.files.each { jarFile ->
+            println "Checking file: ${jarFile.name}"
+            // Check for any natives JAR that matches the current platform
+            if (jarFile.name.contains(nativesClassifier) && jarFile.name.endsWith('.jar')) {
+                println "Extracting natives from: ${jarFile.name}"
+                copy {
+                    from zipTree(jarFile)
+                    into nativesDir
+                    // Include all native library extensions based on platform
+                    if (nativesClassifier.contains('windows')) {
+                        include '**/*.dll'
+                    } else if (nativesClassifier.contains('macosx')) {
+                        include '**/*.dylib'
+                        include '**/*.jnilib'
+                    } else {
+                        include '**/*.so'
+                    }
+                    eachFile { details ->
+                        details.path = details.name
+                        println "Extracting: ${details.name}"
+                    }
+                    includeEmptyDirs = false
+                }
+            }
+        }
+
+        // List what was actually extracted
+        println "Final extracted natives:"
+        nativesDir.listFiles()?.each { file ->
+            if (file.isFile()) {
+                def extension = file.name.toLowerCase()
+                if (extension.endsWith('.so') || extension.endsWith('.dll') ||
+                        extension.endsWith('.dylib') || extension.endsWith('.jnilib')) {
+                    println "- ${file.name}"
+                }
+            }
+        }
+    }
+}
+
+run {
+    dependsOn extractNatives
+
+    systemProperty 'java.library.path', "${layout.buildDirectory.get().asFile}/natives"
+
+    systemProperty 'jogamp.gluegen.UseTempJarCache', 'false'
+    systemProperty 'java.awt.headless', 'false'
+
+    doFirst {
+        println "Operating System: ${System.getProperty('os.name')}"
+        println "Java architecture: ${System.getProperty('os.arch')}"
+        println "Using natives classifier: ${nativesClassifier}"
+        println "Native libraries directory: ${layout.buildDirectory.get().asFile}/natives"
+
+        def nativesDir = file("${layout.buildDirectory.get().asFile}/natives")
+        if (nativesDir.exists()) {
+            nativesDir.listFiles()?.each { file ->
+                def extension = file.name.toLowerCase()
+                if (extension.endsWith('.so') || extension.endsWith('.dll') ||
+                        extension.endsWith('.dylib') || extension.endsWith('.jnilib')) {
+                    println "Available native: ${file.name}"
+                }
+            }
+        } else {
+            println "No natives directory found!"
+        }
+    }
+}
+
 
 java {
     toolchain {
