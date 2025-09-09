@@ -60,7 +60,7 @@ public class GUIManager {
     }
 
     private void handleStateChange(GUIStateChangedEvent event) {
-        uiStates.put(event.getElement(), event.getNewState());
+        uiStates.put(event.element(), event.newState());
     }
 
 
@@ -70,7 +70,7 @@ public class GUIManager {
         updateHoverState("sphere_weights", bottomInitX, bottomInitY - itemSpacing * 2, 270, itemHeight);
         updateHoverState("sphere_trails", bottomInitX, bottomInitY - itemSpacing * 3, 220, itemHeight);
         updateHoverState("gravity_enabled", bottomInitX, bottomInitY - itemSpacing * 4, 280, itemHeight);
-        updateHoverState("bounds_visible", bottomInitX, bottomInitY - itemSpacing * 5, 240, itemHeight);
+        updateHoverState("bounds_enabled", bottomInitX, bottomInitY - itemSpacing * 5, 240, itemHeight);
     }
 
     private void updateHoverState(String elementId, int x, int y, int width, int height) {

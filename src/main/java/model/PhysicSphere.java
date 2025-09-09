@@ -1,12 +1,12 @@
 package model;
 
-import app.GravityCollisionApp;
 import misc.CollisionIndex;
 import processing.core.*;
 
 import java.util.ArrayList;
 
 import static app.GravityCollisionApp.*;
+import static model.SimulationManager.*;
 import static misc.MathUtils.getNormalVector;
 import static misc.VectorUtils.correctPVectorNaN;
 import static misc.VectorUtils.nullifyPVectorNaN;
@@ -57,27 +57,6 @@ public class PhysicSphere {
         this.acceleration = new PVector(0.0f, 0.0f, 0.0f);
         this.bounciness = 1.0f;
         PhysicSphere.app = app;
-    }
-
-    /**
-     * Creates an instance of a sphere.
-     * @param index Sphere index.
-     * @param sphereColor Sphere color.
-     * @param position Sphere initial position.
-     * @param velocity Sphere initial velocity.
-     * @param radius Sphere radius.
-     * @param mass Sphere mass.
-     * @param bounciness Sphere bounciness.
-     */
-    PhysicSphere(int index, int sphereColor, PVector position, PVector velocity, float radius, float mass, float bounciness) {
-        this.index = index;
-        this.sphereColor = sphereColor;
-        this.position = position;
-        this.velocity = velocity;
-        this.radius = radius * 2;
-        this.mass = mass;
-        this.acceleration = new PVector(0.0f, 0.0f, 0.0f);
-        this.bounciness = bounciness;
     }
 
 
@@ -257,24 +236,24 @@ public class PhysicSphere {
      */
     void applyAttraction(ArrayList<PhysicSphere> others)
     {
-        PVector final_acc = new PVector(0, 0, 0);
-        PVector t_acc = new PVector(0, 0, 0);
+        PVector finalAcc = new PVector(0, 0, 0);
+        PVector tAcc = new PVector(0, 0, 0);
         for (PhysicSphere other : others) {
             collideWith(other);
             if (other.index != index) {
                 if (gravityEnabled) {
-                    float small_g_factor = -other.mass * GravityCollisionApp.G;
+                    float small_g_factor = -other.mass * G;
                     small_g_factor /= other.position.dist(position) * other.position.dist(position);
                     PVector small_g = position.copy();
                     small_g.sub(other.position);
                     small_g.mult(small_g_factor);
-                    t_acc = small_g.copy();
-                    t_acc.mult(mass);
-                    final_acc.add(small_g);
+                    tAcc = small_g.copy();
+                    tAcc.mult(mass);
+                    finalAcc.add(small_g);
                 }
             }
-            if (!Float.isNaN(t_acc.x + t_acc.y + t_acc.z)) {
-                acceleration = final_acc.copy();
+            if (!Float.isNaN(tAcc.x + tAcc.y + tAcc.z)) {
+                acceleration = finalAcc.copy();
             }
         }
     }
@@ -284,7 +263,6 @@ public class PhysicSphere {
      * <i>Take care of them.</i>
      */
     void update() {
-        float targetPhysicsFPS = GravityCollisionApp.targetPhysicsFPS;
         if (targetPhysicsFPS < 60.0f) {
             int frameInterval = Math.round(60.0f / targetPhysicsFPS);
             if (FRAMES % frameInterval == 0) {
