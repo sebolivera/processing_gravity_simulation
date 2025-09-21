@@ -5,11 +5,21 @@ import processing.core.*;
 
 import java.util.ArrayList;
 
-import static app.GravityCollisionApp.*;
-import static model.SimulationHandler.*;
+import static app.GravityCollisionApp.FRAMES;
 import static misc.MathUtils.getNormalVector;
 import static misc.VectorUtils.correctPVectorNaN;
 import static misc.VectorUtils.nullifyPVectorNaN;
+import static model.SimulationHandler.G;
+import static model.SimulationHandler.gravityEnabled;
+import static model.SimulationHandler.targetPhysicsFPS;
+import static model.SimulationHandler.boundsEnabled;
+import static model.SimulationHandler.drawNames;
+import static model.SimulationHandler.drawArrows;
+import static model.SimulationHandler.drawTrails;
+import static model.SimulationHandler.drawWeights;
+import static processing.core.PApplet.floor;
+import static processing.core.PApplet.lerp;
+import static processing.core.PConstants.SQUARE;
 
 /**
  * Base class for the spheres.
