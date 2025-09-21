@@ -1,14 +1,13 @@
 package app;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import events.core.EventManager;
-import graphics.gui.GUIHandler;
 import graphics.CameraHandler;
 import graphics.Renderer;
+import graphics.gui.GUIHandler;
 import input.InputHandler;
 import model.SimulationHandler;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import processing.core.PApplet;
 import processing.event.MouseEvent;
 
@@ -22,13 +21,16 @@ public final class GravityCollisionApp extends PApplet {
     private CameraHandler cameraHandler;
     private Renderer renderer;
 
-
     @Override
     public void settings() {
         int width = 1000;
         int height = 1000;
         String engine = P3D;
-        LOGGER.info("Initializing application settings with size {}x{} with {} engine.", width, height, engine);
+        LOGGER.info(
+                "Initializing application settings with size {}x{} with {} engine.",
+                width,
+                height,
+                engine);
         size(width, height, engine);
     }
 
@@ -63,25 +65,25 @@ public final class GravityCollisionApp extends PApplet {
     @Override
     public void draw() {
         try {
-        background(0);
-        inputHandler.updateMousePosition();
-        renderer.bindMousePositionInWindow(simulationHandler.isPaused());
-        cameraHandler.update();
-        lights();
-        guiHandler.hover();
-        guiHandler.render();
-        renderer.drawBounds();
-        renderer.drawCrosshair();
+            background(0);
+            inputHandler.updateMousePosition();
+            renderer.bindMousePositionInWindow(simulationHandler.isPaused());
+            cameraHandler.update();
+            lights();
+            guiHandler.hover();
+            guiHandler.render();
+            renderer.drawBounds();
+            renderer.drawCrosshair();
 
-        simulationHandler.update();
-        simulationHandler.renderSpheres();
+            simulationHandler.update();
+            simulationHandler.renderSpheres();
 
-        guiHandler.drawGUI();
-        renderer.handleMovement();
-        frames++;
-        if (frames % 3600 == 0) {
-            LOGGER.debug("Application running - Frame: {}, FPS: {}", frames, frameRate);
-        }
+            guiHandler.drawGUI();
+            renderer.handleMovement();
+            frames++;
+            if (frames % 3600 == 0) {
+                LOGGER.debug("Application running - Frame: {}, FPS: {}", frames, frameRate);
+            }
         } catch (Exception e) {
             LOGGER.error("Error in draw loop at frame {}", frames, e);
         }
@@ -114,6 +116,7 @@ public final class GravityCollisionApp extends PApplet {
 
     /**
      * Get the current frame count.
+     *
      * @return The frame count.
      */
     public static int getFrames() {

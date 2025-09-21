@@ -5,24 +5,19 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Prevents threads from accessing the same sphere at once.
- * <i>Prevents them from touching each other's balls, if you will.</i>
+ * Prevents threads from accessing the same sphere at once. <i>Prevents them from touching each
+ * other's balls, if you will.</i>
  */
 public final class CollisionIndex {
-    /**
-     * Holds a pair of colliding spheres.
-     */
+    /** Holds a pair of colliding spheres. */
     private static final Set<Map.Entry<Integer, Integer>> LOCKS = ConcurrentHashMap.newKeySet();
 
-    /**
-     * <i>NO TOUCHY.</i>
-     */
-    private CollisionIndex() {
-    }
+    /** <i>NO TOUCHY.</i> */
+    private CollisionIndex() {}
 
     /**
-     * Normalizes pairs so that the lower one always comes first.
-     * <i>One of them is always lower.</i>
+     * Normalizes pairs so that the lower one always comes first. <i>One of them is always
+     * lower.</i>
      *
      * @param sphere1 First sphere.
      * @param sphere2 Second sphere.
@@ -33,8 +28,7 @@ public final class CollisionIndex {
     }
 
     /**
-     * Attempts to get a lock on a pair of Spheres.
-     * <i>Chastity belt.</i>
+     * Attempts to get a lock on a pair of Spheres. <i>Chastity belt.</i>
      *
      * @param sphere1 First sphere to lock.
      * @param sphere2 Second sphere to lock.
@@ -45,8 +39,7 @@ public final class CollisionIndex {
     }
 
     /**
-     * Releases the lock on a sphere pair.
-     * <i>Please let go of my balls.</i>
+     * Releases the lock on a sphere pair. <i>Please let go of my balls.</i>
      *
      * @param sphere1 Index of the first sphere to unlock.
      * @param sphere2 Index of the second sphere to unlock.

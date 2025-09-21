@@ -8,13 +8,26 @@ plugins {
     id 'checkstyle'
     id 'pmd'
     id 'com.github.spotbugs' version '6.4.2'
-    id 'com.github.sherter.google-java-format' version '0.9'
+    id 'com.diffplug.spotless' version '7.2.1'
 }
-googleJavaFormat {
-    source = sourceSets*.allJava
-    include '**/*.java'
-    exclude '**/vendor/**'
+spotless {
+    java {
+        target 'src/**/*.java'
+
+        googleJavaFormat('1.22.0').aosp()
+        targetExclude '**/vendor/**'
+
+        removeUnusedImports()
+        endWithNewline()
+
+        custom 'Remove extra blank lines', {
+            it.replaceAll(/\n\s*\n\s*\n/, '\n\n')
+        }
+    }
 }
+checkstyleMain.dependsOn spotlessApply
+checkstyleTest.dependsOn spotlessApply
+
 ext.joglVersion = '2.5.0'
 ext.processingVersion = '4.4.7'
 def useJar = false

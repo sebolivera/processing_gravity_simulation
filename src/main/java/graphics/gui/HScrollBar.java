@@ -6,8 +6,8 @@ import misc.MathUtils;
 import processing.core.PApplet;
 
 /**
- * Custom horizontal scroll bar GUI element that I probably stole from stackoverflow at some point, but I can't be sure.
- * <i>The 'H' stands for 'vertical'.</i>
+ * Custom horizontal scroll bar GUI element that I probably stole from stackoverflow at some point,
+ * but I can't be sure. <i>The 'H' stands for 'vertical'.</i>
  */
 public class HScrollBar {
     private final int sliderWidth;
@@ -34,38 +34,34 @@ public class HScrollBar {
     private final boolean useExponentialScale;
     private final float exponentialBase;
 
-    /**
-     * Configuration for scroll bar positioning and dimensions.
-     */
-    public record Geometry(float xPosition, float yPosition, int sliderWidth, int sliderHeight) {
-    }
+    /** Configuration for scroll bar positioning and dimensions. */
+    public record Geometry(float xPosition, float yPosition, int sliderWidth, int sliderHeight) {}
 
-    /**
-     * Configuration for scroll bar behavior and values.
-     */
-    public record ValueRange(float lerpedMinValue, float lerpedMaxValue, float defaultValue,
-                             boolean useExponentialScale, float exponentialBase) {
-    }
+    /** Configuration for scroll bar behavior and values. */
+    public record ValueRange(
+            float lerpedMinValue,
+            float lerpedMaxValue,
+            float defaultValue,
+            boolean useExponentialScale,
+            float exponentialBase) {}
 
-    /**
-     * Configuration for scroll bar display options.
-     */
-    public record DisplayOptions(String label, boolean valueShown, String minLabelValue, String maxLabelValue) {
-    }
+    /** Configuration for scroll bar display options. */
+    public record DisplayOptions(
+            String label, boolean valueShown, String minLabelValue, String maxLabelValue) {}
 
-    /**
-     * Dependencies required by the scroll bar.
-     */
-    public record Dependencies(PApplet parent, EventManager eventManager, GUIHandler guiEventManager,
-                               MathUtils.FloatFunction lambdaController, String scrollBarId) {
-    }
+    /** Dependencies required by the scroll bar. */
+    public record Dependencies(
+            PApplet parent,
+            EventManager eventManager,
+            GUIHandler guiEventManager,
+            MathUtils.FloatFunction lambdaController,
+            String scrollBarId) {}
 
     public HScrollBar(
             final Geometry geometry,
             final ValueRange valueRange,
             final DisplayOptions displayOptions,
-            final Dependencies dependencies
-    ) {
+            final Dependencies dependencies) {
         this.sliderWidth = geometry.sliderWidth;
         this.sliderHeight = geometry.sliderHeight;
         this.xPosition = geometry.xPosition;
@@ -90,30 +86,30 @@ public class HScrollBar {
         this.scrollBarId = dependencies.scrollBarId;
 
         if (valueRange.useExponentialScale) {
-            float normalizedValue = (valueRange.defaultValue - valueRange.lerpedMinValue) / (valueRange.lerpedMaxValue - valueRange.lerpedMinValue);
-            float linearPosition = (float) (Math.log(normalizedValue * (valueRange.exponentialBase - 1) + 1) / Math.log(valueRange.exponentialBase));
-            this.sliderPosition = linearPosition * (this.sliderWidth - this.sliderHeight) + this.xPosition;
+            float normalizedValue =
+                    (valueRange.defaultValue - valueRange.lerpedMinValue)
+                            / (valueRange.lerpedMaxValue - valueRange.lerpedMinValue);
+            float linearPosition =
+                    (float)
+                            (Math.log(normalizedValue * (valueRange.exponentialBase - 1) + 1)
+                                    / Math.log(valueRange.exponentialBase));
+            this.sliderPosition =
+                    linearPosition * (this.sliderWidth - this.sliderHeight) + this.xPosition;
         } else {
-            this.sliderPosition = valueRange.defaultValue * (this.sliderWidth - this.sliderHeight) + this.xPosition;
+            this.sliderPosition =
+                    valueRange.defaultValue * (this.sliderWidth - this.sliderHeight)
+                            + this.xPosition;
         }
     }
 
-    /**
-     * Updates the position and the value of the slider.
-     */
+    /** Updates the position and the value of the slider. */
     public void update() {
         boolean wasHovered = isHovered;
         isHovered = overEvent();
 
         if (isHovered != wasHovered) {
             eventManager.publish(
-                    new GUIHoverEvent(
-                            scrollBarId,
-                            isHovered,
-                            parent.mouseX,
-                            parent.mouseY
-                    )
-            );
+                    new GUIHoverEvent(scrollBarId, isHovered, parent.mouseX, parent.mouseY));
         }
 
         if (parent.mousePressed && isHovered && !isLocked) {
@@ -123,7 +119,11 @@ public class HScrollBar {
             isLocked = false;
         }
         if (isLocked) {
-            sliderPosition = constrain(parent.mouseX - sliderHeight / 2.0f, sliderPositionMin, sliderPositionMax);
+            sliderPosition =
+                    constrain(
+                            parent.mouseX - sliderHeight / 2.0f,
+                            sliderPositionMin,
+                            sliderPositionMax);
         }
 
         float currentValue = getValue();
@@ -131,13 +131,9 @@ public class HScrollBar {
             lambdaController.update(currentValue);
             lastValue = currentValue;
         }
-
     }
 
-    /**
-     * Displays the element on the GUI.
-     * <i>Well, there it is.</i>
-     */
+    /** Displays the element on the GUI. <i>Well, there it is.</i> */
     public void display() {
         parent.noStroke();
 
@@ -150,8 +146,12 @@ public class HScrollBar {
         }
         parent.rect(xPosition, yPosition, sliderWidth, sliderHeight);
         parent.fill(255);
-        parent.text(minLabelValue, xPosition, yPosition + sliderHeight + GUIHandler.DEFAULT_FONT_SIZE);
-        parent.text(maxLabelValue, xPosition + sliderWidth - (minLabelValue.length() * 5), yPosition + sliderHeight + GUIHandler.DEFAULT_FONT_SIZE);
+        parent.text(
+                minLabelValue, xPosition, yPosition + sliderHeight + GUIHandler.DEFAULT_FONT_SIZE);
+        parent.text(
+                maxLabelValue,
+                xPosition + sliderWidth - (minLabelValue.length() * 5),
+                yPosition + sliderHeight + GUIHandler.DEFAULT_FONT_SIZE);
 
         if (isHovered || isLocked) {
             parent.fill(255);
@@ -164,34 +164,44 @@ public class HScrollBar {
         parent.rect(sliderPosition, yPosition, sliderHeight, sliderHeight);
         parent.popMatrix();
 
-
         if (guiEventManager.isFreeCamEnabled()) {
             parent.fill(128);
         } else {
             parent.fill(255);
         }
-        parent.text(label, xPosition, yPosition - (sliderHeight + GUIHandler.DEFAULT_FONT_SIZE) / 2f);
+        parent.text(
+                label, xPosition, yPosition - (sliderHeight + GUIHandler.DEFAULT_FONT_SIZE) / 2f);
 
         if (valueShown) {
             parent.fill(255, 200, 200);
             parent.textSize(GUIHandler.DEFAULT_FONT_SIZE * 0.5f);
-            parent.text(getValue(), xPosition + sliderWidth, yPosition + GUIHandler.DEFAULT_FONT_SIZE / 2f);
+            parent.text(
+                    getValue(),
+                    xPosition + sliderWidth,
+                    yPosition + GUIHandler.DEFAULT_FONT_SIZE / 2f);
             parent.textSize(GUIHandler.DEFAULT_FONT_SIZE);
         }
     }
 
     /**
-     * Returns the slider's value, either linear or exponential.
-     * <i>Show me what you're worth.</i>
+     * Returns the slider's value, either linear or exponential. <i>Show me what you're worth.</i>
      *
      * @return The slider value.
      */
     public float getValue() {
-        float normalizedPosition = (float) (Math.round(
-                (sliderPosition - xPosition) / (sliderPositionMax - sliderPositionMin) * 100.0) / 100.0);
+        float normalizedPosition =
+                (float)
+                        (Math.round(
+                                        (sliderPosition - xPosition)
+                                                / (sliderPositionMax - sliderPositionMin)
+                                                * 100.0)
+                                / 100.0);
 
         if (useExponentialScale) {
-            float exponentialValue = (float) ((Math.pow(exponentialBase, normalizedPosition) - 1) / (exponentialBase - 1));
+            float exponentialValue =
+                    (float)
+                            ((Math.pow(exponentialBase, normalizedPosition) - 1)
+                                    / (exponentialBase - 1));
             return PApplet.lerp(lerpedMinValue, lerpedMaxValue, exponentialValue);
         } else {
             return PApplet.lerp(lerpedMinValue, lerpedMaxValue, normalizedPosition);
@@ -201,7 +211,7 @@ public class HScrollBar {
     /**
      * Clamps a value between a minimum and maximum.
      *
-     * @param value    The value to constrain.
+     * @param value The value to constrain.
      * @param minValue The minimum value.
      * @param maxValue The maximum value.
      * @return The constrained value.
@@ -218,7 +228,9 @@ public class HScrollBar {
     public boolean overEvent() {
         float mx = guiEventManager.getCursorX();
         float my = guiEventManager.getCursorY();
-        return mx > xPosition && mx < xPosition + sliderWidth
-                && my > yPosition && my < yPosition + sliderHeight;
+        return mx > xPosition
+                && mx < xPosition + sliderWidth
+                && my > yPosition
+                && my < yPosition + sliderHeight;
     }
 }

@@ -1,7 +1,11 @@
 package graphics;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static events.graphics.CameraCommandEvent.Operation.BOOM;
+import static events.graphics.CameraCommandEvent.Operation.DOLLY;
+import static events.graphics.CameraCommandEvent.Operation.PAN;
+import static events.graphics.CameraCommandEvent.Operation.TILT;
+import static events.graphics.CameraCommandEvent.Operation.TRUCK;
+
 import events.core.EventManager;
 import events.graphics.CameraCommandEvent;
 import events.graphics.gui.GUIStateChangedEvent;
@@ -10,26 +14,20 @@ import events.input.MousePositionChangedEvent;
 import events.input.MouseStateChangedEvent;
 import graphics.gui.GUIHandler;
 import input.InputHandler;
+import java.awt.AWTException;
+import java.awt.MouseInfo;
+import java.awt.PointerInfo;
+import java.awt.Robot;
+import java.util.Objects;
 import model.SimulationHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import processing.core.PApplet;
 import processing.core.PSurface;
 
-import java.awt.AWTException;
-import java.awt.PointerInfo;
-import java.awt.MouseInfo;
-import java.awt.Robot;
-import java.util.Objects;
-
-import static events.graphics.CameraCommandEvent.Operation.BOOM;
-import static events.graphics.CameraCommandEvent.Operation.DOLLY;
-import static events.graphics.CameraCommandEvent.Operation.PAN;
-import static events.graphics.CameraCommandEvent.Operation.TILT;
-import static events.graphics.CameraCommandEvent.Operation.TRUCK;
-
-
 /**
- * Handles all rendering operations for the application.
- * Centralizes drawing methods, font management, and display-related functionality.
+ * Handles all rendering operations for the application. Centralizes drawing methods, font
+ * management, and display-related functionality.
  */
 public class Renderer {
     private static final Logger LOGGER = LoggerFactory.getLogger(Renderer.class);
@@ -56,8 +54,8 @@ public class Renderer {
             final PApplet appParam,
             final EventManager eventManagerParam,
             final InputHandler inputHandlerParam,
-            final GUIHandler guiHandlerParam
-    ) throws AWTException {
+            final GUIHandler guiHandlerParam)
+            throws AWTException {
         this.app = appParam;
         this.eventManager = eventManagerParam;
         this.guiHandler = guiHandlerParam;
@@ -81,6 +79,7 @@ public class Renderer {
 
     /**
      * Handle GUI state changes.
+     *
      * @param e The event.
      */
     private void onGUIStateChangedEvent(final GUIStateChangedEvent e) {
@@ -91,9 +90,7 @@ public class Renderer {
         }
     }
 
-    /**
-     * Snap the mouse to the crosshair.
-     */
+    /** Snap the mouse to the crosshair. */
     private void snapMouseToCrosshair() {
         if (robot == null) {
             return;
@@ -101,7 +98,8 @@ public class Renderer {
 
         try {
             PSurface surface = app.getSurface();
-            com.jogamp.newt.opengl.GLWindow glWindow = (com.jogamp.newt.opengl.GLWindow) surface.getNative();
+            com.jogamp.newt.opengl.GLWindow glWindow =
+                    (com.jogamp.newt.opengl.GLWindow) surface.getNative();
 
             int windowScreenX = glWindow.getX();
             int windowScreenY = glWindow.getY();
@@ -125,16 +123,19 @@ public class Renderer {
 
     /**
      * Handle input state changes.
+     *
      * @param e The event.
      */
     private void onInputEvent(final InputStateChangedEvent e) {
-        if (Objects.requireNonNull(e.element()) == InputStateChangedEvent.InputElement.SHIFT_KEY_DOWN) {
+        if (Objects.requireNonNull(e.element())
+                == InputStateChangedEvent.InputElement.SHIFT_KEY_DOWN) {
             shiftHeld = e.newState();
         }
     }
 
     /**
      * Handle mouse position changes.
+     *
      * @param e The event.
      */
     private void onMousePositionEvent(final MousePositionChangedEvent e) {
@@ -151,6 +152,7 @@ public class Renderer {
 
     /**
      * Handle mouse state changes.
+     *
      * @param e The event.
      */
     private void onMouseStateEvent(final MouseStateChangedEvent e) {
@@ -158,10 +160,9 @@ public class Renderer {
         mouseButton = e.button();
     }
 
-
     /**
-     * Draws the boundaries of the simulation, if enabled.
-     * <i>This is where I would draw the line. IF I HAD ONE.</i>
+     * Draws the boundaries of the simulation, if enabled. <i>This is where I would draw the line.
+     * IF I HAD ONE.</i>
      */
     public void drawBounds() {
         if (SimulationHandler.areBoundsEnabled()) {
@@ -188,10 +189,7 @@ public class Renderer {
         }
     }
 
-    /**
-     * Draw the crosshair.
-     * <i>BOOM! Headshot!</i>
-     */
+    /** Draw the crosshair. <i>BOOM! Headshot!</i> */
     public void drawCrosshair() {
         if (!guiHandler.getDisplaySetting(GUIStateChangedEvent.UIElement.FREE_CAM)) {
             prevCrosshairX = mouseX;
@@ -209,10 +207,9 @@ public class Renderer {
         app.strokeWeight(1);
     }
 
-
     /**
-     * Handle camera/object movement based on the current input state.
-     * <i>You can't handle my moves 💋.</i>
+     * Handle camera/object movement based on the current input state. <i>You can't handle my moves
+     * 💋.</i>
      */
     public void handleMovement() {
         if (robotMoveBuffer > 0) {
@@ -246,24 +243,29 @@ public class Renderer {
 
             for (String k : inputHandler.getKeysDown()) {
                 switch (k) {
-                    case "z", "w" -> eventManager.publish(
-                            new CameraCommandEvent(DOLLY, -CameraHandler.getCamDollyStep() * speedMult));
-                    case "s" -> eventManager.publish(
-                            new CameraCommandEvent(DOLLY, CameraHandler.getCamDollyStep() * speedMult));
-                    case "q", "a" -> eventManager.publish(
-                            new CameraCommandEvent(TRUCK, -CameraHandler.getCamPanStep() * speedMult));
-                    case "d" -> eventManager.publish(
-                            new CameraCommandEvent(TRUCK, CameraHandler.getCamPanStep() * speedMult));
+                    case "z", "w" ->
+                            eventManager.publish(
+                                    new CameraCommandEvent(
+                                            DOLLY, -CameraHandler.getCamDollyStep() * speedMult));
+                    case "s" ->
+                            eventManager.publish(
+                                    new CameraCommandEvent(
+                                            DOLLY, CameraHandler.getCamDollyStep() * speedMult));
+                    case "q", "a" ->
+                            eventManager.publish(
+                                    new CameraCommandEvent(
+                                            TRUCK, -CameraHandler.getCamPanStep() * speedMult));
+                    case "d" ->
+                            eventManager.publish(
+                                    new CameraCommandEvent(
+                                            TRUCK, CameraHandler.getCamPanStep() * speedMult));
                     default -> LOGGER.debug("Unhandled key: {}", k);
                 }
             }
         }
     }
 
-    /**
-     * Bind the mouse position to the area inside the window.
-     * <i>A mousetrap, if you will.</i>
-     */
+    /** Bind the mouse position to the area inside the window. <i>A mousetrap, if you will.</i> */
     public void bindMousePositionInWindow(final boolean isPaused) {
         if (robot == null || app.width <= 0 || app.height <= 0) {
             return;
@@ -274,7 +276,8 @@ public class Renderer {
 
         try {
             PSurface surface = app.getSurface();
-            com.jogamp.newt.opengl.GLWindow glWindow = (com.jogamp.newt.opengl.GLWindow) surface.getNative();
+            com.jogamp.newt.opengl.GLWindow glWindow =
+                    (com.jogamp.newt.opengl.GLWindow) surface.getNative();
             if (!glWindow.hasFocus()) {
                 return;
             }

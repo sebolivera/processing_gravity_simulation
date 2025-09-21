@@ -1,21 +1,15 @@
 package misc;
 
+import java.util.ArrayList;
 import processing.core.PVector;
 
-import java.util.ArrayList;
-
-/**
- * Utility static class for Vectors.
- * <i>Implementations for Grus pending.</i>
- */
+/** Utility static class for Vectors. <i>Implementations for Grus pending.</i> */
 public final class VectorUtils {
-    private VectorUtils() {
-    }
+    private VectorUtils() {}
 
     /**
-     * Fixes all NaN values in a PVector.
-     * <i>Your naans are worthless to me.</i>
-     * todo: Find a viable fix.
+     * Fixes all NaN values in a PVector. <i>Your naans are worthless to me.</i> todo: Find a viable
+     * fix.
      *
      * @param inputVect PVector instance to modify.
      */
@@ -32,15 +26,16 @@ public final class VectorUtils {
     }
 
     /**
-     * Corrects NaN values in the specified PVector by replacing them with values from a list
-     * of previous PVectors. Iterates in reverse through the provided list to find a suitable
-     * replacement for any NaN component in the input vector.
-     * Helps in reducing clipping during large sphere agglomerates.
+     * Corrects NaN values in the specified PVector by replacing them with values from a list of
+     * previous PVectors. Iterates in reverse through the provided list to find a suitable
+     * replacement for any NaN component in the input vector. Helps in reducing clipping during
+     * large sphere agglomerates.
      *
-     * @param inputVector    PVector to fix.
+     * @param inputVector PVector to fix.
      * @param initialVectors List of previous candidates to fix the values with.
      */
-    public static void correctPVectorNaN(final PVector inputVector, final ArrayList<PVector> initialVectors) {
+    public static void correctPVectorNaN(
+            final PVector inputVector, final ArrayList<PVector> initialVectors) {
         for (int i = initialVectors.size() - 1; i >= 0; i--) {
             PVector initialVect = initialVectors.get(i);
             if (Float.isNaN(inputVector.x)) {
