@@ -1,5 +1,7 @@
 package model;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import events.core.EventManager;
 import events.simulation.SimulationRestartEvent;
 import events.physics.GravityChangedEvent;
@@ -15,6 +17,7 @@ import java.util.ArrayList;
  * <i>The conductor of the physics orchestra.</i>
  */
 public class SimulationHandler {
+    private static final Logger logger = LoggerFactory.getLogger(SimulationHandler.class);
     public static float G = 6.6743f;
     public static float targetPhysicsFPS = 60.0f;
     public static boolean gravityEnabled = true;
@@ -49,48 +52,48 @@ public class SimulationHandler {
     private void setupEventHandlers() {
         eventManager.subscribe(SimulationRestartEvent.class, event -> {
             seed(event.sphereCount());
-            System.out.println("Simulation restarted with " + event.sphereCount() + " spheres");
+            logger.info("Simulation restarted with {} spheres", event.sphereCount());
         });
 
         eventManager.subscribe(GravityChangedEvent.class, event -> {
             G = event.newGravity();
-            System.out.println("Gravity changed to: " + G);
+            logger.info("Gravity changed to: {}", G);
         });
 
         eventManager.subscribe(SpeedChangedEvent.class, event -> {
             targetPhysicsFPS = event.newSpeed();
-            System.out.println("Speed changed to: " + targetPhysicsFPS);
+            logger.info("Speed changed to: {}", targetPhysicsFPS);
         });
 
         eventManager.subscribe(GUIStateChangedEvent.class, event -> {
             switch (event.element()) {
                 case SIMULATION_PAUSED -> {
                     isPaused = event.newState();
-                    System.out.println("Simulation " + (isPaused ? "paused" : "unpaused"));
+                    logger.info("Simulation {}", (isPaused ? "paused" : "unpaused"));
                 }
                 case GRAVITY_ENABLED -> {
                     gravityEnabled = event.newState();
-                    System.out.println("Gravity " + (gravityEnabled ? "enabled" : "disabled"));
+                    logger.info("Gravity {}", (gravityEnabled ? "enabled" : "disabled"));
                 }
                 case BOUNDS_ENABLED -> {
                     boundsEnabled = event.newState();
-                    System.out.println("Bounds " + (boundsEnabled ? "enabled" : "disabled"));
+                    logger.info("Bounds {}", (boundsEnabled ? "enabled" : "disabled"));
                 }
                 case VELOCITY_ARROWS -> {
                     drawArrows = event.newState();
-                    System.out.println("Velocity arrows " + (drawArrows ? "enabled" : "disabled"));
+                    logger.info("Velocity arrows {}", (drawArrows ? "enabled" : "disabled"));
                 }
                 case SPHERE_NAMES -> {
                     drawNames = event.newState();
-                    System.out.println("Sphere names " + (drawNames ? "enabled" : "disabled"));
+                    logger.info("Sphere names {}", (drawNames ? "enabled" : "disabled"));
                 }
                 case SPHERE_WEIGHTS -> {
                     drawWeights = event.newState();
-                    System.out.println("Sphere weights " + (drawWeights ? "enabled" : "disabled"));
+                    logger.info("Sphere weights {}", (drawWeights ? "enabled" : "disabled"));
                 }
                 case SPHERE_TRAILS -> {
                     drawTrails = event.newState();
-                    System.out.println("Sphere trails " + (drawTrails ? "enabled" : "disabled"));
+                    logger.info("Sphere trails {}", (drawTrails ? "enabled" : "disabled"));
                 }
             }
         });
@@ -184,7 +187,7 @@ public class SimulationHandler {
     /**
      * Update the physics simulation.
      */
-    public void update() {
+    public void update() throws InterruptedException {
         if (!isPaused) {
             sphereBatchThreads.forEach(Thread::run);
         }
@@ -192,8 +195,9 @@ public class SimulationHandler {
         for (Thread t : sphereBatchThreads) {
             try {
                 t.join();
-            } catch (InterruptedException ex) {
-                ex.printStackTrace();
+            } catch (InterruptedException e) {
+                logger.error("Interrupted while waiting for thread to finish: {}", e.getMessage());
+                throw e;
             }
         }
     }

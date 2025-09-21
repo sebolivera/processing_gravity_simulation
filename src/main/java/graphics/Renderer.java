@@ -1,5 +1,7 @@
 package graphics;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import events.core.EventManager;
 import events.graphics.CameraCommandEvent;
 import events.graphics.gui.GUIStateChangedEvent;
@@ -22,6 +24,7 @@ import static events.graphics.CameraCommandEvent.Operation.*;
  * Centralizes drawing methods, font management, and display-related functionality.
  */
 public class Renderer {
+    private static final Logger logger = LoggerFactory.getLogger(Renderer.class);
     private final PApplet app;
     private final EventManager eventManager;
     private final SimulationHandler simulationHandler;
@@ -48,7 +51,7 @@ public class Renderer {
             SimulationHandler simulationHandler,
             InputHandler inputHandler,
             GUIHandler guiHandler
-    ) {
+    ) throws AWTException {
         this.app = app;
         this.eventManager = eventManager;
         this.simulationHandler = simulationHandler;
@@ -62,7 +65,8 @@ public class Renderer {
         try {
             this.robot = new Robot();
         } catch (AWTException e) {
-            System.err.println("Could not create Robot for mouse binding: " + e.getMessage());
+            logger.error("Could not create Robot for mouse binding: {}", e.getMessage());
+            throw e;
         }
         prevCrosshairX = mouseX;
         prevCrosshairY = mouseY;
@@ -107,7 +111,8 @@ public class Renderer {
             prevMouseX = prevCrosshairX;
             prevMouseY = prevCrosshairY;
         } catch (Exception e) {
-            System.err.println("Error snapping mouse to crosshair: " + e.getMessage());
+            logger.error("Error snapping mouse to crosshair: {}", e.getMessage());
+            throw e;
         }
     }
 
@@ -298,7 +303,8 @@ public class Renderer {
                 }
             }
         } catch (Exception e) {
-            System.err.println("Mouse centering error: " + e.getMessage());
+            logger.error("Mouse centering error: {}", e.getMessage());
+            throw e;
         }
     }
 }
