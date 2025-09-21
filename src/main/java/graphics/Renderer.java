@@ -14,20 +14,27 @@ import model.SimulationHandler;
 import processing.core.PApplet;
 import processing.core.PSurface;
 
-import java.awt.*;
+import java.awt.AWTException;
+import java.awt.PointerInfo;
+import java.awt.MouseInfo;
+import java.awt.Robot;
 import java.util.Objects;
 
-import static events.graphics.CameraCommandEvent.Operation.*;
+import static events.graphics.CameraCommandEvent.Operation.BOOM;
+import static events.graphics.CameraCommandEvent.Operation.DOLLY;
+import static events.graphics.CameraCommandEvent.Operation.PAN;
+import static events.graphics.CameraCommandEvent.Operation.TILT;
+import static events.graphics.CameraCommandEvent.Operation.TRUCK;
+
 
 /**
  * Handles all rendering operations for the application.
  * Centralizes drawing methods, font management, and display-related functionality.
  */
 public class Renderer {
-    private static final Logger logger = LoggerFactory.getLogger(Renderer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Renderer.class);
     private final PApplet app;
     private final EventManager eventManager;
-    private final SimulationHandler simulationHandler;
     private final GUIHandler guiHandler;
     private final InputHandler inputHandler;
 
@@ -42,30 +49,28 @@ public class Renderer {
     private float prevCrosshairY;
     private boolean justSnapped = false;
 
-    private Robot robot;
+    private final Robot robot;
     private int robotMoveBuffer = 0;
 
     public Renderer(
-            PApplet app,
-            EventManager eventManager,
-            SimulationHandler simulationHandler,
-            InputHandler inputHandler,
-            GUIHandler guiHandler
+            final PApplet appParam,
+            final EventManager eventManagerParam,
+            final InputHandler inputHandlerParam,
+            final GUIHandler guiHandlerParam
     ) throws AWTException {
-        this.app = app;
-        this.eventManager = eventManager;
-        this.simulationHandler = simulationHandler;
-        this.guiHandler = guiHandler;
-        this.inputHandler = inputHandler;
+        this.app = appParam;
+        this.eventManager = eventManagerParam;
+        this.guiHandler = guiHandlerParam;
+        this.inputHandler = inputHandlerParam;
 
-        eventManager.subscribe(InputStateChangedEvent.class, this::onInputEvent);
-        eventManager.subscribe(MousePositionChangedEvent.class, this::onMousePositionEvent);
-        eventManager.subscribe(MouseStateChangedEvent.class, this::onMouseStateEvent);
-        eventManager.subscribe(GUIStateChangedEvent.class, this::onGUIStateChangedEvent);
+        eventManagerParam.subscribe(InputStateChangedEvent.class, this::onInputEvent);
+        eventManagerParam.subscribe(MousePositionChangedEvent.class, this::onMousePositionEvent);
+        eventManagerParam.subscribe(MouseStateChangedEvent.class, this::onMouseStateEvent);
+        eventManagerParam.subscribe(GUIStateChangedEvent.class, this::onGUIStateChangedEvent);
         try {
             this.robot = new Robot();
         } catch (AWTException e) {
-            logger.error("Could not create Robot for mouse binding: {}", e.getMessage());
+            LOGGER.error("Could not create Robot for mouse binding: {}", e.getMessage());
             throw e;
         }
         prevCrosshairX = mouseX;
@@ -78,7 +83,7 @@ public class Renderer {
      * Handle GUI state changes.
      * @param e The event.
      */
-    private void onGUIStateChangedEvent(GUIStateChangedEvent e) {
+    private void onGUIStateChangedEvent(final GUIStateChangedEvent e) {
         if (Objects.requireNonNull(e.element()) == GUIStateChangedEvent.UIElement.FREE_CAM) {
             if (!e.newState()) {
                 snapMouseToCrosshair();
@@ -90,7 +95,9 @@ public class Renderer {
      * Snap the mouse to the crosshair.
      */
     private void snapMouseToCrosshair() {
-        if (robot == null) return;
+        if (robot == null) {
+            return;
+        }
 
         try {
             PSurface surface = app.getSurface();
@@ -111,7 +118,7 @@ public class Renderer {
             prevMouseX = prevCrosshairX;
             prevMouseY = prevCrosshairY;
         } catch (Exception e) {
-            logger.error("Error snapping mouse to crosshair: {}", e.getMessage());
+            LOGGER.error("Error snapping mouse to crosshair: {}", e.getMessage());
             throw e;
         }
     }
@@ -120,7 +127,7 @@ public class Renderer {
      * Handle input state changes.
      * @param e The event.
      */
-    private void onInputEvent(InputStateChangedEvent e) {
+    private void onInputEvent(final InputStateChangedEvent e) {
         if (Objects.requireNonNull(e.element()) == InputStateChangedEvent.InputElement.SHIFT_KEY_DOWN) {
             shiftHeld = e.newState();
         }
@@ -130,7 +137,7 @@ public class Renderer {
      * Handle mouse position changes.
      * @param e The event.
      */
-    private void onMousePositionEvent(MousePositionChangedEvent e) {
+    private void onMousePositionEvent(final MousePositionChangedEvent e) {
         if (justSnapped) {
             justSnapped = false;
             return;
@@ -146,7 +153,7 @@ public class Renderer {
      * Handle mouse state changes.
      * @param e The event.
      */
-    private void onMouseStateEvent(MouseStateChangedEvent e) {
+    private void onMouseStateEvent(final MouseStateChangedEvent e) {
         mousePressed = e.pressed();
         mouseButton = e.button();
     }
@@ -157,7 +164,7 @@ public class Renderer {
      * <i>This is where I would draw the line. IF I HAD ONE.</i>
      */
     public void drawBounds() {
-        if (simulationHandler.areBoundsEnabled()) {
+        if (SimulationHandler.areBoundsEnabled()) {
             app.noFill();
             app.stroke(255);
             app.line(0, 0, 0, app.width, 0, 0);
@@ -218,13 +225,21 @@ public class Renderer {
             if (mousePressed && mouseButton == PApplet.RIGHT) {
                 float truck = -(mouseX - prevMouseX);
                 float boom = (mouseY - prevMouseY);
-                if (truck != 0) eventManager.publish(new CameraCommandEvent(TRUCK, truck));
-                if (boom != 0) eventManager.publish(new CameraCommandEvent(BOOM, boom));
+                if (truck != 0) {
+                    eventManager.publish(new CameraCommandEvent(TRUCK, truck));
+                }
+                if (boom != 0) {
+                    eventManager.publish(new CameraCommandEvent(BOOM, boom));
+                }
             } else {
                 float yaw = PApplet.radians(mouseX - prevMouseX) * 0.125f;
                 float pitch = PApplet.radians(mouseY - prevMouseY) * 0.125f;
-                if (yaw != 0) eventManager.publish(new CameraCommandEvent(PAN, yaw));
-                if (pitch != 0) eventManager.publish(new CameraCommandEvent(TILT, pitch));
+                if (yaw != 0) {
+                    eventManager.publish(new CameraCommandEvent(PAN, yaw));
+                }
+                if (pitch != 0) {
+                    eventManager.publish(new CameraCommandEvent(TILT, pitch));
+                }
             }
             prevMouseX = mouseX;
             prevMouseY = mouseY;
@@ -232,13 +247,14 @@ public class Renderer {
             for (String k : inputHandler.getKeysDown()) {
                 switch (k) {
                     case "z", "w" -> eventManager.publish(
-                            new CameraCommandEvent(DOLLY, -CameraHandler.CAM_DOLLY_STEP * speedMult));
+                            new CameraCommandEvent(DOLLY, -CameraHandler.getCamDollyStep() * speedMult));
                     case "s" -> eventManager.publish(
-                            new CameraCommandEvent(DOLLY, CameraHandler.CAM_DOLLY_STEP * speedMult));
+                            new CameraCommandEvent(DOLLY, CameraHandler.getCamDollyStep() * speedMult));
                     case "q", "a" -> eventManager.publish(
-                            new CameraCommandEvent(TRUCK, -CameraHandler.CAM_PAN_STEP * speedMult));
+                            new CameraCommandEvent(TRUCK, -CameraHandler.getCamPanStep() * speedMult));
                     case "d" -> eventManager.publish(
-                            new CameraCommandEvent(TRUCK, CameraHandler.CAM_PAN_STEP * speedMult));
+                            new CameraCommandEvent(TRUCK, CameraHandler.getCamPanStep() * speedMult));
+                    default -> LOGGER.debug("Unhandled key: {}", k);
                 }
             }
         }
@@ -248,9 +264,13 @@ public class Renderer {
      * Bind the mouse position to the area inside the window.
      * <i>A mousetrap, if you will.</i>
      */
-    public void bindMousePositionInWindow(boolean isPaused) {
-        if (robot == null || app.width <= 0 || app.height <= 0) return;
-        if (isPaused) return;
+    public void bindMousePositionInWindow(final boolean isPaused) {
+        if (robot == null || app.width <= 0 || app.height <= 0) {
+            return;
+        }
+        if (isPaused) {
+            return;
+        }
 
         try {
             PSurface surface = app.getSurface();
@@ -263,7 +283,9 @@ public class Renderer {
             int windowScreenY = glWindow.getY();
 
             PointerInfo pointerInfo = MouseInfo.getPointerInfo();
-            if (pointerInfo == null) return;
+            if (pointerInfo == null) {
+                return;
+            }
 
             int mouseScreenX = (int) pointerInfo.getLocation().getX();
             int mouseScreenY = (int) pointerInfo.getLocation().getY();
@@ -303,7 +325,7 @@ public class Renderer {
                 }
             }
         } catch (Exception e) {
-            logger.error("Mouse centering error: {}", e.getMessage());
+            LOGGER.error("Mouse centering error: {}", e.getMessage());
             throw e;
         }
     }

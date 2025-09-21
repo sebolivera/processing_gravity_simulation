@@ -4,26 +4,29 @@ import damkjer.ocd.Camera;
 import events.core.EventManager;
 import events.graphics.CameraChangedEvent;
 import events.graphics.CameraCommandEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import processing.core.PApplet;
 
 public class CameraHandler {
-    public static float CAM_PAN_STEP = 20;
-    public static float CAM_DOLLY_STEP = 20;
+    private static final Logger LOGGER = LoggerFactory.getLogger(CameraHandler.class);
+    private static final float CAM_PAN_STEP = 20;
+    private static final float CAM_DOLLY_STEP = 20;
 
     private final PApplet app;
     private final EventManager eventManager;
     private final Camera camera;
 
-    public CameraHandler(PApplet app, EventManager eventManager) {
-        this.app = app;
-        this.eventManager = eventManager;
+    public CameraHandler(final PApplet appParam, final EventManager eventManagerParam) {
+        this.app = appParam;
+        this.eventManager = eventManagerParam;
         this.camera = new Camera(
-                app,
-                app.width / 2.0f,
-                app.height / 2.0f,
+                appParam,
+                appParam.width / 2.0f,
+                appParam.height / 2.0f,
                 1000.0f,
-                app.width / 2.0f,
-                app.height / 2.0f,
+                appParam.width / 2.0f,
+                appParam.height / 2.0f,
                 0.0f
         );
         setupCameraEventHandler();
@@ -33,7 +36,7 @@ public class CameraHandler {
      * Handle camera commands.
      * @param cameraCommandEvent The event.
      */
-    private void onCommand(CameraCommandEvent cameraCommandEvent) {
+    private void onCommand(final CameraCommandEvent cameraCommandEvent) {
         switch (cameraCommandEvent.op()) {
             case DOLLY -> camera.dolly(cameraCommandEvent.value());
             case TRUCK -> camera.truck(cameraCommandEvent.value());
@@ -42,6 +45,7 @@ public class CameraHandler {
             case BOOM -> camera.boom(cameraCommandEvent.value());
             case ROLL -> camera.roll(cameraCommandEvent.value());
             case RESET -> resetCamera();
+            default -> LOGGER.warn("Unhandled camera command: " + cameraCommandEvent.op());
         }
         eventManager.publish(new CameraChangedEvent(camera));
     }
@@ -77,5 +81,21 @@ public class CameraHandler {
      */
     private void setupCameraEventHandler() {
         eventManager.subscribe(CameraCommandEvent.class, this::onCommand);
+    }
+
+    /**
+     * Get the current camera pan step.
+     * @return The pan step.
+     */
+    public static float getCamPanStep() {
+        return CAM_PAN_STEP;
+    }
+
+    /**
+     * Get the current camera dolly step.
+     * @return The dolly step.
+     */
+    public static float getCamDollyStep() {
+        return CAM_DOLLY_STEP;
     }
 }

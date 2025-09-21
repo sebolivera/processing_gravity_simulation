@@ -8,23 +8,26 @@ import java.util.ArrayList;
  * Utility static class for Vectors.
  * <i>Implementations for Grus pending.</i>
  */
-public class VectorUtils {
+public final class VectorUtils {
+    private VectorUtils() {
+    }
+
     /**
      * Fixes all NaN values in a PVector.
      * <i>Your naans are worthless to me.</i>
-     * TODO: Find a viable fix.
+     * todo: Find a viable fix.
      *
-     * @param input_vect PVector instance to modify.
+     * @param inputVect PVector instance to modify.
      */
-    public static void nullifyPVectorNaN(PVector input_vect) {
-        if (Float.isNaN(input_vect.x)) {
-            input_vect.x = 0;
+    public static void nullifyPVectorNaN(final PVector inputVect) {
+        if (Float.isNaN(inputVect.x)) {
+            inputVect.x = 0;
         }
-        if (Float.isNaN(input_vect.y)) {
-            input_vect.y = 0;
+        if (Float.isNaN(inputVect.y)) {
+            inputVect.y = 0;
         }
-        if (Float.isNaN(input_vect.z)) {
-            input_vect.z = 0;
+        if (Float.isNaN(inputVect.z)) {
+            inputVect.z = 0;
         }
     }
 
@@ -34,20 +37,20 @@ public class VectorUtils {
      * replacement for any NaN component in the input vector.
      * Helps in reducing clipping during large sphere agglomerates.
      *
-     * @param inputVector PVector to fix.
+     * @param inputVector    PVector to fix.
      * @param initialVectors List of previous candidates to fix the values with.
      */
-    public static void correctPVectorNaN(PVector inputVector, ArrayList<PVector> initialVectors) {
-        for (int i = initialVectors.size()-1; i>=0; i--) {
-            PVector initial_vect = initialVectors.get(i);
+    public static void correctPVectorNaN(final PVector inputVector, final ArrayList<PVector> initialVectors) {
+        for (int i = initialVectors.size() - 1; i >= 0; i--) {
+            PVector initialVect = initialVectors.get(i);
             if (Float.isNaN(inputVector.x)) {
-                inputVector.x = initial_vect.x;
+                inputVector.x = initialVect.x;
             }
             if (Float.isNaN(inputVector.y)) {
-                inputVector.y = initial_vect.y;
+                inputVector.y = initialVect.y;
             }
             if (Float.isNaN(inputVector.z)) {
-                inputVector.z = initial_vect.z;
+                inputVector.z = initialVect.z;
             }
         }
     }

@@ -34,79 +34,73 @@ public class HScrollBar {
     private final boolean useExponentialScale;
     private final float exponentialBase;
 
+    /**
+     * Configuration for scroll bar positioning and dimensions.
+     */
+    public record Geometry(float xPosition, float yPosition, int sliderWidth, int sliderHeight) {
+    }
 
-    public HScrollBar(
-            float xPosition,
-            float yPosition,
-            int sliderWidth,
-            int sliderHeight,
-            float lerpedMinValue,
-            float lerpedMaxValue,
-            String label,
-            float defaultValue,
-            MathUtils.FloatFunction lambdaController,
-            boolean valueShown,
-            String minLabelValue,
-            String maxLabelValue,
-            PApplet parent,
-            EventManager eventManager,
-            GUIHandler guiEventManager,
-            String scrollBarId
-    ) {
-        this(xPosition, yPosition, sliderWidth, sliderHeight, lerpedMinValue, lerpedMaxValue,
-                label, defaultValue, lambdaController, valueShown, minLabelValue, maxLabelValue,
-                parent, eventManager, guiEventManager, scrollBarId, false, 2.0f);
+    /**
+     * Configuration for scroll bar behavior and values.
+     */
+    public record ValueRange(float lerpedMinValue, float lerpedMaxValue, float defaultValue,
+                             boolean useExponentialScale, float exponentialBase) {
+    }
+
+    /**
+     * Configuration for scroll bar display options.
+     */
+    public record DisplayOptions(String label, boolean valueShown, String minLabelValue, String maxLabelValue) {
+    }
+
+    /**
+     * Dependencies required by the scroll bar.
+     */
+    public record Dependencies(PApplet parent, EventManager eventManager, GUIHandler guiEventManager,
+                               MathUtils.FloatFunction lambdaController, String scrollBarId) {
     }
 
     public HScrollBar(
-            float xPosition,
-            float yPosition,
-            int sliderWidth,
-            int sliderHeight,
-            float lerpedMinValue,
-            float lerpedMaxValue,
-            String label,
-            float defaultValue,
-            MathUtils.FloatFunction lambdaController,
-            boolean valueShown,
-            String minLabelValue,
-            String maxLabelValue,
-            PApplet parent,
-            EventManager eventManager,
-            GUIHandler guiEventManager,
-            String scrollBarId,
-            boolean useExponentialScale,
-            float exponentialBase
+            final Geometry geometry,
+            final ValueRange valueRange,
+            final DisplayOptions displayOptions,
+            final Dependencies dependencies
     ) {
-        this.sliderWidth = sliderWidth;
-        this.sliderHeight = sliderHeight;
-        this.xPosition = xPosition;
-        this.yPosition = yPosition - this.sliderHeight / 2.0f;
+        this.sliderWidth = geometry.sliderWidth;
+        this.sliderHeight = geometry.sliderHeight;
+        this.xPosition = geometry.xPosition;
+        this.yPosition = geometry.yPosition - this.sliderHeight / 2.0f;
         this.sliderPositionMin = this.xPosition;
         this.sliderPositionMax = this.xPosition + this.sliderWidth - this.sliderHeight;
-        this.lerpedMinValue = lerpedMinValue;
-        this.lerpedMaxValue = lerpedMaxValue;
-        this.label = label;
-        this.lambdaController = lambdaController;
-        this.valueShown = valueShown;
-        this.minLabelValue = minLabelValue;
-        this.maxLabelValue = maxLabelValue;
-        this.parent = parent;
-        this.eventManager = eventManager;
-        this.guiEventManager = guiEventManager;
-        this.scrollBarId = scrollBarId;
-        this.useExponentialScale = useExponentialScale;
-        this.exponentialBase = exponentialBase;
 
-        if (useExponentialScale) {
-            float normalizedValue = (defaultValue - lerpedMinValue) / (lerpedMaxValue - lerpedMinValue);
-            float linearPosition = (float) (Math.log(normalizedValue * (exponentialBase - 1) + 1) / Math.log(exponentialBase));
+        this.lerpedMinValue = valueRange.lerpedMinValue;
+        this.lerpedMaxValue = valueRange.lerpedMaxValue;
+        this.useExponentialScale = valueRange.useExponentialScale;
+        this.exponentialBase = valueRange.exponentialBase;
+
+        this.label = displayOptions.label;
+        this.valueShown = displayOptions.valueShown;
+        this.minLabelValue = displayOptions.minLabelValue;
+        this.maxLabelValue = displayOptions.maxLabelValue;
+
+        this.parent = dependencies.parent;
+        this.eventManager = dependencies.eventManager;
+        this.guiEventManager = dependencies.guiEventManager;
+        this.lambdaController = dependencies.lambdaController;
+        this.scrollBarId = dependencies.scrollBarId;
+
+        if (valueRange.useExponentialScale) {
+            float normalizedValue = (valueRange.defaultValue - valueRange.lerpedMinValue) / (valueRange.lerpedMaxValue - valueRange.lerpedMinValue);
+            float linearPosition = (float) (Math.log(normalizedValue * (valueRange.exponentialBase - 1) + 1) / Math.log(valueRange.exponentialBase));
             this.sliderPosition = linearPosition * (this.sliderWidth - this.sliderHeight) + this.xPosition;
         } else {
-            this.sliderPosition = defaultValue * (this.sliderWidth - this.sliderHeight) + this.xPosition;
+            this.sliderPosition = valueRange.defaultValue * (this.sliderWidth - this.sliderHeight) + this.xPosition;
         }
     }
 
+    /**
+     * Updates the position and the value of the slider.
+     */
     public void update() {
         boolean wasHovered = isHovered;
         isHovered = overEvent();
@@ -189,6 +183,7 @@ public class HScrollBar {
     /**
      * Returns the slider's value, either linear or exponential.
      * <i>Show me what you're worth.</i>
+     *
      * @return The slider value.
      */
     public float getValue() {
@@ -205,23 +200,25 @@ public class HScrollBar {
 
     /**
      * Clamps a value between a minimum and maximum.
-     * @param value The value to constrain.
+     *
+     * @param value    The value to constrain.
      * @param minValue The minimum value.
      * @param maxValue The maximum value.
      * @return The constrained value.
      */
-    private float constrain(float value, float minValue, float maxValue) {
+    private float constrain(final float value, final float minValue, final float maxValue) {
         return Math.min(Math.max(value, minValue), maxValue);
     }
 
     /**
      * Checks if the mouse is over the slider.
+     *
      * @return Whether the mouse is over the slider.
      */
     public boolean overEvent() {
         float mx = guiEventManager.getCursorX();
         float my = guiEventManager.getCursorY();
-        return mx > xPosition && mx < xPosition + sliderWidth &&
-                my > yPosition && my < yPosition + sliderHeight;
+        return mx > xPosition && mx < xPosition + sliderWidth
+                && my > yPosition && my < yPosition + sliderHeight;
     }
 }

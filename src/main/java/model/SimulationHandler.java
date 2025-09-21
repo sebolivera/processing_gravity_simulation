@@ -17,17 +17,17 @@ import java.util.ArrayList;
  * <i>The conductor of the physics orchestra.</i>
  */
 public class SimulationHandler {
-    private static final Logger logger = LoggerFactory.getLogger(SimulationHandler.class);
-    public static float G = 6.6743f;
-    public static float targetPhysicsFPS = 60.0f;
-    public static boolean gravityEnabled = true;
-    public static boolean boundsEnabled = true;
-    public static boolean isPaused = false;
+    private static final Logger LOGGER = LoggerFactory.getLogger(SimulationHandler.class);
+    private static float gravityConstant = 6.6743f;
+    private static float targetPhysicsFPS = 60.0f;
+    private static boolean gravityEnabled = true;
+    private static boolean boundsEnabled = true;
+    private static boolean isPaused = false;
 
-    public static boolean drawTrails = false;
-    public static boolean drawArrows = false;
-    public static boolean drawNames = false;
-    public static boolean drawWeights = false;
+    private static boolean drawTrails = false;
+    private static boolean drawArrows = false;
+    private static boolean drawNames = false;
+    private static boolean drawWeights = false;
 
     public static final int DEFAULT_SPHERE_COUNT = 20;
 
@@ -38,9 +38,9 @@ public class SimulationHandler {
     private ArrayList<PhysicSphere> spheres = new ArrayList<>();
     private ArrayList<SphereBatchThread> sphereBatchThreads = new ArrayList<>();
 
-    public SimulationHandler(PApplet app, EventManager eventManager) {
-        this.app = app;
-        this.eventManager = eventManager;
+    public SimulationHandler(final PApplet appParam, final EventManager eventManagerParam) {
+        this.app = appParam;
+        this.eventManager = eventManagerParam;
         this.threadCount = Runtime.getRuntime().availableProcessors();
 
         setupEventHandlers();
@@ -52,48 +52,51 @@ public class SimulationHandler {
     private void setupEventHandlers() {
         eventManager.subscribe(SimulationRestartEvent.class, event -> {
             seed(event.sphereCount());
-            logger.info("Simulation restarted with {} spheres", event.sphereCount());
+            LOGGER.info("Simulation restarted with {} spheres", event.sphereCount());
         });
 
         eventManager.subscribe(GravityChangedEvent.class, event -> {
-            G = event.newGravity();
-            logger.info("Gravity changed to: {}", G);
+            gravityConstant = event.newGravity();
+            LOGGER.info("Gravity changed to: {}", gravityConstant);
         });
 
         eventManager.subscribe(SpeedChangedEvent.class, event -> {
             targetPhysicsFPS = event.newSpeed();
-            logger.info("Speed changed to: {}", targetPhysicsFPS);
+            LOGGER.info("Speed changed to: {}", targetPhysicsFPS);
         });
 
         eventManager.subscribe(GUIStateChangedEvent.class, event -> {
             switch (event.element()) {
                 case SIMULATION_PAUSED -> {
                     isPaused = event.newState();
-                    logger.info("Simulation {}", (isPaused ? "paused" : "unpaused"));
+                    LOGGER.info("Simulation {}", (isPaused ? "paused" : "unpaused"));
                 }
                 case GRAVITY_ENABLED -> {
                     gravityEnabled = event.newState();
-                    logger.info("Gravity {}", (gravityEnabled ? "enabled" : "disabled"));
+                    LOGGER.info("Gravity {}", (gravityEnabled ? "enabled" : "disabled"));
                 }
                 case BOUNDS_ENABLED -> {
                     boundsEnabled = event.newState();
-                    logger.info("Bounds {}", (boundsEnabled ? "enabled" : "disabled"));
+                    LOGGER.info("Bounds {}", (boundsEnabled ? "enabled" : "disabled"));
                 }
                 case VELOCITY_ARROWS -> {
                     drawArrows = event.newState();
-                    logger.info("Velocity arrows {}", (drawArrows ? "enabled" : "disabled"));
+                    LOGGER.info("Velocity arrows {}", (drawArrows ? "enabled" : "disabled"));
                 }
                 case SPHERE_NAMES -> {
                     drawNames = event.newState();
-                    logger.info("Sphere names {}", (drawNames ? "enabled" : "disabled"));
+                    LOGGER.info("Sphere names {}", (drawNames ? "enabled" : "disabled"));
                 }
                 case SPHERE_WEIGHTS -> {
                     drawWeights = event.newState();
-                    logger.info("Sphere weights {}", (drawWeights ? "enabled" : "disabled"));
+                    LOGGER.info("Sphere weights {}", (drawWeights ? "enabled" : "disabled"));
                 }
                 case SPHERE_TRAILS -> {
                     drawTrails = event.newState();
-                    logger.info("Sphere trails {}", (drawTrails ? "enabled" : "disabled"));
+                    LOGGER.info("Sphere trails {}", (drawTrails ? "enabled" : "disabled"));
+                }
+                default -> {
+                    LOGGER.warn("Unknown GUI element: {}", event.element());
                 }
             }
         });
@@ -105,7 +108,7 @@ public class SimulationHandler {
      *
      * @param amount Number of spheres to seed.
      */
-    public void seed(int amount) {
+    public void seed(final int amount) {
         spheres = new ArrayList<>();
         sphereBatchThreads = new ArrayList<>();
         int randColor;
@@ -116,15 +119,15 @@ public class SimulationHandler {
             float randY = app.random(1000.0f);
             float randZ = app.random(1000.0f);
             float randR = app.random(2.0f + app.random(10.0f));
-            PVector t_pos = new PVector(randX, randY, randZ);
+            PVector tPos = new PVector(randX, randY, randZ);
 
             for (PhysicSphere sphere : spheres) {
-                while (PVector.dist(t_pos, sphere.position) < randR) {
+                while (PVector.dist(tPos, sphere.getPosition()) < randR) {
                     randX = app.random(1000.0f);
                     randY = app.random(1000.0f);
                     randZ = app.random(1000.0f);
                     randR = app.random(2 + app.random(10.0f));
-                    t_pos = new PVector(randX, randY, randZ);
+                    tPos = new PVector(randX, randY, randZ);
                 }
             }
 
@@ -151,7 +154,7 @@ public class SimulationHandler {
     /**
      * Set up batch threads for parallel physics processing.
      */
-    private void setupBatchThreads(int amount) {
+    private void setupBatchThreads(final int amount) {
         sphereBatchThreads = new ArrayList<>();
         ArrayList<Integer> spheresIdxBatch = new ArrayList<>();
 
@@ -196,7 +199,7 @@ public class SimulationHandler {
             try {
                 t.join();
             } catch (InterruptedException e) {
-                logger.error("Interrupted while waiting for thread to finish: {}", e.getMessage());
+                LOGGER.error("Interrupted while waiting for thread to finish: {}", e.getMessage());
                 throw e;
             }
         }
@@ -232,7 +235,44 @@ public class SimulationHandler {
      * @return The bounds' state.
      * <i>You're pushing the limits.</i>
      */
-    public boolean areBoundsEnabled() {
+    public static boolean areBoundsEnabled() {
         return boundsEnabled;
+    }
+
+    /**
+     * Returns the gravity constant.
+     * @return The gravity constant.
+     * <i>Heavy dude.</i>
+     */
+    public static float getGravityConstant() {
+        return gravityConstant;
+    }
+
+    /**
+     * Returns the target physics FPS.
+     * @return The target physics FPS.
+     */
+    public static int getTargetPhysicsFPS() {
+        return (int) targetPhysicsFPS;
+    }
+
+    public static boolean isGravityEnabled() {
+        return gravityEnabled;
+    }
+
+    public static boolean isDrawTrails() {
+        return drawTrails;
+    }
+
+    public static boolean isDrawArrows() {
+        return drawArrows;
+    }
+
+    public static boolean isDrawNames() {
+        return drawNames;
+    }
+
+    public static boolean isDrawWeights() {
+        return drawWeights;
     }
 }

@@ -8,8 +8,13 @@ plugins {
     id 'checkstyle'
     id 'pmd'
     id 'com.github.spotbugs' version '6.4.2'
+    id 'com.github.sherter.google-java-format' version '0.9'
 }
-
+googleJavaFormat {
+    source = sourceSets*.allJava
+    include '**/*.java'
+    exclude '**/vendor/**'
+}
 ext.joglVersion = '2.5.0'
 ext.processingVersion = '4.4.7'
 def useJar = false
