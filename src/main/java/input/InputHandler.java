@@ -30,13 +30,11 @@ public class InputHandler {
     private float lastMouseY;
     private final PApplet app;
 
-
     public boolean firstMousePress = false;
 
     public InputHandler(PApplet app, EventManager eventManager, GUIHandler guiHandler) {
         this.eventManager = eventManager;
         this.guiHandler = guiHandler;
-
         this.lastMouseX = app.mouseX;
         this.lastMouseY = app.mouseY;
         this.app = app;
@@ -149,6 +147,7 @@ public class InputHandler {
 
     /**
      * Handle mouse release events.
+     * <i>Release the mice!</i>
      */
     public void handleMouseReleased() {
         eventManager.publish(new MouseStateChangedEvent(false, 0));
