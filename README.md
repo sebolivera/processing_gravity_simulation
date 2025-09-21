@@ -1,18 +1,31 @@
 # Gravity/Elastic Collision Simulation Engine
 
-This is a small personnal project I started to get a handle on collision and gravity simulations in 3D spaces.
+Formerly Processing 4, this is a now Java project that simulates gravity and elastic collisions between spheres.
 
-The inspiration was taken from [The Coding Train](https://www.youtube.com/@TheCodingTrain)'s episode on [Mutual Attraction](https://www.youtube.com/watch?v=GjbKsOkN1Oc) though I chose to increase the complexity by bringing the project into the third dimension.
+The inspiration was taken from [The Coding Train](https://www.youtube.com/@TheCodingTrain)'s episode on [Mutual Attraction](https://www.youtube.com/watch?v=GjbKsOkN1Oc) though I chose to increase
+the complexity by bringing the project into the third dimension.
 
-> Note: This sketch was made using Processing 4, I cannot guarantee that it will work in other versions.
-
-## What is Processing?
-
-Processing is an open-source project created by the Processing Foundation allowing for the creation of simple 2D and 3D visual applications, as well as many other features. The default programming language is Java, but processing also exists in JavaScript, R as well as Python.
-
-More information [here](https://processing.org/overview).
+> Note: This project was intially made using Processing 4, I cannot guarantee that it will work in other versions.
 
 ## Installation
+
+#### Java
+
+You can download Java 21 from [the official website](https://www.oracle.com/ae/java/technologies/downloads/).
+
+To run the project, run:
+
+Linux/Mac:
+```sh
+./gradlew run
+```
+
+Windows:
+```cmd
+gradlew.bat run
+```
+
+#### Processing
 
 You can download Processing 4 from [the official website](https://processing.org/) as either a standalone or complete installation (all major OS supported).
 

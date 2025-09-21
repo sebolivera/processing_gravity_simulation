@@ -1,4 +1,4 @@
-package events.gui;
+package events.graphics.gui;
 
 import events.core.Event;
 
@@ -23,13 +23,5 @@ public class GUIHoverEvent implements Event {
 
     public boolean isHovered() {
         return isHovered;
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
     }
 }
