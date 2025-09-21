@@ -96,17 +96,4 @@ public final class MathUtils extends PApplet {
         float impulse_z = v_final.mag()*cos(angle_xz);
         return new PVector (impulse_x, impulse_y, impulse_z);
     }
-
-    /**
-     * Ease out function for linear interpolation.
-     * <i>Finesse your way out of this.</i>
-     * @param startVal Start value.
-     * @param endVal End value.
-     * @param frame Current frame.
-     * @param factor Factor of the easing.
-     * @return The interpolated value, between the start and end values, at the current frame.
-     */
-    public static float easeOut(float startVal, float endVal, float frame, float factor) {
-        return lerp(startVal, endVal, MathUtils.pow(1.0f-frame, factor));
-    }
 }

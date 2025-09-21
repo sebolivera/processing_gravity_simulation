@@ -6,7 +6,7 @@ import processing.core.*;
 import java.util.ArrayList;
 
 import static app.GravityCollisionApp.*;
-import static model.SimulationManager.*;
+import static model.SimulationHandler.*;
 import static misc.MathUtils.getNormalVector;
 import static misc.VectorUtils.correctPVectorNaN;
 import static misc.VectorUtils.nullifyPVectorNaN;
@@ -280,7 +280,6 @@ public class PhysicSphere {
 
     /**
      * Updates the position and the velocity of the sphere.
-     * <i>I'm not defying the laws of physics - merely updating them.</i>
      */
     private void updatePhysics() {
         prevPos.add(position.copy());

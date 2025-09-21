@@ -4,7 +4,7 @@ import events.core.EventManager;
 import events.simulation.SimulationRestartEvent;
 import events.physics.GravityChangedEvent;
 import events.physics.SpeedChangedEvent;
-import events.gui.GUIStateChangedEvent;
+import events.graphics.gui.GUIStateChangedEvent;
 import processing.core.PApplet;
 import processing.core.PVector;
 
@@ -14,7 +14,7 @@ import java.util.ArrayList;
  * Manages the physics simulation, sphere creation, and threading.
  * <i>The conductor of the physics orchestra.</i>
  */
-public class SimulationManager {
+public class SimulationHandler {
     public static float G = 6.6743f;
     public static float targetPhysicsFPS = 60.0f;
     public static boolean gravityEnabled = true;
@@ -35,7 +35,7 @@ public class SimulationManager {
     private ArrayList<PhysicSphere> spheres = new ArrayList<>();
     private ArrayList<SphereBatchThread> sphereBatchThreads = new ArrayList<>();
 
-    public SimulationManager(PApplet app, EventManager eventManager) {
+    public SimulationHandler(PApplet app, EventManager eventManager) {
         this.app = app;
         this.eventManager = eventManager;
         this.threadCount = Runtime.getRuntime().availableProcessors();
@@ -174,7 +174,7 @@ public class SimulationManager {
             if (amount % threadCount != 0) {
                 int remainingObjs = (amount - globalIdx);
                 for (int i = 0; i < remainingObjs; i++) {
-                    sphereBatchThreads.get(i).addToObjs(globalIdx);
+                    sphereBatchThreads.get(i).addToObjects(globalIdx);
                     globalIdx++;
                 }
             }
@@ -200,39 +200,35 @@ public class SimulationManager {
 
     /**
      * Render all spheres.
+     * <i>Show me them balls.</i>
      */
-    public void render() {
+    public void renderSpheres() {
         spheres.forEach(PhysicSphere::display);
     }
 
     /**
      * Initialize the simulation with default settings.
+     * <i>And thus, the universe was born.</i>
      */
     public void initialize() {
         seed(DEFAULT_SPHERE_COUNT);
     }
 
-    public ArrayList<PhysicSphere> getSpheres() {
-        return spheres;
-    }
-
+    /**
+     * Returns whether the simulation is paused.
+     * @return The pause state.
+     * <i>Are you awake?</i>
+     */
     public boolean isPaused() {
         return isPaused;
     }
 
-    public boolean isGravityEnabled() {
-        return gravityEnabled;
-    }
-
+    /**
+     * Returns whether bounds are enabled.
+     * @return The bounds' state.
+     * <i>You're pushing the limits.</i>
+     */
     public boolean areBoundsEnabled() {
         return boundsEnabled;
-    }
-
-    public float getGravityConstant() {
-        return G;
-    }
-
-    public float getTargetPhysicsFPS() {
-        return targetPhysicsFPS;
     }
 }

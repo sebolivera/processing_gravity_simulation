@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class CollisionIndex {
     /**
      * Holds a pair of colliding spheres.
-     * <i>They always come in two.</i>
      */
     private static final Set<Map.Entry<Integer, Integer>> LOCKS = ConcurrentHashMap.newKeySet();
 

@@ -1,9 +1,7 @@
-package gui;
+package graphics.gui;
 
-import app.GravityCollisionApp;
 import events.core.EventManager;
-import events.gui.GUIHoverEvent;
-import events.gui.GUIManager;
+import events.graphics.gui.GUIHoverEvent;
 import misc.MathUtils;
 import processing.core.PApplet;
 
@@ -30,7 +28,7 @@ public class HScrollBar {
     private final String maxLabelValue;
     private final PApplet parent;
     private final EventManager eventManager;
-    private final GUIManager guiEventManager;
+    private final GUIHandler guiEventManager;
     private final String scrollBarId;
     private float lastValue = Float.NaN;
     private final boolean useExponentialScale;
@@ -52,7 +50,7 @@ public class HScrollBar {
             String maxLabelValue,
             PApplet parent,
             EventManager eventManager,
-            GUIManager guiEventManager,
+            GUIHandler guiEventManager,
             String scrollBarId
     ) {
         this(xPosition, yPosition, sliderWidth, sliderHeight, lerpedMinValue, lerpedMaxValue,
@@ -75,7 +73,7 @@ public class HScrollBar {
             String maxLabelValue,
             PApplet parent,
             EventManager eventManager,
-            GUIManager guiEventManager,
+            GUIHandler guiEventManager,
             String scrollBarId,
             boolean useExponentialScale,
             float exponentialBase
@@ -108,7 +106,6 @@ public class HScrollBar {
             this.sliderPosition = defaultValue * (this.sliderWidth - this.sliderHeight) + this.xPosition;
         }
     }
-
 
     public void update() {
         boolean wasHovered = isHovered;
@@ -159,8 +156,8 @@ public class HScrollBar {
         }
         parent.rect(xPosition, yPosition, sliderWidth, sliderHeight);
         parent.fill(255);
-        parent.text(minLabelValue, xPosition, yPosition + sliderHeight + GravityCollisionApp.DEFAULT_FONT_SIZE);
-        parent.text(maxLabelValue, xPosition + sliderWidth - (minLabelValue.length() * 5), yPosition + sliderHeight + GravityCollisionApp.DEFAULT_FONT_SIZE);
+        parent.text(minLabelValue, xPosition, yPosition + sliderHeight + GUIHandler.DEFAULT_FONT_SIZE);
+        parent.text(maxLabelValue, xPosition + sliderWidth - (minLabelValue.length() * 5), yPosition + sliderHeight + GUIHandler.DEFAULT_FONT_SIZE);
 
         if (isHovered || isLocked) {
             parent.fill(255);
@@ -179,13 +176,13 @@ public class HScrollBar {
         } else {
             parent.fill(255);
         }
-        parent.text(label, xPosition, yPosition - (sliderHeight + GravityCollisionApp.DEFAULT_FONT_SIZE) / 2f);
+        parent.text(label, xPosition, yPosition - (sliderHeight + GUIHandler.DEFAULT_FONT_SIZE) / 2f);
 
         if (valueShown) {
             parent.fill(255, 200, 200);
-            parent.textSize(GravityCollisionApp.DEFAULT_FONT_SIZE * 0.5f);
-            parent.text(getValue(), xPosition + sliderWidth, yPosition + GravityCollisionApp.DEFAULT_FONT_SIZE / 2f);
-            parent.textSize(GravityCollisionApp.DEFAULT_FONT_SIZE);
+            parent.textSize(GUIHandler.DEFAULT_FONT_SIZE * 0.5f);
+            parent.text(getValue(), xPosition + sliderWidth, yPosition + GUIHandler.DEFAULT_FONT_SIZE / 2f);
+            parent.textSize(GUIHandler.DEFAULT_FONT_SIZE);
         }
     }
 
@@ -206,14 +203,25 @@ public class HScrollBar {
         }
     }
 
-
+    /**
+     * Clamps a value between a minimum and maximum.
+     * @param value The value to constrain.
+     * @param minValue The minimum value.
+     * @param maxValue The maximum value.
+     * @return The constrained value.
+     */
     private float constrain(float value, float minValue, float maxValue) {
         return Math.min(Math.max(value, minValue), maxValue);
     }
 
-
+    /**
+     * Checks if the mouse is over the slider.
+     * @return Whether the mouse is over the slider.
+     */
     public boolean overEvent() {
-        return parent.mouseX > xPosition && parent.mouseX < xPosition + sliderWidth &&
-                parent.mouseY > yPosition && parent.mouseY < yPosition + sliderHeight;
+        float mx = guiEventManager.getCursorX();
+        float my = guiEventManager.getCursorY();
+        return mx > xPosition && mx < xPosition + sliderWidth &&
+                my > yPosition && my < yPosition + sliderHeight;
     }
 }

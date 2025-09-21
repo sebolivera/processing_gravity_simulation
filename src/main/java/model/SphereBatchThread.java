@@ -23,7 +23,12 @@ public class SphereBatchThread extends Thread {
         );
     }
 
-    public void addToObjs(int objIdx) {
+    /**
+     * Add an object index to the list of objects to be processed.
+     * @param objIdx Object index.
+     * <i>One more to add to my collection.</i>
+     */
+    public void addToObjects(int objIdx) {
         objectIndexList.add(objIdx);
     }
 

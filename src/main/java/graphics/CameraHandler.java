@@ -1,7 +1,9 @@
 package graphics;
 
+import damkjer.ocd.Camera;
 import events.core.EventManager;
-import events.physics.CameraChangedEvent;
+import events.graphics.CameraChangedEvent;
+import events.graphics.CameraCommandEvent;
 import processing.core.PApplet;
 
 public class CameraHandler {
@@ -10,13 +12,38 @@ public class CameraHandler {
 
     private final PApplet app;
     private final EventManager eventManager;
-    private final CameraChangedEvent cameraEvent;
+    private final Camera camera;
 
     public CameraHandler(PApplet app, EventManager eventManager) {
         this.app = app;
         this.eventManager = eventManager;
-        this.cameraEvent = new CameraChangedEvent(app);
+        this.camera = new Camera(
+                app,
+                app.width / 2.0f,
+                app.height / 2.0f,
+                1000.0f,
+                app.width / 2.0f,
+                app.height / 2.0f,
+                0.0f
+        );
         setupCameraEventHandler();
+    }
+
+    /**
+     * Handle camera commands.
+     * @param cameraCommandEvent The event.
+     */
+    private void onCommand(CameraCommandEvent cameraCommandEvent) {
+        switch (cameraCommandEvent.op()) {
+            case DOLLY -> camera.dolly(cameraCommandEvent.value());
+            case TRUCK -> camera.truck(cameraCommandEvent.value());
+            case PAN -> camera.pan(cameraCommandEvent.value());
+            case TILT -> camera.tilt(cameraCommandEvent.value());
+            case BOOM -> camera.boom(cameraCommandEvent.value());
+            case ROLL -> camera.roll(cameraCommandEvent.value());
+            case RESET -> resetCamera();
+        }
+        eventManager.publish(new CameraChangedEvent(camera));
     }
 
     /**
@@ -24,7 +51,7 @@ public class CameraHandler {
      * <i>AAAAND... ACTION!</i>
      */
     public void initializeCamera() {
-        cameraEvent.ResetCameraEvent(app.width, app.height);
+        resetCamera();
     }
 
     /**
@@ -32,7 +59,9 @@ public class CameraHandler {
      * <i>Take 2.</i>
      */
     public void resetCamera() {
-        cameraEvent.ResetCameraEvent(app.width, app.height);
+        camera.jump(app.width / 2f, app.height / 2f, app.height + 1000f);
+        camera.aim(app.width / 2f, app.height / 2f, 0);
+        eventManager.publish(new CameraChangedEvent(camera));
     }
 
     /**
@@ -40,22 +69,15 @@ public class CameraHandler {
      * <i>Rolling...</i>
      */
     public void update() {
-        cameraEvent.FeedEvent();
+        camera.feed();
     }
 
     /**
      * Set up the camera event handler.
-     * <i>Cameraman... handler. Camera man-handler?</i>
      */
     private void setupCameraEventHandler() {
         eventManager.subscribe(CameraChangedEvent.class, event ->
                 System.out.println("Camera updated via event system"));
-    }
-
-    /**
-     * Get the current camera event for external use
-     */
-    public CameraChangedEvent getCameraEvent() {
-        return cameraEvent;
+        eventManager.subscribe(CameraCommandEvent.class, this::onCommand);
     }
 }

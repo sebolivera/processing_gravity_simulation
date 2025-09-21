@@ -1,4 +1,4 @@
-package events.gui;
+package events.graphics.gui;
 
 import events.core.Event;
 
