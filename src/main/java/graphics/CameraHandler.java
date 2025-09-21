@@ -76,8 +76,6 @@ public class CameraHandler {
      * Set up the camera event handler.
      */
     private void setupCameraEventHandler() {
-        eventManager.subscribe(CameraChangedEvent.class, event ->
-                System.out.println("Camera updated via event system"));
         eventManager.subscribe(CameraCommandEvent.class, this::onCommand);
     }
 }

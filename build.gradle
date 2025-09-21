@@ -34,9 +34,9 @@ ext {
 }
 
 dependencies {
+    implementation 'org.slf4j:slf4j-api:2.0.17'
+    implementation 'ch.qos.logback:logback-classic:1.5.18'
     implementation("org.processing:core:${processingVersion}")
-
-    // implementation("org.processing:core:${processingVersion}")
 
     implementation "org.jogamp.jogl:jogl-all:${joglVersion}"
     implementation "org.jogamp.gluegen:gluegen-rt:${joglVersion}"
@@ -103,7 +103,6 @@ tasks.register('extractNatives') {
             }
         }
 
-        // List what was actually extracted
         println "Final extracted natives:"
         nativesDir.listFiles()?.each { file ->
             if (file.isFile()) {

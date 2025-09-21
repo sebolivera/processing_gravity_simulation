@@ -10,6 +10,8 @@ import graphics.gui.GUIHandler;
 import events.simulation.SimulationRestartEvent;
 import graphics.CameraHandler;
 import model.SimulationHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import processing.core.PApplet;
 import processing.event.MouseEvent;
 
@@ -17,6 +19,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class InputHandler {
+    private static final Logger logger = LoggerFactory.getLogger(InputHandler.class);
     private final EventManager eventManager;
     private final GUIHandler guiHandler;
 
@@ -57,6 +60,7 @@ public class InputHandler {
      * <i>Stop pressing my buttons.</i>
      */
     public void handleKeyPressed(int key, int keyCode) {
+        logger.debug("Key '{}' with keycode {} pressed", key, keyCode);
         String keyStr = key == PApplet.CODED ?
                 (keyCode == PApplet.SHIFT ? "SHIFT" : String.valueOf(keyCode)) :
                 String.valueOf((char)key).toLowerCase();
@@ -74,7 +78,7 @@ public class InputHandler {
         switch (keyStr) {
             case "l" -> {
                 isAzerty = !isAzerty;
-                System.out.println("Keyboard layout switched to: " + (isAzerty ? "AZERTY" : "QWERTY"));
+                logger.info("Keyboard layout switched to: {}", (isAzerty ? "AZERTY" : "QWERTY"));
             }
             case "f" -> eventManager.publish(new GUIStateChangedEvent(
                     GUIStateChangedEvent.UIElement.FREE_CAM,
@@ -105,16 +109,22 @@ public class InputHandler {
         switch (keyCode) {
             case 82 -> { // 'R' key
                 eventManager.publish(new SimulationRestartEvent(SimulationHandler.DEFAULT_SPHERE_COUNT));
-                System.out.println("Restart requested via InputHandler");
+                logger.info("Restart requested via InputHandler");
             }
-            case 80 -> eventManager.publish(new GUIStateChangedEvent( // 'P' key'
-                    GUIStateChangedEvent.UIElement.SIMULATION_PAUSED,
-                    !guiHandler.getDisplaySetting(GUIStateChangedEvent.UIElement.SIMULATION_PAUSED)
-            ));
-            case 72 -> eventManager.publish(new GUIStateChangedEvent( // 'H' key
-                    GUIStateChangedEvent.UIElement.INTERFACE_VISIBLE,
-                    !guiHandler.getDisplaySetting(GUIStateChangedEvent.UIElement.INTERFACE_VISIBLE)
-            ));
+            case 80 -> {
+                eventManager.publish(new GUIStateChangedEvent( // 'P' key'
+                        GUIStateChangedEvent.UIElement.SIMULATION_PAUSED,
+                        !guiHandler.getDisplaySetting(GUIStateChangedEvent.UIElement.SIMULATION_PAUSED)
+                ));
+                logger.info("Pause requested via InputHandler");
+            }
+            case 72 -> {
+                eventManager.publish(new GUIStateChangedEvent( // 'H' key
+                        GUIStateChangedEvent.UIElement.INTERFACE_VISIBLE,
+                        !guiHandler.getDisplaySetting(GUIStateChangedEvent.UIElement.INTERFACE_VISIBLE)
+                ));
+                logger.info("Interface hiding requested via InputHandler");
+            }
         }
     }
 
@@ -123,7 +133,6 @@ public class InputHandler {
      * <i>Hopefully not present in the hydraulic press channel.</i>
      */
     public void handleMousePressed() {
-
         eventManager.publish(new MouseStateChangedEvent(true, app.mouseButton));
 
         if (!guiHandler.isFreeCamEnabled()) {
@@ -142,7 +151,6 @@ public class InputHandler {
      * Handle mouse release events.
      */
     public void handleMouseReleased() {
-
         eventManager.publish(new MouseStateChangedEvent(false, 0));
     }
 
