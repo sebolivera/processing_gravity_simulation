@@ -9,11 +9,9 @@ import events.input.MousePositionChangedEvent;
 import events.physics.GravityChangedEvent;
 import events.physics.SimulationPausedEvent;
 import events.physics.SpeedChangedEvent;
-
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
-
 import misc.MathUtils;
 import processing.core.PApplet;
 import processing.core.PFont;
@@ -42,10 +40,7 @@ public class GUIHandler {
     private PFont fontLight;
     private PFont fontBold;
 
-    public GUIHandler(
-            final EventManager eventManagerParam,
-            final PApplet appParam
-    ) {
+    public GUIHandler(final EventManager eventManagerParam, final PApplet appParam) {
         this.eventManager = eventManagerParam;
         this.app = appParam;
         this.bottomInitX = 50;
@@ -83,17 +78,13 @@ public class GUIHandler {
         return cursorY;
     }
 
-    /**
-     * Initializes the fonts used in the application.
-     */
+    /** Initializes the fonts used in the application. */
     private void initializeFonts() {
         fontLight = app.createFont("Roboto-Light.ttf", DEFAULT_FONT_SIZE);
         fontBold = app.createFont("Roboto-Black.ttf", DEFAULT_FONT_SIZE);
     }
 
-    /**
-     * Initializes the default GUI state.
-     */
+    /** Initializes the default GUI state. */
     private void initializeDefaultState() {
         uiStates.put(UIElement.VELOCITY_ARROWS, false);
         uiStates.put(UIElement.SPHERE_NAMES, false);
@@ -106,9 +97,7 @@ public class GUIHandler {
         uiStates.put(UIElement.SIMULATION_PAUSED, false);
     }
 
-    /**
-     * Sets up the event handlers for the GUI.
-     */
+    /** Sets up the event handlers for the GUI. */
     private void setupEventHandlers() {
         eventManager.subscribe(GUIStateChangedEvent.class, this::handleGUIStateChanges);
         eventManager.subscribe(GUIHoverEvent.class, this::handleHover);
@@ -149,9 +138,7 @@ public class GUIHandler {
         }
     }
 
-    /**
-     * Updates the hover states of the GUI elements. <i>I'm over it.</i>
-     */
+    /** Updates the hover states of the GUI elements. <i>I'm over it.</i> */
     public void updateHoverStates() {
         updateHoverState("velocity_arrows", bottomInitX, bottomInitY, 320, itemHeight);
         updateHoverState("sphere_names", bottomInitX, bottomInitY - itemSpacing, 295, itemHeight);
@@ -169,18 +156,13 @@ public class GUIHandler {
      * Updates the hover state of a single GUI element.
      *
      * @param elementId ID of the element.
-     * @param x         X coordinate of the element.
-     * @param y         Y coordinate of the element.
-     * @param width     Width of the element.
-     * @param height    Height of the element.
+     * @param x X coordinate of the element.
+     * @param y Y coordinate of the element.
+     * @param width Width of the element.
+     * @param height Height of the element.
      */
     private void updateHoverState(
-            final String elementId,
-            final int x,
-            final int y,
-            final int width,
-            final int height
-    ) {
+            final String elementId, final int x, final int y, final int width, final int height) {
         final boolean isHovered =
                 app.mouseX >= x
                         && app.mouseX <= x + width
@@ -194,9 +176,7 @@ public class GUIHandler {
         }
     }
 
-    /**
-     * Handles mouse clicks. <i>It's more of a squeak, really.</i>
-     */
+    /** Handles mouse clicks. <i>It's more of a squeak, really.</i> */
     public void handleMouseClick() {
         if (hoverStates.getOrDefault("velocity_arrows", false)) {
             toggleSetting(UIElement.VELOCITY_ARROWS);
@@ -238,9 +218,7 @@ public class GUIHandler {
         eventManager.publish(new GUIStateChangedEvent(element, newValue));
     }
 
-    /**
-     * Renders the GUI. <i>Here are some happy little clouds, and some happy little trees.</i>
-     */
+    /** Renders the GUI. <i>Here are some happy little clouds, and some happy little trees.</i> */
     public void render() {
         drawTickbox(
                 "velocity_arrows",
@@ -285,9 +263,7 @@ public class GUIHandler {
                 bottomInitY - itemSpacing * 5);
     }
 
-    /**
-     * Updates the UI. <i>Draw me like one of your French GUIs.</i>
-     */
+    /** Updates the UI. <i>Draw me like one of your French GUIs.</i> */
     public void drawGUI() {
         drawHints();
 
@@ -302,9 +278,7 @@ public class GUIHandler {
         }
     }
 
-    /**
-     * Draw hints and UI overlays. <i>This really tipped me off.</i>
-     */
+    /** Draw hints and UI overlays. <i>This really tipped me off.</i> */
     public void drawHints() {
         if (!getDisplaySetting(GUIStateChangedEvent.UIElement.INTERFACE_VISIBLE)) {
             return;
@@ -352,19 +326,18 @@ public class GUIHandler {
      * Draws a tickbox along with its label. Normal color is white, active is yellow, disabled is
      * gray. <i>It's my tick in a box!</i>
      *
-     * @param elementId    ID of the element.
+     * @param elementId ID of the element.
      * @param elementLabel Label of the element.
-     * @param active       Whether the element is active.
-     * @param xPosition    X coordinate of the element.
-     * @param yPosition    Y coordinate of the element.
+     * @param active Whether the element is active.
+     * @param xPosition X coordinate of the element.
+     * @param yPosition Y coordinate of the element.
      */
     private void drawTickbox(
             final String elementId,
             final String elementLabel,
             final boolean active,
             final int xPosition,
-            final int yPosition
-    ) {
+            final int yPosition) {
         final boolean isHovered = hoverStates.getOrDefault(elementId, false);
 
         if (isHovered) {
@@ -409,16 +382,12 @@ public class GUIHandler {
         return uiStates.get(UIElement.FREE_CAM);
     }
 
-    /**
-     * Set the gravity constant.
-     */
+    /** Set the gravity constant. */
     private void setGravityConstant(final float newGravity) {
         eventManager.publish(new GravityChangedEvent(newGravity));
     }
 
-    /**
-     * Set the global speed.
-     */
+    /** Set the global speed. */
     private void setGlobalSpeed(final float newSpeed) {
         eventManager.publish(new SpeedChangedEvent((int) newSpeed));
     }
@@ -426,13 +395,10 @@ public class GUIHandler {
     /**
      * Sets up the GUI sliders.
      *
-     * @param width  Width of the window.
+     * @param width Width of the window.
      * @param height Height of the window. <i>Slide to the left. One hop this time.</i>
      */
-    public void setupSliders(
-            final int width,
-            final int height
-    ) {
+    public void setupSliders(final int width, final int height) {
         final int bottomInitXParam = 50;
         final int bottomInitYParam = height - 50;
 
@@ -468,9 +434,7 @@ public class GUIHandler {
         this.unpausedTimer = timer;
     }
 
-    /**
-     * Handle hovering effects. <i>It's hover Hanakin, I ave the igh ground!</i>
-     */
+    /** Handle hovering effects. <i>It's hover Hanakin, I ave the igh ground!</i> */
     public void hover() {
         updateHoverStates();
     }

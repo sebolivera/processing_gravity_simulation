@@ -27,6 +27,8 @@ spotless {
 }
 checkstyleMain.dependsOn spotlessApply
 checkstyleTest.dependsOn spotlessApply
+checkstyleMain.dependsOn pmdMain
+checkstyleTest.dependsOn pmdTest
 
 ext.joglVersion = '2.5.0'
 ext.processingVersion = '4.4.7'

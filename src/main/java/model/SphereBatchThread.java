@@ -12,8 +12,7 @@ public class SphereBatchThread extends Thread {
     private final List<PhysicSphere> colliderList;
 
     public SphereBatchThread(
-            final List<Integer> objectIndexListParam,
-            final List<PhysicSphere> colliderListParam) {
+            final List<Integer> objectIndexListParam, final List<PhysicSphere> colliderListParam) {
 
         this.objectIndexList = new ArrayList<>(objectIndexListParam);
         this.colliderList = new ArrayList<>(colliderListParam);

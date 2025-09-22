@@ -9,11 +9,9 @@ import events.input.MouseStateChangedEvent;
 import events.simulation.SimulationRestartEvent;
 import graphics.CameraHandler;
 import graphics.gui.GUIHandler;
-
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
-
 import model.SimulationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +34,7 @@ public class InputHandler {
     public InputHandler(
             final PApplet appParam,
             final EventManager eventManagerParam,
-            final GUIHandler guiHandlerParam
-    ) {
+            final GUIHandler guiHandlerParam) {
         this.eventManager = eventManagerParam;
         this.guiHandler = guiHandlerParam;
         this.lastMouseX = appParam.mouseX;
@@ -60,13 +57,8 @@ public class InputHandler {
         }
     }
 
-    /**
-     * Handle keyboard press events. <i>Stop pressing my buttons.</i>
-     */
-    public void handleKeyPressed(
-            final int key,
-            final int keyCode
-    ) {
+    /** Handle keyboard press events. <i>Stop pressing my buttons.</i> */
+    public void handleKeyPressed(final int key, final int keyCode) {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Key '{}' with keycode {} pressed", key, keyCode);
         }
@@ -92,12 +84,14 @@ public class InputHandler {
                     LOGGER.info("Keyboard layout switched to: {}", isAzerty ? "AZERTY" : "QWERTY");
                 }
             }
-            case "f" -> eventManager.publish(
-                    new GUIStateChangedEvent(
-                            GUIStateChangedEvent.UIElement.FREE_CAM,
-                            !guiHandler.isFreeCamEnabled()));
-            case "c" -> eventManager.publish(
-                    new CameraCommandEvent(CameraCommandEvent.Operation.RESET, 0));
+            case "f" ->
+                    eventManager.publish(
+                            new GUIStateChangedEvent(
+                                    GUIStateChangedEvent.UIElement.FREE_CAM,
+                                    !guiHandler.isFreeCamEnabled()));
+            case "c" ->
+                    eventManager.publish(
+                            new CameraCommandEvent(CameraCommandEvent.Operation.RESET, 0));
             default -> {
                 if (LOGGER.isTraceEnabled()) {
                     LOGGER.trace("Unknown key: {}", keyStr);
@@ -106,13 +100,8 @@ public class InputHandler {
         }
     }
 
-    /**
-     * Handle keyboard release events
-     */
-    public void handleKeyReleased(
-            final int key,
-            final int keyCode
-    ) {
+    /** Handle keyboard release events */
+    public void handleKeyReleased(final int key, final int keyCode) {
         final String keyStr =
                 key == PApplet.CODED
                         ? (keyCode == PApplet.SHIFT ? "SHIFT" : String.valueOf(keyCode))
@@ -167,9 +156,7 @@ public class InputHandler {
         }
     }
 
-    /**
-     * Handle mouse press events. <i>Hopefully not present in the hydraulic press channel.</i>
-     */
+    /** Handle mouse press events. <i>Hopefully not present in the hydraulic press channel.</i> */
     public void handleMousePressed() {
         eventManager.publish(new MouseStateChangedEvent(true, app.mouseButton));
         guiHandler.handleMouseClick();
@@ -178,9 +165,7 @@ public class InputHandler {
         }
     }
 
-    /**
-     * Handle mouse release events. <i>Release the mice!</i>
-     */
+    /** Handle mouse release events. <i>Release the mice!</i> */
     public void handleMouseReleased() {
         eventManager.publish(new MouseStateChangedEvent(false, 0));
     }

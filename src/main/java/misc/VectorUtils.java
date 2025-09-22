@@ -1,12 +1,12 @@
 package misc;
 
 import java.util.List;
-
 import processing.core.PVector;
 
 /** Utility static class for Vectors. <i>Implementations for Grus pending.</i> */
 public final class VectorUtils {
     private VectorUtils() {}
+
     /**
      * Fixes all NaN values in a PVector. <i>Your naans are worthless to me.</i> todo: Find a viable
      * fix.
@@ -35,9 +35,7 @@ public final class VectorUtils {
      * @param initialVectors List of previous candidates to fix the values with.
      */
     public static void correctPVectorNaN(
-            final PVector inputVector,
-            final List<PVector> initialVectors
-    ) {
+            final PVector inputVector, final List<PVector> initialVectors) {
         for (int i = initialVectors.size() - 1; i >= 0; i--) {
             final PVector initialVect = initialVectors.get(i);
             if (Float.isNaN(inputVector.x)) {

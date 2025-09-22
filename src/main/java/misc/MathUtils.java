@@ -28,7 +28,8 @@ public final class MathUtils extends PApplet {
      * @param deltaVelocity Delta velocity vector.
      * @return The angle between the two vectors, expressed in radians.
      */
-    public static float getXYZAngleForImpactVector(final PVector velocity, final PVector deltaVelocity) {
+    public static float getXYZAngleForImpactVector(
+            final PVector velocity, final PVector deltaVelocity) {
         PVector normalizedVel = velocity.copy();
         final PVector delta = deltaVelocity.copy();
         normalizedVel.normalize();
@@ -86,12 +87,10 @@ public final class MathUtils extends PApplet {
      *     velocity.'
      */
     public static PVector getNormalVector(
-            final PVector velocity,
-            final PVector pos1,
-            final PVector pos2
-    ) {
+            final PVector velocity, final PVector pos1, final PVector pos2) {
         final PVector delta = getNormalizedDelta(pos1, pos2);
-        final PVector vFinal = getCenterVector(velocity, delta); // impact vector for the current object
+        final PVector vFinal =
+                getCenterVector(velocity, delta); // impact vector for the current object
         final PVector xz = new PVector(pos2.x - pos1.x, 0, pos2.z - pos1.z);
         final PVector xy = new PVector(pos2.x - pos1.x, pos2.y - pos1.y, 0);
 

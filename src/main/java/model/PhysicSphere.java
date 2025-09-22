@@ -8,10 +8,8 @@ import static processing.core.PApplet.lerp;
 import static processing.core.PConstants.SQUARE;
 
 import app.GravityCollisionApp;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import misc.CollisionIndex;
 import processing.core.PApplet;
 import processing.core.PVector;
@@ -44,12 +42,12 @@ public class PhysicSphere {
      * some issues when too many spheres are colliding, so it is 1 by default (perfect bounciness)
      * todo: Switch to builder pattern, this is going to be a nightmare soon enough.
      *
-     * @param indexParam       Sphere index.
+     * @param indexParam Sphere index.
      * @param sphereColorParam Sphere color.
-     * @param positionParam    Sphere initial position.
-     * @param velocityParam    Sphere initial velocity.
-     * @param radiusParam      Sphere radius.
-     * @param massParam        Sphere mass.
+     * @param positionParam Sphere initial position.
+     * @param velocityParam Sphere initial velocity.
+     * @param radiusParam Sphere radius.
+     * @param massParam Sphere mass.
      */
     public PhysicSphere(
             final PApplet appParam,
@@ -58,8 +56,7 @@ public class PhysicSphere {
             final PVector positionParam,
             final PVector velocityParam,
             final float radiusParam,
-            final float massParam
-    ) {
+            final float massParam) {
         this.maxWidth = 1000.0f;
         this.maxHeight = 1000.0f;
         this.maxDepth = 1000.0f;
@@ -77,8 +74,7 @@ public class PhysicSphere {
     /**
      * Sets the Processing app for all spheres.
      *
-     * @param appParam Processing app.
-     *                 <i>Omagaaad, setaaaapp!</i>
+     * @param appParam Processing app. <i>Omagaaad, setaaaapp!</i>
      */
     public static void setApp(final PApplet appParam) {
         if (app == null) {
@@ -91,10 +87,10 @@ public class PhysicSphere {
      * href="https://forum.processing.org/one/topic/drawing-an-arrow.html">here</a>. <i>It's only
      * stealing if it comes from StackOverflow, otherwise it's citing sources.</i>
      *
-     * @param originX         X-coordinate of the arrow's origin.
-     * @param originY         Y-coordinate of the arrow's origin.
-     * @param originZ         Z-coordinate of the arrow's origin.
-     * @param lengthScalar    Scalar applied to the length of the arrow.
+     * @param originX X-coordinate of the arrow's origin.
+     * @param originY Y-coordinate of the arrow's origin.
+     * @param originZ Z-coordinate of the arrow's origin.
+     * @param lengthScalar Scalar applied to the length of the arrow.
      * @param targetDirection Target direction, expressed as a PVector.
      */
     private void drawArrow(
@@ -102,8 +98,7 @@ public class PhysicSphere {
             final float originY,
             final float originZ,
             final float lengthScalar,
-            final PVector targetDirection
-    ) {
+            final PVector targetDirection) {
         app.pushMatrix();
         app.strokeWeight(radius / 2);
         app.translate(originX, originY, originZ);
@@ -225,19 +220,15 @@ public class PhysicSphere {
                                 impactVelocitySelf.mag()
                                         * (residualVelocitySelf.y / residualVelocitySelf.mag()),
                                 impactVelocitySelf.mag()
-                                        * (residualVelocitySelf.z
-                                        / residualVelocitySelf.mag()));
+                                        * (residualVelocitySelf.z / residualVelocitySelf.mag()));
                 impactVelocitySelf =
                         new PVector(
                                 impactVelocityOther.mag()
-                                        * (residualVelocityOther.x
-                                        / residualVelocityOther.mag()),
+                                        * (residualVelocityOther.x / residualVelocityOther.mag()),
                                 impactVelocityOther.mag()
-                                        * (residualVelocityOther.y
-                                        / residualVelocityOther.mag()),
+                                        * (residualVelocityOther.y / residualVelocityOther.mag()),
                                 impactVelocityOther.mag()
-                                        * (residualVelocityOther.z
-                                        / residualVelocityOther.mag()));
+                                        * (residualVelocityOther.z / residualVelocityOther.mag()));
 
                 final PVector momentumSelf = impactVelocitySelf.copy();
                 momentumSelf.mult(mass);
@@ -267,8 +258,7 @@ public class PhysicSphere {
                 final PVector finalVelocityOther = finalVelocitySelf.copy();
                 finalVelocityOther.add(restitutionDelta);
 
-                if (!Float.isNaN(
-                        finalVelocitySelf.x + finalVelocitySelf.y + finalVelocitySelf.z)) {
+                if (!Float.isNaN(finalVelocitySelf.x + finalVelocitySelf.y + finalVelocitySelf.z)) {
                     velocity = finalVelocitySelf;
                 }
 
@@ -329,18 +319,18 @@ public class PhysicSphere {
         }
     }
 
-    /**
-     * Updates the position of the sphere. <i>Take care of them.</i>
-     */
+    /** Updates the position of the sphere. <i>Take care of them.</i> */
     public void update() {
         final float fpsCount = 60.0f;
         if (SimulationHandler.getTargetPhysicsFPS() < fpsCount) {
-            final int frameInterval = Math.round(fpsCount / SimulationHandler.getTargetPhysicsFPS());
+            final int frameInterval =
+                    Math.round(fpsCount / SimulationHandler.getTargetPhysicsFPS());
             if (GravityCollisionApp.getFrames() % frameInterval == 0) {
                 updatePhysics();
             }
         } else {
-            int physicsStepsThisFrame = Math.round(SimulationHandler.getTargetPhysicsFPS() / fpsCount);
+            int physicsStepsThisFrame =
+                    Math.round(SimulationHandler.getTargetPhysicsFPS() / fpsCount);
             physicsStepsThisFrame = Math.max(1, Math.min(physicsStepsThisFrame, 10));
 
             for (int i = 0; i < physicsStepsThisFrame; i++) {
@@ -349,9 +339,7 @@ public class PhysicSphere {
         }
     }
 
-    /**
-     * Updates the position and the velocity of the sphere.
-     */
+    /** Updates the position and the velocity of the sphere. */
     private void updatePhysics() {
         prevPos.add(position.copy());
         velocity.add(acceleration);
@@ -417,8 +405,8 @@ public class PhysicSphere {
             // makes them look flat when the balls turn at sharp angles or face slightly away from
             // the camera.
             for (int i = prevPos.isEmpty() ? 0 : prevPos.size() - 1;
-                 i > (prevPos.size() > 20 ? prevPos.size() - 20 : 0);
-                 i--) {
+                    i > (prevPos.size() > 20 ? prevPos.size() - 20 : 0);
+                    i--) {
                 app.stroke(
                         sphereColor,
                         lerp(

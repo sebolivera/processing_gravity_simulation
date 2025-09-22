@@ -14,13 +14,11 @@ import events.input.MousePositionChangedEvent;
 import events.input.MouseStateChangedEvent;
 import graphics.gui.GUIHandler;
 import input.InputHandler;
-
 import java.awt.AWTException;
 import java.awt.MouseInfo;
 import java.awt.PointerInfo;
 import java.awt.Robot;
 import java.util.Objects;
-
 import model.SimulationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,9 +91,7 @@ public class Renderer {
         }
     }
 
-    /**
-     * Snap the mouse to the crosshair.
-     */
+    /** Snap the mouse to the crosshair. */
     private void snapMouseToCrosshair() {
         if (robot == null) {
             return;
@@ -196,9 +192,7 @@ public class Renderer {
         }
     }
 
-    /**
-     * Draw the crosshair. <i>BOOM! Headshot!</i>
-     */
+    /** Draw the crosshair. <i>BOOM! Headshot!</i> */
     public void drawCrosshair() {
         if (!guiHandler.getDisplaySetting(GUIStateChangedEvent.UIElement.FREE_CAM)) {
             prevCrosshairX = mouseX;
@@ -252,18 +246,22 @@ public class Renderer {
 
             for (final String k : inputHandler.getKeysDown()) {
                 switch (k) {
-                    case "z", "w" -> eventManager.publish(
-                            new CameraCommandEvent(
-                                    DOLLY, -CameraHandler.getCamDollyStep() * speedMult));
-                    case "s" -> eventManager.publish(
-                            new CameraCommandEvent(
-                                    DOLLY, CameraHandler.getCamDollyStep() * speedMult));
-                    case "q", "a" -> eventManager.publish(
-                            new CameraCommandEvent(
-                                    TRUCK, -CameraHandler.getCamPanStep() * speedMult));
-                    case "d" -> eventManager.publish(
-                            new CameraCommandEvent(
-                                    TRUCK, CameraHandler.getCamPanStep() * speedMult));
+                    case "z", "w" ->
+                            eventManager.publish(
+                                    new CameraCommandEvent(
+                                            DOLLY, -CameraHandler.getCamDollyStep() * speedMult));
+                    case "s" ->
+                            eventManager.publish(
+                                    new CameraCommandEvent(
+                                            DOLLY, CameraHandler.getCamDollyStep() * speedMult));
+                    case "q", "a" ->
+                            eventManager.publish(
+                                    new CameraCommandEvent(
+                                            TRUCK, -CameraHandler.getCamPanStep() * speedMult));
+                    case "d" ->
+                            eventManager.publish(
+                                    new CameraCommandEvent(
+                                            TRUCK, CameraHandler.getCamPanStep() * speedMult));
                     default -> {
                         if (LOGGER.isDebugEnabled()) {
                             LOGGER.debug("Unhandled key: {}", k);
@@ -274,9 +272,7 @@ public class Renderer {
         }
     }
 
-    /**
-     * Bind the mouse position to the area inside the window. <i>A mousetrap, if you will.</i>
-     */
+    /** Bind the mouse position to the area inside the window. <i>A mousetrap, if you will.</i> */
     public void bindMousePositionInWindow(final boolean isPaused) {
         if (robot == null || app.width <= 0 || app.height <= 0) {
             return;
@@ -292,7 +288,6 @@ public class Renderer {
             if (!glWindow.hasFocus()) {
                 return;
             }
-
 
             final PointerInfo pointerInfo = MouseInfo.getPointerInfo();
             if (pointerInfo == null) {

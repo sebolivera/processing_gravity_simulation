@@ -55,32 +55,24 @@ public class CameraHandler {
         eventManager.publish(new CameraChangedEvent(camera));
     }
 
-    /**
-     * Initialize and reset camera to default position. <i>AAAAND... ACTION!</i>
-     */
+    /** Initialize and reset camera to default position. <i>AAAAND... ACTION!</i> */
     public void initializeCamera() {
         resetCamera();
     }
 
-    /**
-     * Reset camera to default position. <i>Take 2.</i>
-     */
+    /** Reset camera to default position. <i>Take 2.</i> */
     public void resetCamera() {
         camera.jump(app.width / 2f, app.height / 2f, app.height + 1000f);
         camera.aim(app.width / 2f, app.height / 2f, 0);
         eventManager.publish(new CameraChangedEvent(camera));
     }
 
-    /**
-     * Update the camera transformation. <i>Rolling...</i>
-     */
+    /** Update the camera transformation. <i>Rolling...</i> */
     public void update() {
         camera.feed();
     }
 
-    /**
-     * Set up the camera event handler.
-     */
+    /** Set up the camera event handler. */
     private void setupCameraEventHandler() {
         eventManager.subscribe(CameraCommandEvent.class, this::onCommand);
     }
