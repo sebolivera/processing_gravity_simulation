@@ -86,10 +86,10 @@ public class HScrollBar {
         this.scrollBarId = dependencies.scrollBarId;
 
         if (valueRange.useExponentialScale) {
-            float normalizedValue =
+            final float normalizedValue =
                     (valueRange.defaultValue - valueRange.lerpedMinValue)
                             / (valueRange.lerpedMaxValue - valueRange.lerpedMinValue);
-            float linearPosition =
+            final float linearPosition =
                     (float)
                             (Math.log(normalizedValue * (valueRange.exponentialBase - 1) + 1)
                                     / Math.log(valueRange.exponentialBase));
@@ -104,7 +104,7 @@ public class HScrollBar {
 
     /** Updates the position and the value of the slider. */
     public void update() {
-        boolean wasHovered = isHovered;
+        final boolean wasHovered = isHovered;
         isHovered = overEvent();
 
         if (isHovered != wasHovered) {
@@ -126,7 +126,7 @@ public class HScrollBar {
                             sliderPositionMax);
         }
 
-        float currentValue = getValue();
+        final float currentValue = getValue();
         if (Float.isNaN(lastValue) || Math.abs(currentValue - lastValue) > 0.001f) {
             lambdaController.update(currentValue);
             lastValue = currentValue;
@@ -189,7 +189,7 @@ public class HScrollBar {
      * @return The slider value.
      */
     public float getValue() {
-        float normalizedPosition =
+        final float normalizedPosition =
                 (float)
                         (Math.round(
                                         (sliderPosition - xPosition)
@@ -198,7 +198,7 @@ public class HScrollBar {
                                 / 100.0);
 
         if (useExponentialScale) {
-            float exponentialValue =
+            final float exponentialValue =
                     (float)
                             ((Math.pow(exponentialBase, normalizedPosition) - 1)
                                     / (exponentialBase - 1));
@@ -226,8 +226,8 @@ public class HScrollBar {
      * @return Whether the mouse is over the slider.
      */
     public boolean overEvent() {
-        float mx = guiEventManager.getCursorX();
-        float my = guiEventManager.getCursorY();
+        final float mx = guiEventManager.getCursorX();
+        final float my = guiEventManager.getCursorY();
         return mx > xPosition
                 && mx < xPosition + sliderWidth
                 && my > yPosition

@@ -5,7 +5,10 @@ import events.graphics.gui.GUIStateChangedEvent;
 import events.physics.GravityChangedEvent;
 import events.physics.SpeedChangedEvent;
 import events.simulation.SimulationRestartEvent;
+
 import java.util.ArrayList;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import processing.core.PApplet;
@@ -19,14 +22,13 @@ public class SimulationHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(SimulationHandler.class);
     private static float gravityConstant = 6.6743f;
     private static float targetPhysicsFPS = 60.0f;
-    private static boolean gravityEnabled = true;
-    private static boolean boundsEnabled = true;
-    private static boolean isPaused = false;
-
-    private static boolean drawTrails = false;
-    private static boolean drawArrows = false;
-    private static boolean drawNames = false;
-    private static boolean drawWeights = false;
+    private static boolean gravityEnabled;
+    private static boolean boundsEnabled;
+    private static boolean paused;
+    private static boolean drawTrails;
+    private static boolean drawArrows;
+    private static boolean drawNames;
+    private static boolean drawWeights;
 
     public static final int DEFAULT_SPHERE_COUNT = 20;
 
@@ -34,38 +36,59 @@ public class SimulationHandler {
     private final EventManager eventManager;
     private final int threadCount;
 
-    private ArrayList<PhysicSphere> spheres = new ArrayList<>();
-    private ArrayList<SphereBatchThread> sphereBatchThreads = new ArrayList<>();
+    private List<PhysicSphere> spheres = new ArrayList<>();
+    private List<SphereBatchThread> sphereBatchThreads = new ArrayList<>();
 
     public SimulationHandler(final PApplet appParam, final EventManager eventManagerParam) {
         this.app = appParam;
         this.eventManager = eventManagerParam;
         this.threadCount = Runtime.getRuntime().availableProcessors();
-
+        setDefaultSimulationProps();
         setupEventHandlers();
     }
 
-    /** Set up event handlers for simulation-related events. */
+    /**
+     * Set up the simulation default properties.
+     */
+    private static void setDefaultSimulationProps() {
+        paused = false;
+        drawTrails = false;
+        drawArrows = false;
+        drawNames = false;
+        drawWeights = false;
+        gravityEnabled = true;
+        boundsEnabled = true;
+    }
+
+    /**
+     * Set up event handlers for simulation-related events.
+     */
     private void setupEventHandlers() {
         eventManager.subscribe(
                 SimulationRestartEvent.class,
                 event -> {
                     seed(event.sphereCount());
-                    LOGGER.info("Simulation restarted with {} spheres", event.sphereCount());
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info("Simulation restarted with {} spheres", event.sphereCount());
+                    }
                 });
 
         eventManager.subscribe(
                 GravityChangedEvent.class,
                 event -> {
                     gravityConstant = event.newGravity();
-                    LOGGER.info("Gravity changed to: {}", gravityConstant);
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info("Gravity changed to: {}", gravityConstant);
+                    }
                 });
 
         eventManager.subscribe(
                 SpeedChangedEvent.class,
                 event -> {
                     targetPhysicsFPS = event.newSpeed();
-                    LOGGER.info("Speed changed to: {}", targetPhysicsFPS);
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info("Speed changed to: {}", targetPhysicsFPS);
+                    }
                 });
 
         eventManager.subscribe(
@@ -73,37 +96,53 @@ public class SimulationHandler {
                 event -> {
                     switch (event.element()) {
                         case SIMULATION_PAUSED -> {
-                            isPaused = event.newState();
-                            LOGGER.info("Simulation {}", (isPaused ? "paused" : "unpaused"));
+                            paused = event.newState();
+                            if (LOGGER.isInfoEnabled()) {
+                                LOGGER.info("Simulation {}", paused ? "paused" : "unpaused");
+                            }
                         }
                         case GRAVITY_ENABLED -> {
                             gravityEnabled = event.newState();
-                            LOGGER.info("Gravity {}", (gravityEnabled ? "enabled" : "disabled"));
+                            if (LOGGER.isTraceEnabled()) {
+                                LOGGER.trace("Gravity {}", gravityEnabled);
+                            }
                         }
                         case BOUNDS_ENABLED -> {
                             boundsEnabled = event.newState();
-                            LOGGER.info("Bounds {}", (boundsEnabled ? "enabled" : "disabled"));
+                            if (LOGGER.isTraceEnabled()) {
+                                LOGGER.trace("Bounds {}", boundsEnabled);
+                            }
                         }
                         case VELOCITY_ARROWS -> {
                             drawArrows = event.newState();
-                            LOGGER.info(
-                                    "Velocity arrows {}", (drawArrows ? "enabled" : "disabled"));
+                            if (LOGGER.isTraceEnabled()) {
+                                LOGGER.trace(
+                                        "Velocity arrows {}", drawArrows);
+                            }
                         }
                         case SPHERE_NAMES -> {
                             drawNames = event.newState();
-                            LOGGER.info("Sphere names {}", (drawNames ? "enabled" : "disabled"));
+                            if (LOGGER.isTraceEnabled()) {
+                                LOGGER.trace("Sphere names {}", drawNames);
+                            }
                         }
                         case SPHERE_WEIGHTS -> {
                             drawWeights = event.newState();
-                            LOGGER.info(
-                                    "Sphere weights {}", (drawWeights ? "enabled" : "disabled"));
+                            if (LOGGER.isTraceEnabled()) {
+                                LOGGER.trace(
+                                        "Sphere weights {}", drawWeights);
+                            }
                         }
                         case SPHERE_TRAILS -> {
                             drawTrails = event.newState();
-                            LOGGER.info("Sphere trails {}", (drawTrails ? "enabled" : "disabled"));
+                            if (LOGGER.isTraceEnabled()) {
+                                LOGGER.trace("Sphere trails {}", drawTrails);
+                            }
                         }
                         default -> {
-                            LOGGER.warn("Unknown GUI element: {}", event.element());
+                            if (LOGGER.isWarnEnabled()) {
+                                LOGGER.warn("Unknown GUI element: {}", event.element());
+                            }
                         }
                     }
                 });
@@ -128,7 +167,7 @@ public class SimulationHandler {
             float randR = app.random(2.0f + app.random(10.0f));
             PVector tPos = new PVector(randX, randY, randZ);
 
-            for (PhysicSphere sphere : spheres) {
+            for (final PhysicSphere sphere : spheres) {
                 while (PVector.dist(tPos, sphere.getPosition()) < randR) {
                     randX = app.random(1000.0f);
                     randY = app.random(1000.0f);
@@ -152,10 +191,12 @@ public class SimulationHandler {
         setupBatchThreads(amount);
     }
 
-    /** Set up batch threads for parallel physics processing. */
+    /**
+     * Set up batch threads for parallel physics processing.
+     */
     private void setupBatchThreads(final int amount) {
         sphereBatchThreads = new ArrayList<>();
-        ArrayList<Integer> spheresIdxBatch = new ArrayList<>();
+        final List<Integer> spheresIdxBatch = new ArrayList<>();
 
         if (threadCount > amount) {
             for (int i = 0; i < amount; i++) {
@@ -164,7 +205,7 @@ public class SimulationHandler {
             sphereBatchThreads.add(new SphereBatchThread(spheresIdxBatch, spheres));
             spheresIdxBatch.clear();
         } else {
-            int itemsPerThread = amount / threadCount;
+            final int itemsPerThread = amount / threadCount;
             int globalIdx = 0;
 
             for (int i = 0; i < threadCount; i++) {
@@ -177,7 +218,7 @@ public class SimulationHandler {
             }
 
             if (amount % threadCount != 0) {
-                int remainingObjs = (amount - globalIdx);
+                final int remainingObjs = amount - globalIdx;
                 for (int i = 0; i < remainingObjs; i++) {
                     sphereBatchThreads.get(i).addToObjects(globalIdx);
                     globalIdx++;
@@ -186,28 +227,36 @@ public class SimulationHandler {
         }
     }
 
-    /** Update the physics simulation. */
+    /**
+     * Update the physics simulation.
+     */
     public void update() throws InterruptedException {
-        if (!isPaused) {
+        if (!paused) {
             sphereBatchThreads.forEach(Thread::run);
         }
 
-        for (Thread t : sphereBatchThreads) {
+        for (final Thread t : sphereBatchThreads) {
             try {
                 t.join();
-            } catch (InterruptedException e) {
-                LOGGER.error("Interrupted while waiting for thread to finish: {}", e.getMessage());
-                throw e;
+            } catch (InterruptedException exc) {
+                if (LOGGER.isErrorEnabled()) {
+                    LOGGER.error("Interrupted while waiting for thread to finish: {}", exc.getMessage());
+                }
+                throw exc;
             }
         }
     }
 
-    /** Render all spheres. <i>Show me them balls.</i> */
+    /**
+     * Render all spheres. <i>Show me them balls.</i>
+     */
     public void renderSpheres() {
         spheres.forEach(PhysicSphere::display);
     }
 
-    /** Initialize the simulation with default settings. <i>And thus, the universe was born.</i> */
+    /**
+     * Initialize the simulation with default settings. <i>And thus, the universe was born.</i>
+     */
     public void initialize() {
         seed(DEFAULT_SPHERE_COUNT);
     }
@@ -218,7 +267,7 @@ public class SimulationHandler {
      * @return The pause state. <i>Are you awake?</i>
      */
     public boolean isPaused() {
-        return isPaused;
+        return paused;
     }
 
     /**

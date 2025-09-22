@@ -28,16 +28,15 @@ public final class MathUtils extends PApplet {
      * @param deltaVelocity Delta velocity vector.
      * @return The angle between the two vectors, expressed in radians.
      */
-    public static float getXYZAngleForImpactVector(
-            final PVector velocity, final PVector deltaVelocity) {
+    public static float getXYZAngleForImpactVector(final PVector velocity, final PVector deltaVelocity) {
         PVector normalizedVel = velocity.copy();
-        PVector delta = deltaVelocity.copy();
+        final PVector delta = deltaVelocity.copy();
         normalizedVel.normalize();
         normalizedVel =
                 new PVector(abs(normalizedVel.x), abs(normalizedVel.y), abs(normalizedVel.z));
-        float numerator =
+        final float numerator =
                 delta.x * normalizedVel.x + delta.y * normalizedVel.y + delta.z * normalizedVel.z;
-        float denominator =
+        final float denominator =
                 sqrt(
                         (delta.x + delta.y + delta.z)
                                 * (normalizedVel.x + normalizedVel.y + normalizedVel.z));
@@ -53,7 +52,7 @@ public final class MathUtils extends PApplet {
      * @return The resulting vector, after applying the angle between the two vectors.
      */
     public static PVector getCenterVector(final PVector vect, final PVector delta) {
-        PVector finalVect = vect.copy();
+        final PVector finalVect = vect.copy();
         finalVect.mult(getXYZAngleForImpactVector(vect, delta));
         return finalVect;
     }
@@ -87,18 +86,21 @@ public final class MathUtils extends PApplet {
      *     velocity.'
      */
     public static PVector getNormalVector(
-            final PVector velocity, final PVector pos1, final PVector pos2) {
-        PVector delta = getNormalizedDelta(pos1, pos2);
-        PVector vFinal = getCenterVector(velocity, delta); // impact vector for the current object
-        PVector xz = new PVector(pos2.x - pos1.x, 0, pos2.z - pos1.z);
-        PVector xy = new PVector(pos2.x - pos1.x, pos2.y - pos1.y, 0);
+            final PVector velocity,
+            final PVector pos1,
+            final PVector pos2
+    ) {
+        final PVector delta = getNormalizedDelta(pos1, pos2);
+        final PVector vFinal = getCenterVector(velocity, delta); // impact vector for the current object
+        final PVector xz = new PVector(pos2.x - pos1.x, 0, pos2.z - pos1.z);
+        final PVector xy = new PVector(pos2.x - pos1.x, pos2.y - pos1.y, 0);
 
-        float angleXZ = PVector.angleBetween(xz, new PVector(0, 0, 1));
-        float angleXY = PVector.angleBetween(xy, new PVector(1, 0, 0));
+        final float angleXZ = PVector.angleBetween(xz, new PVector(0, 0, 1));
+        final float angleXY = PVector.angleBetween(xy, new PVector(1, 0, 0));
 
-        float impulseX = vFinal.mag() * sin(angleXZ) * cos(angleXY);
-        float impulseY = vFinal.mag() * sin(angleXZ) * sin(angleXY);
-        float impulseZ = vFinal.mag() * cos(angleXZ);
+        final float impulseX = vFinal.mag() * sin(angleXZ) * cos(angleXY);
+        final float impulseY = vFinal.mag() * sin(angleXZ) * sin(angleXY);
+        final float impulseZ = vFinal.mag() * cos(angleXZ);
         return new PVector(impulseX, impulseY, impulseZ);
     }
 }

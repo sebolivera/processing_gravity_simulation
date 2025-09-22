@@ -14,11 +14,13 @@ import events.input.MousePositionChangedEvent;
 import events.input.MouseStateChangedEvent;
 import graphics.gui.GUIHandler;
 import input.InputHandler;
+
 import java.awt.AWTException;
 import java.awt.MouseInfo;
 import java.awt.PointerInfo;
 import java.awt.Robot;
 import java.util.Objects;
+
 import model.SimulationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,19 +38,19 @@ public class Renderer {
     private final GUIHandler guiHandler;
     private final InputHandler inputHandler;
 
-    private boolean shiftHeld = false;
-    private boolean mousePressed = false;
-    private int mouseButton = 0;
-    private float mouseX = 0;
-    private float mouseY = 0;
+    private boolean shiftHeld;
+    private boolean mousePressed;
+    private int mouseButton;
+    private float mouseX;
+    private float mouseY;
     private float prevMouseX;
     private float prevMouseY;
     private float prevCrosshairX;
     private float prevCrosshairY;
-    private boolean justSnapped = false;
+    private boolean justSnapped;
 
     private final Robot robot;
-    private int robotMoveBuffer = 0;
+    private int robotMoveBuffer;
 
     public Renderer(
             final PApplet appParam,
@@ -67,9 +69,11 @@ public class Renderer {
         eventManagerParam.subscribe(GUIStateChangedEvent.class, this::onGUIStateChangedEvent);
         try {
             this.robot = new Robot();
-        } catch (AWTException e) {
-            LOGGER.error("Could not create Robot for mouse binding: {}", e.getMessage());
-            throw e;
+        } catch (AWTException exc) {
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error("Could not create Robot for mouse binding: {}", exc.getMessage());
+            }
+            throw exc;
         }
         prevCrosshairX = mouseX;
         prevCrosshairY = mouseY;
@@ -80,32 +84,33 @@ public class Renderer {
     /**
      * Handle GUI state changes.
      *
-     * @param e The event.
+     * @param exc The event.
      */
-    private void onGUIStateChangedEvent(final GUIStateChangedEvent e) {
-        if (Objects.requireNonNull(e.element()) == GUIStateChangedEvent.UIElement.FREE_CAM) {
-            if (!e.newState()) {
-                snapMouseToCrosshair();
-            }
+    private void onGUIStateChangedEvent(final GUIStateChangedEvent exc) {
+        if (Objects.requireNonNull(exc.element()) == GUIStateChangedEvent.UIElement.FREE_CAM
+                && !exc.newState()) {
+            snapMouseToCrosshair();
         }
     }
 
-    /** Snap the mouse to the crosshair. */
+    /**
+     * Snap the mouse to the crosshair.
+     */
     private void snapMouseToCrosshair() {
         if (robot == null) {
             return;
         }
 
         try {
-            PSurface surface = app.getSurface();
-            com.jogamp.newt.opengl.GLWindow glWindow =
+            final PSurface surface = app.getSurface();
+            final com.jogamp.newt.opengl.GLWindow glWindow =
                     (com.jogamp.newt.opengl.GLWindow) surface.getNative();
 
-            int windowScreenX = glWindow.getX();
-            int windowScreenY = glWindow.getY();
+            final int windowScreenX = glWindow.getX();
+            final int windowScreenY = glWindow.getY();
 
-            int targetScreenX = windowScreenX + (int) prevCrosshairX;
-            int targetScreenY = windowScreenY + (int) prevCrosshairY;
+            final int targetScreenX = windowScreenX + (int) prevCrosshairX;
+            final int targetScreenY = windowScreenY + (int) prevCrosshairY;
 
             justSnapped = true;
             robotMoveBuffer = 5;
@@ -115,30 +120,32 @@ public class Renderer {
             mouseY = prevCrosshairY;
             prevMouseX = prevCrosshairX;
             prevMouseY = prevCrosshairY;
-        } catch (Exception e) {
-            LOGGER.error("Error snapping mouse to crosshair: {}", e.getMessage());
-            throw e;
+        } catch (Exception exc) {
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error("Error snapping mouse to crosshair: {}", exc.getMessage());
+            }
+            throw exc;
         }
     }
 
     /**
      * Handle input state changes.
      *
-     * @param e The event.
+     * @param exc The event.
      */
-    private void onInputEvent(final InputStateChangedEvent e) {
-        if (Objects.requireNonNull(e.element())
+    private void onInputEvent(final InputStateChangedEvent exc) {
+        if (Objects.requireNonNull(exc.element())
                 == InputStateChangedEvent.InputElement.SHIFT_KEY_DOWN) {
-            shiftHeld = e.newState();
+            shiftHeld = exc.newState();
         }
     }
 
     /**
      * Handle mouse position changes.
      *
-     * @param e The event.
+     * @param exc The event.
      */
-    private void onMousePositionEvent(final MousePositionChangedEvent e) {
+    private void onMousePositionEvent(final MousePositionChangedEvent exc) {
         if (justSnapped) {
             justSnapped = false;
             return;
@@ -146,18 +153,18 @@ public class Renderer {
 
         prevMouseX = mouseX;
         prevMouseY = mouseY;
-        mouseX = e.x();
-        mouseY = e.y();
+        mouseX = exc.x();
+        mouseY = exc.y();
     }
 
     /**
      * Handle mouse state changes.
      *
-     * @param e The event.
+     * @param exc The event.
      */
-    private void onMouseStateEvent(final MouseStateChangedEvent e) {
-        mousePressed = e.pressed();
-        mouseButton = e.button();
+    private void onMouseStateEvent(final MouseStateChangedEvent exc) {
+        mousePressed = exc.pressed();
+        mouseButton = exc.button();
     }
 
     /**
@@ -189,7 +196,9 @@ public class Renderer {
         }
     }
 
-    /** Draw the crosshair. <i>BOOM! Headshot!</i> */
+    /**
+     * Draw the crosshair. <i>BOOM! Headshot!</i>
+     */
     public void drawCrosshair() {
         if (!guiHandler.getDisplaySetting(GUIStateChangedEvent.UIElement.FREE_CAM)) {
             prevCrosshairX = mouseX;
@@ -218,10 +227,10 @@ public class Renderer {
         }
 
         if (guiHandler.isFreeCamEnabled()) {
-            float speedMult = shiftHeld ? 4 : 1;
+            final float speedMult = shiftHeld ? 4 : 1;
             if (mousePressed && mouseButton == PApplet.RIGHT) {
-                float truck = -(mouseX - prevMouseX);
-                float boom = (mouseY - prevMouseY);
+                final float truck = -(mouseX - prevMouseX);
+                final float boom = mouseY - prevMouseY;
                 if (truck != 0) {
                     eventManager.publish(new CameraCommandEvent(TRUCK, truck));
                 }
@@ -229,8 +238,8 @@ public class Renderer {
                     eventManager.publish(new CameraCommandEvent(BOOM, boom));
                 }
             } else {
-                float yaw = PApplet.radians(mouseX - prevMouseX) * 0.125f;
-                float pitch = PApplet.radians(mouseY - prevMouseY) * 0.125f;
+                final float yaw = PApplet.radians(mouseX - prevMouseX) * 0.125f;
+                final float pitch = PApplet.radians(mouseY - prevMouseY) * 0.125f;
                 if (yaw != 0) {
                     eventManager.publish(new CameraCommandEvent(PAN, yaw));
                 }
@@ -241,31 +250,33 @@ public class Renderer {
             prevMouseX = mouseX;
             prevMouseY = mouseY;
 
-            for (String k : inputHandler.getKeysDown()) {
+            for (final String k : inputHandler.getKeysDown()) {
                 switch (k) {
-                    case "z", "w" ->
-                            eventManager.publish(
-                                    new CameraCommandEvent(
-                                            DOLLY, -CameraHandler.getCamDollyStep() * speedMult));
-                    case "s" ->
-                            eventManager.publish(
-                                    new CameraCommandEvent(
-                                            DOLLY, CameraHandler.getCamDollyStep() * speedMult));
-                    case "q", "a" ->
-                            eventManager.publish(
-                                    new CameraCommandEvent(
-                                            TRUCK, -CameraHandler.getCamPanStep() * speedMult));
-                    case "d" ->
-                            eventManager.publish(
-                                    new CameraCommandEvent(
-                                            TRUCK, CameraHandler.getCamPanStep() * speedMult));
-                    default -> LOGGER.debug("Unhandled key: {}", k);
+                    case "z", "w" -> eventManager.publish(
+                            new CameraCommandEvent(
+                                    DOLLY, -CameraHandler.getCamDollyStep() * speedMult));
+                    case "s" -> eventManager.publish(
+                            new CameraCommandEvent(
+                                    DOLLY, CameraHandler.getCamDollyStep() * speedMult));
+                    case "q", "a" -> eventManager.publish(
+                            new CameraCommandEvent(
+                                    TRUCK, -CameraHandler.getCamPanStep() * speedMult));
+                    case "d" -> eventManager.publish(
+                            new CameraCommandEvent(
+                                    TRUCK, CameraHandler.getCamPanStep() * speedMult));
+                    default -> {
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("Unhandled key: {}", k);
+                        }
+                    }
                 }
             }
         }
     }
 
-    /** Bind the mouse position to the area inside the window. <i>A mousetrap, if you will.</i> */
+    /**
+     * Bind the mouse position to the area inside the window. <i>A mousetrap, if you will.</i>
+     */
     public void bindMousePositionInWindow(final boolean isPaused) {
         if (robot == null || app.width <= 0 || app.height <= 0) {
             return;
@@ -275,41 +286,28 @@ public class Renderer {
         }
 
         try {
-            PSurface surface = app.getSurface();
-            com.jogamp.newt.opengl.GLWindow glWindow =
+            final PSurface surface = app.getSurface();
+            final com.jogamp.newt.opengl.GLWindow glWindow =
                     (com.jogamp.newt.opengl.GLWindow) surface.getNative();
             if (!glWindow.hasFocus()) {
                 return;
             }
 
-            int windowScreenX = glWindow.getX();
-            int windowScreenY = glWindow.getY();
 
-            PointerInfo pointerInfo = MouseInfo.getPointerInfo();
+            final PointerInfo pointerInfo = MouseInfo.getPointerInfo();
             if (pointerInfo == null) {
                 return;
             }
 
-            int mouseScreenX = (int) pointerInfo.getLocation().getX();
-            int mouseScreenY = (int) pointerInfo.getLocation().getY();
+            final int mouseScreenX = (int) pointerInfo.getLocation().getX();
+            final int mouseScreenY = (int) pointerInfo.getLocation().getY();
 
-            int windowRight = windowScreenX + app.width;
-            int windowBottom = windowScreenY + app.height;
+            final int windowScreenX = glWindow.getX();
+            final int windowScreenY = glWindow.getY();
+            final int windowRight = windowScreenX + app.width;
+            final int windowBottom = windowScreenY + app.height;
 
-            if (!guiHandler.isFreeCamEnabled()) {
-                if (mouseScreenX < windowScreenX + 2) {
-                    robot.mouseMove(windowScreenX + 1, mouseScreenY);
-                }
-                if (mouseScreenX > windowRight - 3) {
-                    robot.mouseMove(windowRight - 3, mouseScreenY);
-                }
-                if (mouseScreenY < windowScreenY + 2) {
-                    robot.mouseMove(mouseScreenX, windowScreenY + 2);
-                }
-                if (mouseScreenY > windowBottom - 3) {
-                    robot.mouseMove(mouseScreenX, windowBottom - 3);
-                }
-            } else {
+            if (guiHandler.isFreeCamEnabled()) {
                 if (mouseScreenX < windowScreenX + 1) {
                     robot.mouseMove(windowRight - 2, mouseScreenY);
                     robotMoveBuffer = 3;
@@ -326,10 +324,25 @@ public class Renderer {
                     robot.mouseMove(mouseScreenX, windowScreenY + 1);
                     robotMoveBuffer = 3;
                 }
+            } else {
+                if (mouseScreenX < windowScreenX + 2) {
+                    robot.mouseMove(windowScreenX + 1, mouseScreenY);
+                }
+                if (mouseScreenX > windowRight - 3) {
+                    robot.mouseMove(windowRight - 3, mouseScreenY);
+                }
+                if (mouseScreenY < windowScreenY + 2) {
+                    robot.mouseMove(mouseScreenX, windowScreenY + 2);
+                }
+                if (mouseScreenY > windowBottom - 3) {
+                    robot.mouseMove(mouseScreenX, windowBottom - 3);
+                }
             }
-        } catch (Exception e) {
-            LOGGER.error("Mouse centering error: {}", e.getMessage());
-            throw e;
+        } catch (Exception exc) {
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error("Mouse centering error: {}", exc.getMessage());
+            }
+            throw exc;
         }
     }
 }

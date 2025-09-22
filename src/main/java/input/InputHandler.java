@@ -9,8 +9,11 @@ import events.input.MouseStateChangedEvent;
 import events.simulation.SimulationRestartEvent;
 import graphics.CameraHandler;
 import graphics.gui.GUIHandler;
+
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
+
 import model.SimulationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,22 +27,24 @@ public class InputHandler {
 
     private final Set<String> keysDown = new HashSet<>();
     private final Set<String> moveKeys = Set.of("z", "q", "s", "d", "w", "a");
-    private boolean isAzerty = false;
+    private boolean isAzerty;
     private float lastMouseX;
     private float lastMouseY;
     private final PApplet app;
-
-    private static boolean firstMousePress = false;
+    private boolean firstMousePress;
 
     public InputHandler(
             final PApplet appParam,
             final EventManager eventManagerParam,
-            final GUIHandler guiHandlerParam) {
+            final GUIHandler guiHandlerParam
+    ) {
         this.eventManager = eventManagerParam;
         this.guiHandler = guiHandlerParam;
         this.lastMouseX = appParam.mouseX;
         this.lastMouseY = appParam.mouseY;
         this.app = appParam;
+        this.isAzerty = true;
+        this.firstMousePress = false;
     }
 
     /**
@@ -55,13 +60,20 @@ public class InputHandler {
         }
     }
 
-    /** Handle keyboard press events. <i>Stop pressing my buttons.</i> */
-    public void handleKeyPressed(final int key, final int keyCode) {
-        LOGGER.debug("Key '{}' with keycode {} pressed", key, keyCode);
-        String keyStr =
+    /**
+     * Handle keyboard press events. <i>Stop pressing my buttons.</i>
+     */
+    public void handleKeyPressed(
+            final int key,
+            final int keyCode
+    ) {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Key '{}' with keycode {} pressed", key, keyCode);
+        }
+        final String keyStr =
                 key == PApplet.CODED
                         ? (keyCode == PApplet.SHIFT ? "SHIFT" : String.valueOf(keyCode))
-                        : String.valueOf((char) key).toLowerCase();
+                        : String.valueOf((char) key).toLowerCase(Locale.ROOT);
 
         if (moveKeys.contains(keyStr)) {
             keysDown.add(keyStr);
@@ -76,26 +88,35 @@ public class InputHandler {
         switch (keyStr) {
             case "l" -> {
                 isAzerty = !isAzerty;
-                LOGGER.info("Keyboard layout switched to: {}", (isAzerty ? "AZERTY" : "QWERTY"));
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info("Keyboard layout switched to: {}", isAzerty ? "AZERTY" : "QWERTY");
+                }
             }
-            case "f" ->
-                    eventManager.publish(
-                            new GUIStateChangedEvent(
-                                    GUIStateChangedEvent.UIElement.FREE_CAM,
-                                    !guiHandler.isFreeCamEnabled()));
-            case "c" ->
-                    eventManager.publish(
-                            new CameraCommandEvent(CameraCommandEvent.Operation.RESET, 0));
-            default -> LOGGER.info("Unknown key: {}", keyStr);
+            case "f" -> eventManager.publish(
+                    new GUIStateChangedEvent(
+                            GUIStateChangedEvent.UIElement.FREE_CAM,
+                            !guiHandler.isFreeCamEnabled()));
+            case "c" -> eventManager.publish(
+                    new CameraCommandEvent(CameraCommandEvent.Operation.RESET, 0));
+            default -> {
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("Unknown key: {}", keyStr);
+                }
+            }
         }
     }
 
-    /** Handle keyboard release events */
-    public void handleKeyReleased(final int key, final int keyCode) {
-        String keyStr =
+    /**
+     * Handle keyboard release events
+     */
+    public void handleKeyReleased(
+            final int key,
+            final int keyCode
+    ) {
+        final String keyStr =
                 key == PApplet.CODED
                         ? (keyCode == PApplet.SHIFT ? "SHIFT" : String.valueOf(keyCode))
-                        : String.valueOf((char) key).toLowerCase();
+                        : String.valueOf((char) key).toLowerCase(Locale.ROOT);
 
         if (moveKeys.contains(keyStr)) {
             keysDown.remove(keyStr);
@@ -111,7 +132,10 @@ public class InputHandler {
             case 82 -> { // 'R' key
                 eventManager.publish(
                         new SimulationRestartEvent(SimulationHandler.DEFAULT_SPHERE_COUNT));
-                LOGGER.info("Restart requested via InputHandler");
+
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("Restart requested via InputHandler");
+                }
             }
             case 80 -> { // 'P' key'
                 eventManager.publish(
@@ -119,7 +143,10 @@ public class InputHandler {
                                 GUIStateChangedEvent.UIElement.SIMULATION_PAUSED,
                                 !guiHandler.getDisplaySetting(
                                         GUIStateChangedEvent.UIElement.SIMULATION_PAUSED)));
-                LOGGER.info("Pause requested via InputHandler");
+
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("Pause requested via InputHandler");
+                }
             }
             case 72 -> { // 'H' key
                 eventManager.publish(
@@ -127,28 +154,33 @@ public class InputHandler {
                                 GUIStateChangedEvent.UIElement.INTERFACE_VISIBLE,
                                 !guiHandler.getDisplaySetting(
                                         GUIStateChangedEvent.UIElement.INTERFACE_VISIBLE)));
-                LOGGER.info("Interface hiding requested via InputHandler");
+
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("Interface hiding requested via InputHandler");
+                }
             }
-            default -> LOGGER.info("Unhandled keycode: {}", key);
+            default -> {
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("Unhandled keycode: {}", key);
+                }
+            }
         }
     }
 
-    /** Handle mouse press events. <i>Hopefully not present in the hydraulic press channel.</i> */
+    /**
+     * Handle mouse press events. <i>Hopefully not present in the hydraulic press channel.</i>
+     */
     public void handleMousePressed() {
         eventManager.publish(new MouseStateChangedEvent(true, app.mouseButton));
-
-        if (!guiHandler.isFreeCamEnabled()) {
-            guiHandler.handleMouseClick();
-
-            if (!firstMousePress) {
-                firstMousePress = true;
-            }
-        } else {
-            guiHandler.handleMouseClick();
+        guiHandler.handleMouseClick();
+        if (!guiHandler.isFreeCamEnabled() && !firstMousePress) {
+            firstMousePress = true;
         }
     }
 
-    /** Handle mouse release events. <i>Release the mice!</i> */
+    /**
+     * Handle mouse release events. <i>Release the mice!</i>
+     */
     public void handleMouseReleased() {
         eventManager.publish(new MouseStateChangedEvent(false, 0));
     }
@@ -158,7 +190,7 @@ public class InputHandler {
      * it.</i>
      */
     public void handleMouseWheel(final MouseEvent evt) {
-        float dollyAmount = evt.getCount() * CameraHandler.getCamDollyStep();
+        final float dollyAmount = evt.getCount() * CameraHandler.getCamDollyStep();
         eventManager.publish(
                 new CameraCommandEvent(CameraCommandEvent.Operation.DOLLY, -dollyAmount));
     }

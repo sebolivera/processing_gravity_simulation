@@ -13,7 +13,7 @@ import processing.event.MouseEvent;
 
 public final class GravityCollisionApp extends PApplet {
     private static final Logger LOGGER = LoggerFactory.getLogger(GravityCollisionApp.class);
-    private static int frames = 0;
+    private static int frames;
 
     private SimulationHandler simulationHandler;
     private GUIHandler guiHandler;
@@ -23,22 +23,26 @@ public final class GravityCollisionApp extends PApplet {
 
     @Override
     public void settings() {
-        int width = 1000;
-        int height = 1000;
-        String engine = P3D;
-        LOGGER.info(
-                "Initializing application settings with size {}x{} with {} engine.",
-                width,
-                height,
-                engine);
+        final int width = 1000;
+        final int height = 1000;
+        final String engine = P3D;
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info(
+                    "Initializing application settings with size {}x{} with {} engine.",
+                    width,
+                    height,
+                    engine);
+        }
         size(width, height, engine);
     }
 
     @Override
     public void setup() {
-        LOGGER.info("Setting up app event handlers");
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info("Setting up app event handlers");
+        }
         try {
-            EventManager eventManager = new EventManager();
+            final EventManager eventManager = new EventManager();
             simulationHandler = new SimulationHandler(this, eventManager);
 
             cameraHandler = new CameraHandler(this, eventManager);
@@ -48,17 +52,25 @@ public final class GravityCollisionApp extends PApplet {
             renderer = new Renderer(this, eventManager, inputHandler, guiHandler);
             simulationHandler.initialize();
 
-            LOGGER.info("Setting up GUI");
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Setting up GUI");
+            }
             noCursor();
             initGUI();
-        } catch (Exception e) {
-            LOGGER.error("Failed to setup application", e);
+        } catch (Exception exc) {
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error("Failed to setup application", exc);
+            }
         }
-        LOGGER.info("Application setup completed successfully");
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info("Application setup completed successfully");
+        }
     }
 
     private void initGUI() {
-        LOGGER.debug("Initializing GUI components");
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Initializing GUI components");
+        }
         guiHandler.setupSliders(width, height);
     }
 
@@ -81,11 +93,13 @@ public final class GravityCollisionApp extends PApplet {
             guiHandler.drawGUI();
             renderer.handleMovement();
             frames++;
-            if (frames % 3600 == 0) {
+            if (LOGGER.isDebugEnabled() && frames % 3600 == 0) {
                 LOGGER.debug("Application running - Frame: {}, FPS: {}", frames, frameRate);
             }
-        } catch (Exception e) {
-            LOGGER.error("Error in draw loop at frame {}", frames, e);
+        } catch (Exception exc) {
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error("Error in draw loop at frame {}", frames, exc);
+            }
         }
     }
 
@@ -100,8 +114,8 @@ public final class GravityCollisionApp extends PApplet {
     }
 
     @Override
-    public void mouseWheel(final MouseEvent e) {
-        inputHandler.handleMouseWheel(e);
+    public void mouseWheel(final MouseEvent event) {
+        inputHandler.handleMouseWheel(event);
     }
 
     @Override
@@ -124,7 +138,9 @@ public final class GravityCollisionApp extends PApplet {
     }
 
     public static void main(final String[] args) {
-        LOGGER.info("Starting Gravity Collision Application");
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info("Starting Gravity Collision Application");
+        }
         PApplet.main(GravityCollisionApp.class);
     }
 }
