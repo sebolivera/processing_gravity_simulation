@@ -21,15 +21,26 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/gradle_build
 
+      - name: Build distZip
+        run: ./gradlew distZip
+
       - name: Run for 5s (unix)
         if: runner.os != 'Windows'
         shell: bash
         run: |
           set -euo pipefail
-          BIN="$(find . -type f -path '*/build/install/*/bin/*' -maxdepth 6 | head -n1)"
-          test -n "$BIN" || { echo "No installed binary found"; exit 1; }
-          chmod +x "$BIN"
-          "$BIN" &
+          ZIP="$(ls -1 build/distributions/*.zip | head -n1)"
+          test -f "$ZIP"
+          mkdir -p dist && unzip -q "$ZIP" -d dist
+          # Find the launcher script inside the unpacked dist
+          BIN="$(find dist -type f -path '*/bin/*' ! -name '*.bat' | head -n1)"
+          test -x "$BIN" || chmod +x "$BIN"
+          # JOGL needs a display; on Linux use xvfb
+          if command -v xvfb-run >/dev/null 2>&1; then
+            xvfb-run -a "$BIN" &
+          else
+            "$BIN" &
+          fi
           PID=$!
           sleep 5
           kill "$PID" || true
@@ -39,8 +50,11 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $bin = Get-ChildItem -Path . -Recurse -File -Filter * | Where-Object { $_.FullName -match '\\build\\install\\[^\\]+\\bin\\[^\\]+\.bat$' } | Select-Object -First 1
-          if (-not $bin) { throw "No installed binary found" }
+          $zip = Get-ChildItem build\distributions\*.zip | Select-Object -First 1
+          if (-not $zip) { throw "No dist zip found" }
+          Expand-Archive -Path $zip.FullName -DestinationPath dist -Force
+          $bin = Get-ChildItem -Path dist -Recurse -File | Where-Object { $_.FullName -match '\\bin\\.+\.bat$' } | Select-Object -First 1
+          if (-not $bin) { throw "No launcher .bat found" }
           $p = Start-Process -FilePath $bin.FullName -PassThru
           Start-Sleep -Seconds 5
           Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
