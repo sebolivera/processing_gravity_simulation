@@ -1,5 +1,8 @@
 package graphics.gui;
 
+import static events.graphics.gui.GUIStateChangedEvent.UIElement;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import events.core.EventManager;
 import events.graphics.gui.GUIHoverEvent;
 import events.graphics.gui.GUIStateChangedEvent;
@@ -7,66 +10,85 @@ import events.input.MousePositionChangedEvent;
 import events.physics.GravityChangedEvent;
 import events.physics.SimulationPausedEvent;
 import events.physics.SpeedChangedEvent;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
 import misc.MathUtils;
 import processing.core.PApplet;
 import processing.core.PFont;
 
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
-
-import static events.graphics.gui.GUIStateChangedEvent.UIElement;
-
 public class GUIHandler {
     public static final int DEFAULT_FONT_SIZE = 28;
 
+    private static final int MAX_UNPAUSED_TIMER = 2000;
     private final EventManager eventManager;
     private final PApplet app;
 
     private final Map<UIElement, Boolean> uiStates = new EnumMap<>(UIElement.class);
     private final Map<String, Boolean> hoverStates = new HashMap<>();
 
-    private final int bottomInitX = 50;
+    private final int bottomInitX;
     private final int bottomInitY;
-    private final int itemHeight = 20;
-    private final int itemSpacing = 50;
+    private final int itemHeight;
+    private final int itemSpacing;
 
     private HScrollBar gravityScroll;
     private HScrollBar speedScroll;
-    private long unpausedTimer = 0;
-    private float cursorX, cursorY;
+    private long unpausedTimer;
+    private float cursorX;
+    private float cursorY;
 
     private PFont fontLight;
     private PFont fontBold;
 
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification = "PApplet must be shared in Processing; Renderer never exposes app.")
+    public GUIHandler(final EventManager eventManagerParam, final PApplet appParam) {
+        this.eventManager = eventManagerParam;
+        this.app = appParam;
+        this.bottomInitX = 50;
+        this.itemHeight = 20;
+        this.itemSpacing = 50;
+        this.unpausedTimer = 0;
+        this.bottomInitY = appParam.height - 50;
 
-    public GUIHandler(EventManager eventManager, PApplet app) {
-        this.eventManager = eventManager;
-        this.app = app;
-        this.bottomInitY = app.height - 50;
-
-        eventManager.subscribe(MousePositionChangedEvent.class, e -> {
-            cursorX = e.x();
-            cursorY = e.y();
-        });
+        eventManagerParam.subscribe(
+                MousePositionChangedEvent.class,
+                event -> {
+                    cursorX = event.x();
+                    cursorY = event.y();
+                });
         initializeDefaultState();
         setupEventHandlers();
         initializeFonts();
     }
-    public float getCursorX() { return cursorX; }
-    public float getCursorY() { return cursorY; }
 
     /**
-     * Initializes the fonts used in the application.
+     * Returns the cursor X position.
+     *
+     * @return The cursor X position.
      */
+    public float getCursorX() {
+        return cursorX;
+    }
+
+    /**
+     * Returns the cursor Y position.
+     *
+     * @return The cursor Y position.
+     */
+    public float getCursorY() {
+        return cursorY;
+    }
+
+    /** Initializes the fonts used in the application. */
     private void initializeFonts() {
         fontLight = app.createFont("Roboto-Light.ttf", DEFAULT_FONT_SIZE);
         fontBold = app.createFont("Roboto-Black.ttf", DEFAULT_FONT_SIZE);
     }
 
-    /**
-     * Initializes the default GUI state.
-     */
+    /** Initializes the default GUI state. */
     private void initializeDefaultState() {
         uiStates.put(UIElement.VELOCITY_ARROWS, false);
         uiStates.put(UIElement.SPHERE_NAMES, false);
@@ -79,9 +101,7 @@ public class GUIHandler {
         uiStates.put(UIElement.SIMULATION_PAUSED, false);
     }
 
-    /**
-     * Sets up the event handlers for the GUI.
-     */
+    /** Sets up the event handlers for the GUI. */
     private void setupEventHandlers() {
         eventManager.subscribe(GUIStateChangedEvent.class, this::handleGUIStateChanges);
         eventManager.subscribe(GUIHoverEvent.class, this::handleHover);
@@ -90,9 +110,10 @@ public class GUIHandler {
 
     /**
      * Handles the simulation paused event (for the "Paused" and "Running" text indicators).
+     *
      * @param event The event.
      */
-    private void handleSimulationPaused(SimulationPausedEvent event) {
+    private void handleSimulationPaused(final SimulationPausedEvent event) {
         if (!event.paused()) {
             setUnpausedTimer(app.millis());
         }
@@ -100,62 +121,66 @@ public class GUIHandler {
 
     /**
      * Handles hover events triggered in the GUI.
+     *
      * @param event the GUI hover event.
      */
-    private void handleHover(GUIHoverEvent event) {
-        hoverStates.put(event.getElementId(), event.isHovered());
+    private void handleHover(final GUIHoverEvent event) {
+        hoverStates.put(event.elementId(), event.isHovered());
     }
 
     /**
      * Handles GUI state change events.
+     *
      * @param event The event.
      */
-    private void handleGUIStateChanges(GUIStateChangedEvent event) {
-        boolean previousState = uiStates.get(event.element());
+    private void handleGUIStateChanges(final GUIStateChangedEvent event) {
+        final boolean previousState = uiStates.get(event.element());
 
         uiStates.put(event.element(), event.newState());
-        if (event.element() == UIElement.SIMULATION_PAUSED &&
-                previousState && !event.newState()) {
+        if (event.element() == UIElement.SIMULATION_PAUSED && previousState && !event.newState()) {
             setUnpausedTimer(app.millis());
         }
     }
 
-    /**
-     * Updates the hover states of the GUI elements.
-     * <i>I'm over it.</i>
-     */
+    /** Updates the hover states of the GUI elements. <i>I'm over it.</i> */
     public void updateHoverStates() {
         updateHoverState("velocity_arrows", bottomInitX, bottomInitY, 320, itemHeight);
         updateHoverState("sphere_names", bottomInitX, bottomInitY - itemSpacing, 295, itemHeight);
-        updateHoverState("sphere_weights", bottomInitX, bottomInitY - itemSpacing * 2, 270, itemHeight);
-        updateHoverState("sphere_trails", bottomInitX, bottomInitY - itemSpacing * 3, 220, itemHeight);
-        updateHoverState("gravity_enabled", bottomInitX, bottomInitY - itemSpacing * 4, 280, itemHeight);
-        updateHoverState("bounds_enabled", bottomInitX, bottomInitY - itemSpacing * 5, 240, itemHeight);
+        updateHoverState(
+                "sphere_weights", bottomInitX, bottomInitY - itemSpacing * 2, 270, itemHeight);
+        updateHoverState(
+                "sphere_trails", bottomInitX, bottomInitY - itemSpacing * 3, 220, itemHeight);
+        updateHoverState(
+                "gravity_enabled", bottomInitX, bottomInitY - itemSpacing * 4, 280, itemHeight);
+        updateHoverState(
+                "bounds_enabled", bottomInitX, bottomInitY - itemSpacing * 5, 240, itemHeight);
     }
 
     /**
      * Updates the hover state of a single GUI element.
+     *
      * @param elementId ID of the element.
      * @param x X coordinate of the element.
      * @param y Y coordinate of the element.
      * @param width Width of the element.
      * @param height Height of the element.
      */
-    private void updateHoverState(String elementId, int x, int y, int width, int height) {
-        boolean isHovered = app.mouseX >= x && app.mouseX <= x + width &&
-                app.mouseY >= y && app.mouseY <= y + height;
+    private void updateHoverState(
+            final String elementId, final int x, final int y, final int width, final int height) {
+        final boolean isHovered =
+                app.mouseX >= x
+                        && app.mouseX <= x + width
+                        && app.mouseY >= y
+                        && app.mouseY <= y + height;
 
-        boolean wasHovered = hoverStates.getOrDefault(elementId, false);
+        final boolean wasHovered = hoverStates.getOrDefault(elementId, false);
         if (isHovered != wasHovered) {
             hoverStates.put(elementId, isHovered);
             eventManager.publish(new GUIHoverEvent(elementId, isHovered, app.mouseX, app.mouseY));
         }
     }
 
-    /**
-     * Handles mouse clicks.
-     * <i>It's more of a squeak, really.</i>
-     */
+    /** Handles mouse clicks. <i>It's more of a squeak, really.</i> */
     public void handleMouseClick() {
         if (hoverStates.getOrDefault("velocity_arrows", false)) {
             toggleSetting(UIElement.VELOCITY_ARROWS);
@@ -188,49 +213,61 @@ public class GUIHandler {
 
     /**
      * Toggles the specified UI element.
+     *
      * @param element The element to toggle.
      */
-    private void toggleSetting(UIElement element) {
-        boolean newValue = !uiStates.get(element);
+    private void toggleSetting(final UIElement element) {
+        final boolean newValue = !uiStates.get(element);
         uiStates.put(element, newValue);
         eventManager.publish(new GUIStateChangedEvent(element, newValue));
     }
 
-
-    /**
-     * Renders the GUI.
-     * <i>Here are some happy little clouds, and some happy little trees.</i>
-     */
+    /** Renders the GUI. <i>Here are some happy little clouds, and some happy little trees.</i> */
     public void render() {
-        drawTickbox("velocity_arrows", "Show velocity arrows",
+        drawTickbox(
+                "velocity_arrows",
+                "Show velocity arrows",
                 uiStates.get(UIElement.VELOCITY_ARROWS),
-                bottomInitX, bottomInitY);
+                bottomInitX,
+                bottomInitY);
 
-        drawTickbox("sphere_names", "Show sphere names",
+        drawTickbox(
+                "sphere_names",
+                "Show sphere names",
                 uiStates.get(UIElement.SPHERE_NAMES),
-                bottomInitX, bottomInitY - itemSpacing);
+                bottomInitX,
+                bottomInitY - itemSpacing);
 
-        drawTickbox("sphere_weights", "Show sphere weights",
+        drawTickbox(
+                "sphere_weights",
+                "Show sphere weights",
                 uiStates.get(UIElement.SPHERE_WEIGHTS),
-                bottomInitX, bottomInitY - itemSpacing * 2);
+                bottomInitX,
+                bottomInitY - itemSpacing * 2);
 
-        drawTickbox("sphere_trails", "Show sphere trails",
+        drawTickbox(
+                "sphere_trails",
+                "Show sphere trails",
                 uiStates.get(UIElement.SPHERE_TRAILS),
-                bottomInitX, bottomInitY - itemSpacing * 3);
+                bottomInitX,
+                bottomInitY - itemSpacing * 3);
 
-        drawTickbox("gravity_enabled", "Enable gravity",
+        drawTickbox(
+                "gravity_enabled",
+                "Enable gravity",
                 uiStates.get(UIElement.GRAVITY_ENABLED),
-                bottomInitX, bottomInitY - itemSpacing * 4);
+                bottomInitX,
+                bottomInitY - itemSpacing * 4);
 
-        drawTickbox("bounds_enabled", "Enable boundaries",
+        drawTickbox(
+                "bounds_enabled",
+                "Enable boundaries",
                 uiStates.get(UIElement.BOUNDS_ENABLED),
-                bottomInitX, bottomInitY - itemSpacing * 5);
+                bottomInitX,
+                bottomInitY - itemSpacing * 5);
     }
 
-    /**
-     * Updates the UI.
-     * <i>Draw me like one of your French GUIs.</i>
-     */
+    /** Updates the UI. <i>Draw me like one of your French GUIs.</i> */
     public void drawGUI() {
         drawHints();
 
@@ -245,10 +282,7 @@ public class GUIHandler {
         }
     }
 
-    /**
-     * Draw hints and UI overlays.
-     * <i>This really tipped me off.</i>
-     */
+    /** Draw hints and UI overlays. <i>This really tipped me off.</i> */
     public void drawHints() {
         if (!getDisplaySetting(GUIStateChangedEvent.UIElement.INTERFACE_VISIBLE)) {
             return;
@@ -259,7 +293,10 @@ public class GUIHandler {
 
         if (isFreeCamEnabled()) {
             app.text("Use wasd/zqsd to move around.", app.width - 575, app.height - 330);
-            app.text("Use right-click to move the camera laterally.", app.width - 575, app.height - 280);
+            app.text(
+                    "Use right-click to move the camera laterally.",
+                    app.width - 575,
+                    app.height - 280);
         }
 
         app.text("Press 'f' to toggle freecam", app.width - 575, app.height - 230);
@@ -281,7 +318,7 @@ public class GUIHandler {
             app.text("Press 'p' to pause the simulation.", app.width - 575, app.height - 80);
             app.textFont(fontBold);
             app.noStroke();
-            if (app.millis() - unpausedTimer < 2000) {
+            if (app.millis() - unpausedTimer < MAX_UNPAUSED_TIMER) {
                 app.fill(0, PApplet.lerp(255, 0, (float) (app.millis() - unpausedTimer) / 2000), 0);
                 app.triangle(35, 70, 35, 96, 65, 83);
                 app.text("RUNNING", 75, 100);
@@ -290,19 +327,24 @@ public class GUIHandler {
     }
 
     /**
-     * Draws a tickbox along with its label.
-     * Normal color is white, active is yellow, disabled is gray.
-     * <i>It's my tick in a box!</i>
+     * Draws a tickbox along with its label. Normal color is white, active is yellow, disabled is
+     * gray. <i>It's my tick in a box!</i>
+     *
      * @param elementId ID of the element.
      * @param elementLabel Label of the element.
      * @param active Whether the element is active.
      * @param xPosition X coordinate of the element.
      * @param yPosition Y coordinate of the element.
      */
-    private void drawTickbox(String elementId, String elementLabel, boolean active, int xPosition, int yPosition) {
-        boolean hovered = hoverStates.getOrDefault(elementId, false);
+    private void drawTickbox(
+            final String elementId,
+            final String elementLabel,
+            final boolean active,
+            final int xPosition,
+            final int yPosition) {
+        final boolean isHovered = hoverStates.getOrDefault(elementId, false);
 
-        if (hovered) {
+        if (isHovered) {
             app.fill(51);
         } else {
             app.fill(0);
@@ -317,7 +359,7 @@ public class GUIHandler {
             app.popMatrix();
         }
 
-        if (hovered) {
+        if (isHovered) {
             app.fill(255);
         } else {
             app.fill(200);
@@ -325,117 +367,80 @@ public class GUIHandler {
         app.text(elementLabel, xPosition + 30, yPosition + 20);
     }
 
-    public boolean getDisplaySetting(UIElement element) {
+    /**
+     * Get the display setting for a given element.
+     *
+     * @param element The element.
+     * @return The display setting.
+     */
+    public boolean getDisplaySetting(final UIElement element) {
         return uiStates.getOrDefault(element, false);
     }
 
+    /**
+     * Checks whether the free cam mode is enabled.
+     *
+     * @return Whether free cam is enabled.
+     */
     public boolean isFreeCamEnabled() {
         return uiStates.get(UIElement.FREE_CAM);
     }
 
-
-    /**
-     * Set the gravity constant.
-     */
-    private void setGravityConstant(float newGravity) {
+    /** Set the gravity constant. */
+    private void setGravityConstant(final float newGravity) {
         eventManager.publish(new GravityChangedEvent(newGravity));
     }
 
-    /**
-     * Set the global speed.
-     */
-    private void setGlobalSpeed(float newSpeed) {
+    /** Set the global speed. */
+    private void setGlobalSpeed(final float newSpeed) {
         eventManager.publish(new SpeedChangedEvent((int) newSpeed));
     }
 
-
     /**
      * Sets up the GUI sliders.
+     *
      * @param width Width of the window.
-     * @param height Height of the window.
-     * <i>Slide to the left. One hop this time.</i>
+     * @param height Height of the window. <i>Slide to the left. One hop this time.</i>
      */
-    public void setupSliders(int width, int height) {
+    public void setupSliders(final int width, final int height) {
+        final int bottomInitXParam = 50;
+        final int bottomInitYParam = height - 50;
 
-        int bottomInitX = 50;
-        int bottomInitY = height - 50;
+        final MathUtils.FloatFunction editGLambda = this::setGravityConstant;
+        final MathUtils.FloatFunction editPhysicsFPS = this::setGlobalSpeed;
 
-        MathUtils.FloatFunction editGLambda = this::setGravityConstant;
-        MathUtils.FloatFunction editPhysicsFPS = this::setGlobalSpeed;
+        gravityScroll =
+                new HScrollBar(
+                        new HScrollBar.ScrollBarGeometry(
+                                bottomInitXParam, bottomInitYParam - 330, width / 3, 16),
+                        new HScrollBar.ScrollBarValueRange(0, 20, 0.5f, true, 2.0f),
+                        new HScrollBar.ScrollBarDisplayOptions(
+                                "Global gravity scale", true, "0", "2"),
+                        new HScrollBar.ScrollBarDependencies(
+                                this.app, eventManager, this, editGLambda, "gravity_scroll"));
 
-        gravityScroll = new HScrollBar(
-                bottomInitX,
-                bottomInitY - 330,
-                width / 3,
-                16,
-                0,
-                20,
-                "Global gravity scale",
-                0.5f,
-                editGLambda,
-                true,
-                "0",
-                "2",
-                this.app,
-                eventManager,
-                this,
-                "gravity_scroll"
-        );
-
-        speedScroll = new HScrollBar(
-                bottomInitX,
-                bottomInitY - 420,
-                width / 3,
-                16,
-                1f,
-                3000.0f,
-                "Simulation speed multiplier",
-                0.01f,
-                editPhysicsFPS,
-                true,
-                "1/60x",
-                "50x",
-                this.app,
-                eventManager,
-                this,
-                "speed_scroll",
-                true,
-                30.0f
-        );
+        speedScroll =
+                new HScrollBar(
+                        new HScrollBar.ScrollBarGeometry(
+                                bottomInitXParam, bottomInitYParam - 420, width / 3, 16),
+                        new HScrollBar.ScrollBarValueRange(1f, 3000.0f, 0.01f, true, 30.0f),
+                        new HScrollBar.ScrollBarDisplayOptions(
+                                "Simulation speed multiplier", true, "1/60x", "50x"),
+                        new HScrollBar.ScrollBarDependencies(
+                                this.app, eventManager, this, editPhysicsFPS, "speed_scroll"));
     }
 
     /**
-     * Sets the pause timer for the 'pause' text indicator.
-     * <i>Time's ticking.</i>
+     * Sets the pause timer for the 'pause' text indicator. <i>Time's ticking.</i>
+     *
      * @param timer Timer in milliseconds.
      */
-    public void setUnpausedTimer(long timer) {
+    public void setUnpausedTimer(final long timer) {
         this.unpausedTimer = timer;
     }
 
-    /**
-     * Handle hovering effects.
-     * <i>It's hover Hanakin, I ave the igh ground!</i>
-     */
+    /** Handle hovering effects. <i>It's hover Hanakin, I ave the igh ground!</i> */
     public void hover() {
         updateHoverStates();
-    }
-
-    /**
-     * Returns the light font.
-     * <i>Let there be light!</i>
-     * @return The light font.
-     */
-    public PFont getFontLight() {
-        return fontLight;
-    }
-
-    /**
-     * Returns the bold font.
-     * <i>Let there be boldness!</i>
-     * @return The bold font.
-     */
-    public PFont getFontBold() {
-        return fontBold;
     }
 }

@@ -1,256 +1,320 @@
 package model;
 
-import misc.CollisionIndex;
-import processing.core.*;
-
-import java.util.ArrayList;
-
-import static app.GravityCollisionApp.*;
-import static model.SimulationHandler.*;
 import static misc.MathUtils.getNormalVector;
 import static misc.VectorUtils.correctPVectorNaN;
 import static misc.VectorUtils.nullifyPVectorNaN;
+import static processing.core.PApplet.floor;
+import static processing.core.PApplet.lerp;
+import static processing.core.PConstants.SQUARE;
+
+import app.GravityCollisionApp;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.ArrayList;
+import java.util.List;
+import misc.CollisionIndex;
+import processing.core.PVector;
 
 /**
- * Base class for the spheres.
- * Core of the simulation. Each sphere has an update function that allows it to look at
- * all other objects and apply their gravity to it, while they do the same for each other.
- * A sphere has position (3D vector), a radius (float>0), a velocity (3D vector), a mass
- * (float>0), an acceleration (3D vector), a color (processing Color>=(255, 255, 255)),
- * an index (int>=0) and a bounciness (0<=float<=1).
+ * Base class for the spheres. Core of the simulation. Each sphere has an update function that
+ * allows it to look at all other objects and apply their gravity to it, while they do the same for
+ * each other. A sphere has position (3D vector), a radius (float>0), a velocity (3D vector), a mass
+ * (float>0), an acceleration (3D vector), a color (processing Color>=(255, 255, 255)), an index
+ * (int>=0) and a bounciness (0<=float<=1).
  */
 public class PhysicSphere {
-    float MAX_WIDTH = 1000.0f;
-    float MAX_HEIGHT = 1000.0f;
-    float MAX_DEPTH = 1000.0f;
-    int sphereColor;
-    public PVector position;
-    PVector velocity;
-    ArrayList<PVector> prevPos = new ArrayList<>();
-    // int maxSpeed = 5; // TODO: implement this.
-    float radius;
-    float mass;
-    float bounciness;
-    int index;
-    public PVector acceleration;
-    public static PApplet app;
+    private final float maxWidth;
+    private final float maxHeight;
+    private final float maxDepth;
+    private final int sphereColor;
+    private final PVector position;
+    private PVector velocity;
+    private final List<PVector> prevPos = new ArrayList<>();
+    // int maxSpeed = 5; // todo: implement this.
+    private final float radius;
+    private final float mass;
+    private final float bounciness;
+    private final int index;
+    private PVector acceleration;
+    private static GravityCollisionApp app;
 
     /**
-     * Overload for normal bounciness sphere.
-     * Bounciness is optional and has been known to cause some issues when too many spheres are colliding,
-     * so it is 1 by default (perfect bounciness)
-     * TODO: Switch to builder pattern, this is going to be a nightmare soon enough.
-     * @param index Sphere index.
-     * @param sphereColor Sphere color.
-     * @param position Sphere initial position.
-     * @param velocity Sphere initial velocity.
-     * @param radius Sphere radius.
-     * @param mass Sphere mass.
+     * Overload for normal bounciness sphere. Bounciness is optional and has been known to cause
+     * some issues when too many spheres are colliding, so it is 1 by default (perfect bounciness)
+     * todo: Switch to builder pattern, this is going to be a nightmare soon enough.
+     *
+     * @param indexParam Sphere index.
+     * @param sphereColorParam Sphere color.
+     * @param positionParam Sphere initial position.
+     * @param velocityParam Sphere initial velocity.
+     * @param radiusParam Sphere radius.
+     * @param massParam Sphere mass.
      */
-    public PhysicSphere(PApplet app, int index, int sphereColor, PVector position, PVector velocity, float radius, float mass) {
-        this.index = index;
-        this.sphereColor = sphereColor;
-        this.position = position;
-        this.velocity = velocity;
-        this.radius = radius * 2;
-        this.mass = mass;
+    public PhysicSphere(
+            final GravityCollisionApp appParam,
+            final int indexParam,
+            final int sphereColorParam,
+            final PVector positionParam,
+            final PVector velocityParam,
+            final float radiusParam,
+            final float massParam) {
+        this.maxWidth = 1000.0f;
+        this.maxHeight = 1000.0f;
+        this.maxDepth = 1000.0f;
+        this.index = indexParam;
+        this.sphereColor = sphereColorParam;
+        this.position = positionParam;
+        this.velocity = velocityParam;
+        this.radius = radiusParam * 2;
+        this.mass = massParam;
         this.acceleration = new PVector(0.0f, 0.0f, 0.0f);
         this.bounciness = 1.0f;
-        PhysicSphere.app = app;
+        setApp(appParam);
     }
 
+    /**
+     * Sets the Processing app for all spheres.
+     *
+     * @param appParam Processing app. <i>Omagaaad, setaaaapp!</i>
+     */
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_STATIC_REP2",
+            justification = "PApplet must be shared in Processing; Renderer never exposes app.")
+    public static void setApp(final GravityCollisionApp appParam) {
+        if (app == null) {
+            app = appParam;
+        }
+    }
 
     /**
-     * Draws an arrow. Adapted from <a href="https://forum.processing.org/one/topic/drawing-an-arrow.html">here</a>.
-     * <i>It's only stealing if it comes from StackOverflow, otherwise it's citing sources.</i>
+     * Draws an arrow. Adapted from <a
+     * href="https://forum.processing.org/one/topic/drawing-an-arrow.html">here</a>. <i>It's only
+     * stealing if it comes from StackOverflow, otherwise it's citing sources.</i>
+     *
      * @param originX X-coordinate of the arrow's origin.
      * @param originY Y-coordinate of the arrow's origin.
      * @param originZ Z-coordinate of the arrow's origin.
      * @param lengthScalar Scalar applied to the length of the arrow.
      * @param targetDirection Target direction, expressed as a PVector.
      */
-    void drawArrow(float originX, float originY, float originZ, float lengthScalar, PVector targetDirection) {//
+    private void drawArrow(
+            final float originX,
+            final float originY,
+            final float originZ,
+            final float lengthScalar,
+            final PVector targetDirection) {
         app.pushMatrix();
         app.strokeWeight(radius / 2);
         app.translate(originX, originY, originZ);
-        targetDirection = targetDirection.copy();
-        targetDirection.normalize();
-        targetDirection.mult(lengthScalar * targetDirection.mag() * 10);
+        final PVector targetDirectionCopy = targetDirection.copy();
+        targetDirectionCopy.normalize();
+        targetDirectionCopy.mult(lengthScalar * targetDirectionCopy.mag() * 10);
 
-        app.stroke(255 - app.red(sphereColor), 255 - app.green(sphereColor), 255 - app.blue(sphereColor));
-        app.line(0, 0, 0, targetDirection.x, targetDirection.y, targetDirection.z);
-        app.fill(255 - app.red(sphereColor), 255 - app.green(sphereColor), 255 - app.blue(sphereColor));
-        float halfBaseSize = radius / 2;
-        float tipLength = radius;
-        app.translate(targetDirection.x, targetDirection.y, targetDirection.z);
+        app.stroke(
+                255 - app.red(sphereColor),
+                255 - app.green(sphereColor),
+                255 - app.blue(sphereColor));
+        app.line(0, 0, 0, targetDirectionCopy.x, targetDirectionCopy.y, targetDirectionCopy.z);
+        app.fill(
+                255 - app.red(sphereColor),
+                255 - app.green(sphereColor),
+                255 - app.blue(sphereColor));
+        final float halfBaseSize = radius / 2;
+        final float tipLength = radius;
+        app.translate(targetDirectionCopy.x, targetDirectionCopy.y, targetDirectionCopy.z);
         app.noStroke();
         app.beginShape();
         app.vertex(-halfBaseSize, -halfBaseSize, -halfBaseSize);
         app.vertex(halfBaseSize, -halfBaseSize, -halfBaseSize);
-        app.vertex(tipLength * targetDirection.x / 100, tipLength * targetDirection.y / 100, tipLength * targetDirection.z / 100);
+        app.vertex(
+                tipLength * targetDirectionCopy.x / 100,
+                tipLength * targetDirectionCopy.y / 100,
+                tipLength * targetDirectionCopy.z / 100);
         app.endShape();
         app.beginShape();
         app.vertex(halfBaseSize, -halfBaseSize, -halfBaseSize);
         app.vertex(halfBaseSize, halfBaseSize, -halfBaseSize);
-        app.vertex(tipLength * targetDirection.x / 100, tipLength * targetDirection.y / 100, tipLength * targetDirection.z / 100);
+        app.vertex(
+                tipLength * targetDirectionCopy.x / 100,
+                tipLength * targetDirectionCopy.y / 100,
+                tipLength * targetDirectionCopy.z / 100);
         app.endShape();
 
         app.beginShape();
         app.vertex(halfBaseSize, halfBaseSize, -halfBaseSize);
         app.vertex(-halfBaseSize, halfBaseSize, -halfBaseSize);
-        app.vertex(tipLength * targetDirection.x / 100, tipLength * targetDirection.y / 100, tipLength * targetDirection.z / 100);
+        app.vertex(
+                tipLength * targetDirectionCopy.x / 100,
+                tipLength * targetDirectionCopy.y / 100,
+                tipLength * targetDirectionCopy.z / 100);
         app.endShape();
 
         app.beginShape();
         app.vertex(-halfBaseSize, halfBaseSize, -halfBaseSize);
         app.vertex(-halfBaseSize, -halfBaseSize, -halfBaseSize);
-        app.vertex(tipLength * targetDirection.x / 100, tipLength * targetDirection.y / 100, tipLength * targetDirection.z / 100);
+        app.vertex(
+                tipLength * targetDirectionCopy.x / 100,
+                tipLength * targetDirectionCopy.y / 100,
+                tipLength * targetDirectionCopy.z / 100);
         app.endShape();
 
         app.popMatrix();
     }
 
-
     /**
-     * Checks whether one given sphere is colliding with the current instance.
-     * Accounts for both the current frame and the next one in case of high speeds.
-     * <i>Are you hitting on me?</i>
+     * Checks whether one given sphere is colliding with the current instance. Accounts for both the
+     * current frame and the next one in case of high speeds. <i>Are you hitting on me?</i>
+     *
      * @param other Another instance of a sphere.
      * @return {@code true} if the spheres are colliding.
      */
-    boolean isCollidingWith(PhysicSphere other) {
-        if (index != other.index) {
-            boolean isFrameColliding = other.position.dist(position) < other.radius * 2 + radius * 2;
-            PVector vectorizedPosition = position.copy();
-            vectorizedPosition.dot(velocity);
-            PVector otherVectorizedPosition = other.position.copy();
-            otherVectorizedPosition.dot(other.velocity);
-            boolean isVectorColliding = vectorizedPosition.dist(otherVectorizedPosition) < other.radius * 2 + radius * 2;
-            return isFrameColliding || isVectorColliding;
+    private boolean isCollidingWith(final PhysicSphere other) {
+        if (index == other.index) {
+            return false;
         }
-        return false;
+
+        final float sumR = radius + other.radius;
+
+        final boolean isFrameColliding = position.dist(other.position) < sumR;
+
+        final PVector nextPos = PVector.add(position, velocity);
+        final PVector otherNextPos = PVector.add(other.position, other.velocity);
+        final boolean isVectorColliding = nextPos.dist(otherNextPos) < sumR;
+
+        return isFrameColliding || isVectorColliding;
     }
 
     /**
-     * Handles collision detection and resolution between the current PhysicSphere
-     * instance and the provided PhysicSphere instance.
-     * See:
-     *  - Momentum conservation in angle collisions between two spherical bodies:
-     *      <a href="https://atmos.illinois.edu/courses/atmos100/userdocs/3Dcollisions.html">here</a>
-     *  - Elastic collision and exchange of momentum between two bodies with different masses:
-     *      <a href="https://physics.stackexchange.com/questions/681396/elastic-collision-3d-eqaution">here</a>
-     *  - TODO: add rotation to the equation (check
-     *  <a href="https://www.euclideanspace.com/physics/dynamics/collision/threed/index.htm">here</a>).
-     * ISSUE: don't know how to handle rotation of objects yet
-     * <i>Are you insured?</i>
+     * Handles collision detection and resolution between the current PhysicSphere instance and the
+     * provided PhysicSphere instance. See: - Momentum conservation in angle collisions between two
+     * spherical bodies: <a
+     * href="https://atmos.illinois.edu/courses/atmos100/userdocs/3Dcollisions.html">here</a> -
+     * Elastic collision and exchange of momentum between two bodies with different masses: <a
+     * href="https://physics.stackexchange.com/questions/681396/elastic-collision-3d-eqaution">here</a>
+     * - todo: add rotation to the equation (check <a
+     * href="https://www.euclideanspace.com/physics/dynamics/collision/threed/index.htm">here</a>).
+     * ISSUE: don't know how to handle rotation of objects yet <i>Are you insured?</i>
      *
      * @param other The other sphere involved in the collision.
      */
-    void collideWith(PhysicSphere other) {
-        if (isCollidingWith(other)) {
-            if (CollisionIndex.tryLock(this.index, other.index)) {
-                try {
-                    PVector impulseSelf = getNormalVector(velocity, position, other.position);//selfImpulseVector & v_imp_1 are swapped
-                    PVector impulseOther = getNormalVector(other.velocity, other.position, position);
+    private void collideWith(final PhysicSphere other) {
+        if (isCollidingWith(other) && CollisionIndex.tryLock(this.index, other.index)) {
+            try {
+                final PVector impulseSelf =
+                        getNormalVector(
+                                velocity,
+                                position,
+                                other.position); // selfImpulseVector & v_imp_1 are swapped
+                final PVector impulseOther =
+                        getNormalVector(other.velocity, other.position, position);
 
-                    PVector residualVelocityOther = velocity.copy();
-                    residualVelocityOther.sub(impulseOther);
+                final PVector residualVelocityOther = velocity.copy();
+                residualVelocityOther.sub(impulseOther);
 
-                    PVector residualVelocitySelf = other.velocity.copy();
-                    residualVelocitySelf.sub(impulseSelf);
+                final PVector residualVelocitySelf = other.velocity.copy();
+                residualVelocitySelf.sub(impulseSelf);
 
-                    PVector impactVelocitySelf = velocity.copy();
-                    PVector impactVelocityOther;
+                PVector impactVelocitySelf = velocity.copy();
+                final PVector impactVelocityOther;
 
-                    impactVelocityOther = new PVector(impactVelocitySelf.mag() * (residualVelocitySelf.x / residualVelocitySelf.mag()), impactVelocitySelf.mag() * (residualVelocitySelf.y / residualVelocitySelf.mag()), impactVelocitySelf.mag() * (residualVelocitySelf.z / residualVelocitySelf.mag()));
-                    impactVelocitySelf = new PVector(impactVelocityOther.mag() * (residualVelocityOther.x / residualVelocityOther.mag()), impactVelocityOther.mag() * (residualVelocityOther.y / residualVelocityOther.mag()), impactVelocityOther.mag() * (residualVelocityOther.z / residualVelocityOther.mag()));
+                impactVelocityOther =
+                        new PVector(
+                                impactVelocitySelf.mag()
+                                        * (residualVelocitySelf.x / residualVelocitySelf.mag()),
+                                impactVelocitySelf.mag()
+                                        * (residualVelocitySelf.y / residualVelocitySelf.mag()),
+                                impactVelocitySelf.mag()
+                                        * (residualVelocitySelf.z / residualVelocitySelf.mag()));
+                impactVelocitySelf =
+                        new PVector(
+                                impactVelocityOther.mag()
+                                        * (residualVelocityOther.x / residualVelocityOther.mag()),
+                                impactVelocityOther.mag()
+                                        * (residualVelocityOther.y / residualVelocityOther.mag()),
+                                impactVelocityOther.mag()
+                                        * (residualVelocityOther.z / residualVelocityOther.mag()));
 
-                    PVector momentumSelf = impactVelocitySelf.copy();
-                    momentumSelf.mult(mass);
+                final PVector momentumSelf = impactVelocitySelf.copy();
+                momentumSelf.mult(mass);
 
-                    PVector momentumOther = impactVelocityOther.copy();
-                    momentumOther.mult(other.mass);
+                final PVector momentumOther = impactVelocityOther.copy();
+                momentumOther.mult(other.mass);
 
-                    PVector totalMomentum = momentumSelf.copy();
-                    totalMomentum.add(momentumOther);
+                final PVector totalMomentum = momentumSelf.copy();
+                totalMomentum.add(momentumOther);
 
-                    PVector bounceVelocitySelf = impactVelocitySelf.copy();
-                    bounceVelocitySelf.mult(bounciness);
-                    PVector bounceVelocityOther = impactVelocityOther.copy();
-                    bounceVelocityOther.mult(bounciness);
+                final PVector bounceVelocitySelf = impactVelocitySelf.copy();
+                bounceVelocitySelf.mult(bounciness);
+                final PVector bounceVelocityOther = impactVelocityOther.copy();
+                bounceVelocityOther.mult(bounciness);
 
-                    //b_part => (((1-bounciness)(v_1_i-v_2_i)+v_1_f)*other.mass)/mass
-                    PVector restitutionDelta = bounceVelocitySelf.copy();
-                    restitutionDelta.sub(bounceVelocityOther);
+                // b_part => (((1-bounciness)(v_1_i-v_2_i)+v_1_f)*other.mass)/mass
+                final PVector restitutionDelta = bounceVelocitySelf.copy();
+                restitutionDelta.sub(bounceVelocityOther);
 
-                    //v_1_f => (v_1_i*mass+v_2_i*other.mass-(1-bounciness)*(v_1_i-v_2_i))/(mass+1)
-                    PVector finalVelocitySelf = totalMomentum.copy();
-                    finalVelocitySelf.sub(restitutionDelta);
+                // v_1_f => (v_1_i*mass+v_2_i*other.mass-(1-bounciness)*(v_1_i-v_2_i))/(mass+1)
+                final PVector finalVelocitySelf = totalMomentum.copy();
+                finalVelocitySelf.sub(restitutionDelta);
 
-                    finalVelocitySelf.div(mass + 1.0f);
+                finalVelocitySelf.div(mass + 1.0f);
 
-                    //v_2_f => (1-bounciness)*(v_1_i-v_2_i)+v_1_f
-                    PVector finalVelocityOther = finalVelocitySelf.copy();
-                    finalVelocityOther.add(restitutionDelta);
+                // v_2_f => (1-bounciness)*(v_1_i-v_2_i)+v_1_f
+                final PVector finalVelocityOther = finalVelocitySelf.copy();
+                finalVelocityOther.add(restitutionDelta);
 
-                    if (!Float.isNaN(finalVelocitySelf.x + finalVelocitySelf.y + finalVelocitySelf.z)) {
-                        velocity = finalVelocitySelf;
-                    }
-
-                    if (!Float.isNaN(finalVelocityOther.x + finalVelocityOther.y + finalVelocityOther.z)) {
-                        other.velocity = finalVelocityOther;
-                    }
-
-                    correctClipping(other);
+                if (!Float.isNaN(finalVelocitySelf.x + finalVelocitySelf.y + finalVelocitySelf.z)) {
+                    velocity = finalVelocitySelf;
                 }
-                finally {
-                    CollisionIndex.unlock(this.index, other.index);
+
+                if (!Float.isNaN(
+                        finalVelocityOther.x + finalVelocityOther.y + finalVelocityOther.z)) {
+                    other.velocity = finalVelocityOther;
                 }
+
+                correctClipping(other);
+            } finally {
+                CollisionIndex.unlock(this.index, other.index);
             }
         }
     }
 
     /**
-     * Attempts to correct some of the clipping issues.
-     * Note: very unoptimal.
+     * Attempts to correct some of the clipping issues. Note: very unoptimal.
+     *
      * @param other Other sphere involved in the collision.
      */
-    private void correctClipping(PhysicSphere other) {
-        PVector t_corrector = velocity.copy();
-        t_corrector.sub(getNormalVector(velocity, position, other.position));
-        t_corrector.mult(.1f);
-        int sc = 0;
-        while (isCollidingWith(other) && sc < 10000) {
-            position.add(t_corrector);
-            sc++;
+    private void correctClipping(final PhysicSphere other) {
+        final PVector tCorrector = velocity.copy();
+        tCorrector.sub(getNormalVector(velocity, position, other.position));
+        tCorrector.mult(.1f);
+        int safetyCounter = 0;
+        while (isCollidingWith(other) && safetyCounter < 10_000) {
+            position.add(tCorrector);
+            safetyCounter++;
         }
     }
 
     /**
-     * Applies gravity forces (provided they are enabled) to a sphere as well as all the
-     * others.
-     * Note: this part accesses other spheres without going through the
-     * thread structures, as the movement from one frame to the other should be negligible.
-     * <i>I think I'm falling for you.</i>
+     * Applies gravity forces (provided they are enabled) to a sphere as well as all the others.
+     * Note: this part accesses other spheres without going through the thread structures, as the
+     * movement from one frame to the other should be negligible. <i>I think I'm falling for
+     * you.</i>
+     *
      * @param others List of all the other spheres.
      */
-    void applyAttraction(ArrayList<PhysicSphere> others)
-    {
-        PVector finalAcc = new PVector(0, 0, 0);
+    public void applyAttraction(final List<PhysicSphere> others) {
+        final PVector finalAcc = new PVector(0, 0, 0);
         PVector tAcc = new PVector(0, 0, 0);
-        for (PhysicSphere other : others) {
+        for (final PhysicSphere other : others) {
             collideWith(other);
-            if (other.index != index) {
-                if (gravityEnabled) {
-                    float small_g_factor = -other.mass * G;
-                    small_g_factor /= other.position.dist(position) * other.position.dist(position);
-                    PVector small_g = position.copy();
-                    small_g.sub(other.position);
-                    small_g.mult(small_g_factor);
-                    tAcc = small_g.copy();
-                    tAcc.mult(mass);
-                    finalAcc.add(small_g);
-                }
+            if (other.index != index && SimulationHandler.isGravityEnabled()) {
+                float smallGFactor = -other.mass * SimulationHandler.getGravityConstant();
+                smallGFactor /= other.position.dist(position) * other.position.dist(position);
+                final PVector smallG = position.copy();
+                smallG.sub(other.position);
+                smallG.mult(smallGFactor);
+                tAcc = smallG.copy();
+                tAcc.mult(mass);
+                finalAcc.add(smallG);
             }
             if (!Float.isNaN(tAcc.x + tAcc.y + tAcc.z)) {
                 acceleration = finalAcc.copy();
@@ -258,18 +322,18 @@ public class PhysicSphere {
         }
     }
 
-    /**
-     * Updates the position of the sphere.
-     * <i>Take care of them.</i>
-     */
-    void update() {
-        if (targetPhysicsFPS < 60.0f) {
-            int frameInterval = Math.round(60.0f / targetPhysicsFPS);
-            if (FRAMES % frameInterval == 0) {
+    /** Updates the position of the sphere. <i>Take care of them.</i> */
+    public void update() {
+        final float fpsCount = 60.0f;
+        if (SimulationHandler.getTargetPhysicsFPS() < fpsCount) {
+            final int frameInterval =
+                    Math.round(fpsCount / SimulationHandler.getTargetPhysicsFPS());
+            if (app.getFrames() % frameInterval == 0) {
                 updatePhysics();
             }
         } else {
-            int physicsStepsThisFrame = Math.round(targetPhysicsFPS / 60.0f);
+            int physicsStepsThisFrame =
+                    Math.round(SimulationHandler.getTargetPhysicsFPS() / fpsCount);
             physicsStepsThisFrame = Math.max(1, Math.min(physicsStepsThisFrame, 10));
 
             for (int i = 0; i < physicsStepsThisFrame; i++) {
@@ -278,26 +342,24 @@ public class PhysicSphere {
         }
     }
 
-    /**
-     * Updates the position and the velocity of the sphere.
-     */
+    /** Updates the position and the velocity of the sphere. */
     private void updatePhysics() {
         prevPos.add(position.copy());
         velocity.add(acceleration);
-        if (boundsEnabled) {
+        if (SimulationHandler.areBoundsEnabled()) {
             if (position.x <= 0 && velocity.x < 0) {
                 velocity.x = -velocity.x * bounciness;
-            } else if (position.x >= MAX_WIDTH && velocity.x > 0) {
+            } else if (position.x >= maxWidth && velocity.x > 0) {
                 velocity.x = -velocity.x * bounciness;
             }
             if (position.y <= 0 && velocity.y < 0) {
                 velocity.y = -velocity.y * bounciness;
-            } else if (position.y >= MAX_HEIGHT && velocity.y > 0) {
+            } else if (position.y >= maxHeight && velocity.y > 0) {
                 velocity.y = -velocity.y * bounciness;
             }
             if (position.z <= 0 && velocity.z < 0) {
                 velocity.z = -velocity.z * bounciness;
-            } else if (position.z >= MAX_DEPTH && velocity.z > 0) {
+            } else if (position.z >= maxDepth && velocity.z > 0) {
                 velocity.z = -velocity.z * bounciness;
             }
         }
@@ -317,30 +379,69 @@ public class PhysicSphere {
         app.fill(sphereColor, 200);
         app.sphere(radius * 2);
         app.popMatrix();
-        app.fill(255 - app.red(sphereColor), 255 - app.green(sphereColor), 255 - app.blue(sphereColor));
+        app.fill(
+                255 - app.red(sphereColor),
+                255 - app.green(sphereColor),
+                255 - app.blue(sphereColor));
         app.textSize(radius * 3);
-        if (drawNames) {
-            app.text((char) (index + 65), lerp(MAX_WIDTH * 0.05f, MAX_WIDTH * 0.95f, (position.x - radius) / MAX_WIDTH), lerp(MAX_HEIGHT * 0.05f, MAX_HEIGHT * 0.95f, (position.y + radius) / MAX_HEIGHT) + 100f, position.z + radius * 2f);
+        if (SimulationHandler.isDrawNames()) {
+            app.text(
+                    (char) (index + 65),
+                    lerp(maxWidth * 0.05f, maxWidth * 0.95f, (position.x - radius) / maxWidth),
+                    lerp(maxHeight * 0.05f, maxHeight * 0.95f, (position.y + radius) / maxHeight)
+                            + 100f,
+                    position.z + radius * 2f);
         }
-        if (drawWeights) {
-            app.text(floor(mass * 100), lerp(MAX_WIDTH * 0.05f, MAX_WIDTH * 0.95f, (position.x - radius) / MAX_WIDTH), lerp(MAX_HEIGHT * 0.05f, MAX_HEIGHT * 0.95f, (position.y + radius) / MAX_HEIGHT), position.z + radius * 2);
+        if (SimulationHandler.isDrawWeights()) {
+            app.text(
+                    floor(mass * 100),
+                    lerp(maxWidth * 0.05f, maxWidth * 0.95f, (position.x - radius) / maxWidth),
+                    lerp(maxHeight * 0.05f, maxHeight * 0.95f, (position.y + radius) / maxHeight),
+                    position.z + radius * 2);
         }
         app.noFill();
         app.beginShape();
         app.curveVertex(position.x, position.y, position.z);
         app.strokeCap(SQUARE);
-        if (drawTrails) {
-            // Note: Processing's way of drawing strokes gives them no depth on the Z axis, which makes them look flat when the balls turn at sharp angles or face slightly away from the camera.
-            for (int i = !prevPos.isEmpty() ? prevPos.size() - 1 : 0; i > (prevPos.size() > 20 ? prevPos.size() - 20 : 0); i--) {
-                app.stroke(sphereColor, lerp(255f, 25f, ((float) (prevPos.size() < 20 ? i : prevPos.size() - i)) / (Math.min(prevPos.size(), 20))));
-                app.strokeWeight(lerp(0, radius * 2, lerp(1.0f, 0, ((float) (prevPos.size() - i)) / (Math.min(prevPos.size(), 20)))));
+        if (SimulationHandler.isDrawTrails()) {
+            // Note: Processing's way of drawing strokes gives them no depth on the Z axis, which
+            // makes them look flat when the balls turn at sharp angles or face slightly away from
+            // the camera.
+            for (int i = prevPos.isEmpty() ? 0 : prevPos.size() - 1;
+                    i > (prevPos.size() > 20 ? prevPos.size() - 20 : 0);
+                    i--) {
+                app.stroke(
+                        sphereColor,
+                        lerp(
+                                255f,
+                                25f,
+                                ((float) (prevPos.size() < 20 ? i : prevPos.size() - i))
+                                        / Math.min(prevPos.size(), 20)));
+                app.strokeWeight(
+                        lerp(
+                                0,
+                                radius * 2,
+                                lerp(
+                                        1.0f,
+                                        0,
+                                        ((float) (prevPos.size() - i))
+                                                / Math.min(prevPos.size(), 20))));
                 app.curveVertex(prevPos.get(i).x, prevPos.get(i).y, prevPos.get(i).z);
             }
         }
         app.endShape();
 
-        if (index >= 0 && drawArrows) {
+        if (index >= 0 && SimulationHandler.isDrawArrows()) {
             drawArrow(position.x, position.y, position.z, radius, velocity);
         }
+    }
+
+    /**
+     * Returns the position of the sphere.
+     *
+     * @return The position of the sphere. <i>Ah, I finally found my bearings.</i>
+     */
+    public PVector getPosition() {
+        return position;
     }
 }

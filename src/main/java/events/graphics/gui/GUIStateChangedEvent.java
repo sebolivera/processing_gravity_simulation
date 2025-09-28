@@ -2,10 +2,7 @@ package events.graphics.gui;
 
 import events.core.Event;
 
-/**
- * State changes events in the GUI.
- * <i>Lucky there's a famili GUI.</i>
- */
+/** State changes events in the GUI. <i>Lucky there's a famili GUI.</i> */
 public record GUIStateChangedEvent(UIElement element, boolean newState) implements Event {
     public enum UIElement {
         VELOCITY_ARROWS,
@@ -18,5 +15,4 @@ public record GUIStateChangedEvent(UIElement element, boolean newState) implemen
         INTERFACE_VISIBLE,
         SIMULATION_PAUSED
     }
-
 }

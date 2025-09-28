@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<ruleset name="myruleset"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+    <description>Gravity custom ruleset</description>
+
+    <exclude-pattern>.*/vendor/.*</exclude-pattern>
+    <rule ref="category/java/bestpractices.xml">
+    </rule>
+
+    <!-- Code Style -->
+    <rule ref="category/java/codestyle.xml">
+        <!-- (Dumbly) Conflicts with `UnnecessaryConstructor`... -->
+        <exclude name="AtLeastOneConstructor"/>
+        <!-- Not applicable -->
+        <exclude name="CallSuperInConstructor"/>
+        <!-- Fight me. -->
+        <exclude name="LongVariable"/>
+        <!-- Dogmatic drivel -->
+        <exclude name="OnlyOneReturn"/>
+        <!-- This is dumb when working with geometry -->
+        <exclude name="ShortVariable"/>
+        <!-- I don't mind stupidly big imports -->
+        <exclude name="TooManyStaticImports"/>
+    </rule>
+
+    <!-- Design -->
+    <rule ref="category/java/design.xml">
+        <!-- Not familiar enough with the ways the app can crash yet to be able to use that -->
+        <exclude name="AvoidCatchingGenericException"/>
+        <!-- todo: assess this -->
+        <exclude name="CognitiveComplexity"/>
+        <!-- todo: assess this -->
+        <exclude name="CyclomaticComplexity"/>
+        <!-- Kind of unavoidable due to the origins of the project -->
+        <exclude name="GodClass"/>
+        <!-- Kind of annoying when a field might change soon -->
+        <exclude name="FinalFieldCouldBeStatic"/>
+        <!-- No. Just No. -->
+        <exclude name="LawOfDemeter"/>
+        <!-- todo: assess this -->
+        <exclude name="NPathComplexity"/>
+    </rule>
+
+    <!-- Not 100% sure if I want to keep this yet -->
+    <rule ref="category/java/design.xml/TooManyMethods">
+        <properties>
+            <property name="maxmethods" value="20" />
+        </properties>
+    </rule>
+
+    <!-- Error Prone -->
+    <rule ref="category/java/errorprone.xml">
+    </rule>
+
+    <!-- Performance -->
+    <rule ref="category/java/performance.xml">
+        <!-- Too annoying when catching events in a loop (e.g. movement) -->
+        <exclude name="AvoidInstantiatingObjectsInLoops"/>
+    </rule>
+
+    <!-- Security -->
+    <rule ref="category/java/security.xml"/>
+</ruleset>

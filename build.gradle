@@ -1,21 +1,82 @@
+import com.github.spotbugs.snom.Confidence
+import com.github.spotbugs.snom.Effort
 import org.gradle.internal.os.OperatingSystem
 
 plugins {
     id 'java'
     id 'application'
+    id 'checkstyle'
+    id 'pmd'
+    id 'com.github.spotbugs' version '6.4.2'
+    id 'com.diffplug.spotless' version '7.2.1'
 }
+spotless {
+    java {
+        target 'src/**/*.java'
 
+        googleJavaFormat('1.22.0').aosp()
+        targetExclude '**/vendor/**'
+
+        removeUnusedImports()
+        endWithNewline()
+
+        custom 'Remove extra blank lines', {
+            it.replaceAll(/\n\s*\n\s*\n/, '\n\n')
+        }
+    }
+}
+checkstyleMain.dependsOn spotlessCheck
+checkstyleTest.dependsOn spotlessCheck
+checkstyleMain.dependsOn pmdMain
+checkstyleTest.dependsOn pmdTest
 
 ext.joglVersion = '2.5.0'
 ext.processingVersion = '4.4.7'
 def useJar = false
+
+pmd {
+    ignoreFailures = false
+    ruleSetFiles = files('config/pmd/ruleset.xml')
+    toolVersion = '7.8.0'
+}
+
+checkstyle {
+    toolVersion = '11.0.1'
+    configFile = file('config/checkstyle/checkstyle.xml')
+    ignoreFailures = false
+    maxWarnings = 0
+    maxErrors = 0
+}
+
+spotbugs {
+    ignoreFailures = false
+    showStackTraces = true
+    showProgress = true
+    effort = Effort.MAX
+    reportLevel = Confidence.values()[0]
+    excludeFilter = file('config/spotbugs/excludeFilter.xml')
+}
+tasks.spotbugsMain {
+    reports.create("html") {
+        required = true
+        outputLocation = file("${layout.buildDirectory.get().asFile}/reports/spotbugs.html")
+        setStylesheet("fancy-hist.xsl")
+    }
+}
+
+tasks.spotbugsTest {
+    reports.create("html") {
+        required = true
+        outputLocation = file("${layout.buildDirectory.get().asFile}/reports/spotbugs/test/spotbugs.html")
+    }
+}
 
 repositories {
     mavenCentral()
     maven { url 'https://jitpack.io' }
     maven {
         name = 'jogamp'
-        url  = 'https://jogamp.org/deployment/maven/'
+        url = 'https://jogamp.org/deployment/maven/'
     }
 
 }
@@ -37,6 +98,8 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:2.0.17'
     implementation 'ch.qos.logback:logback-classic:1.5.18'
     implementation("org.processing:core:${processingVersion}")
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.9.6'
+    testCompileOnly 'com.github.spotbugs:spotbugs-annotations:4.9.6'
 
     implementation "org.jogamp.jogl:jogl-all:${joglVersion}"
     implementation "org.jogamp.gluegen:gluegen-rt:${joglVersion}"
@@ -63,6 +126,10 @@ sourceSets {
     }
 }
 
+tasks.named('checkstyleMain') {
+    source = fileTree('src/main/java')
+}
+
 dependencies {
     if (useJar) {
         implementation files('vendor/ocd/library/ocd.jar')
@@ -79,13 +146,11 @@ tasks.register('extractNatives') {
 
         configurations.runtimeClasspath.files.each { jarFile ->
             println "Checking file: ${jarFile.name}"
-            // Check for any natives JAR that matches the current platform
             if (jarFile.name.contains(nativesClassifier) && jarFile.name.endsWith('.jar')) {
                 println "Extracting natives from: ${jarFile.name}"
                 copy {
                     from zipTree(jarFile)
                     into nativesDir
-                    // Include all native library extensions based on platform
                     if (nativesClassifier.contains('windows')) {
                         include '**/*.dll'
                     } else if (nativesClassifier.contains('macosx')) {
@@ -113,6 +178,21 @@ tasks.register('extractNatives') {
                 }
             }
         }
+    }
+}
+
+tasks.withType(Checkstyle).configureEach {
+    reports {
+        xml.required = false
+        html.required = true
+        html.outputLocation = file("${layout.buildDirectory.get().asFile}/reports/checkstyle/${name}.html")
+    }
+}
+
+tasks.withType(Pmd).configureEach {
+    reports {
+        xml.required = false
+        html.required = true
     }
 }
 
