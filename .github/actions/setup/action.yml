@@ -1,0 +1,11 @@
+name: Setup
+description: Setup JDK and build with Gradle
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '21'
+        cache: gradle
+    - uses: gradle/actions/setup-gradle@v4

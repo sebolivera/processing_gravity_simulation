@@ -1,0 +1,60 @@
+name: Run the Simulation
+on:
+  workflow_call:
+
+jobs:
+  run_simulation:
+    name: Run Simulation
+    strategy:
+      matrix:
+        os:
+          - "ubuntu-latest"
+          - "windows-latest"
+          - "macos-latest"
+        java-version:
+          - "21"
+        distribution:
+          - "temurin"
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Build distZip
+        run: ./gradlew distZip
+
+      - name: Run for 5s (unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$(ls -1 build/distributions/*.zip | head -n1)"
+          test -f "$ZIP"
+          mkdir -p dist && unzip -q "$ZIP" -d dist
+          # Find the launcher script inside the unpacked dist
+          BIN="$(find dist -type f -path '*/bin/*' ! -name '*.bat' | head -n1)"
+          test -x "$BIN" || chmod +x "$BIN"
+          # JOGL needs a display; on Linux use xvfb
+          if command -v xvfb-run >/dev/null 2>&1; then
+            xvfb-run -a "$BIN" &
+          else
+            "$BIN" &
+          fi
+          PID=$!
+          sleep 5
+          kill "$PID" || true
+          wait "$PID" || true
+
+      - name: Run for 5s (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $zip = Get-ChildItem build\distributions\*.zip | Select-Object -First 1
+          if (-not $zip) { throw "No dist zip found" }
+          Expand-Archive -Path $zip.FullName -DestinationPath dist -Force
+          $bin = Get-ChildItem -Path dist -Recurse -File | Where-Object { $_.FullName -match '\\bin\\.+\.bat$' } | Select-Object -First 1
+          if (-not $bin) { throw "No launcher .bat found" }
+          $p = Start-Process -FilePath $bin.FullName -PassThru
+          Start-Sleep -Seconds 5
+          Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
