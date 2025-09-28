@@ -18,7 +18,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: ./.github/workflows/_build.yml
+      - uses: ./.github/actions/build
 
       - name: Run for 5s (unix)
         if: runner.os != 'Windows'
