@@ -1,0 +1,45 @@
+name: Run the Simulation
+on:
+  workflow_call:
+
+jobs:
+  run_simulation:
+    name: Run Simulation
+    strategy:
+      matrix:
+        os:
+          - "ubuntu-latest"
+          - "windows-latest"
+          - "macos-latest"
+        java-version:
+          - "21"
+        distribution:
+          - "temurin"
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: ./.github/workflows/_build.yml
+
+      - name: Run for 5s (unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP_DIR="$(./gradlew -q properties | awk -F': ' '/^name:/ {print $2}')"
+          BIN="./build/install/$APP_DIR/bin/$APP_DIR"
+          chmod +x "$BIN"
+          "$BIN" &
+          PID=$!
+          sleep 5
+          kill "$PID" || true
+          wait "$PID" || true
+
+      - name: Run for 5s (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $appName = & .\gradlew.bat -q properties | Where-Object { $_ -match '^name:\s*(.+)$' } | ForEach-Object { $Matches[1] }
+          $bin = "build\install\$appName\bin\$appName.bat"
+          $p = Start-Process -FilePath $bin -PassThru
+          Start-Sleep -Seconds 5
+          Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue

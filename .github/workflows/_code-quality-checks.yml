@@ -1,0 +1,12 @@
+name: Code Quality Checks
+
+on:
+  workflow_call:
+
+jobs:
+  check-style:
+    name: Code Style Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/workflows/_build.yml
+      - run: ./gradlew check
