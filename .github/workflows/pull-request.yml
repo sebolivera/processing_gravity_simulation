@@ -12,3 +12,4 @@ jobs:
     uses: ./.github/workflows/_code-quality-checks.yml
   run:
     uses: ./.github/workflows/_run.yml
+    needs: code_quality_checks
