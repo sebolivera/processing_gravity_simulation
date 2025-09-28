@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/build
+      - uses: ./.github/actions/gradle_build
 
       - name: Run for 5s (unix)
         if: runner.os != 'Windows'

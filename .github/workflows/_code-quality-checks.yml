@@ -9,5 +9,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/build
+      - uses: ./.github/actions/gradle_build
       - run: ./gradlew check
