@@ -13,7 +13,7 @@ import processing.event.MouseEvent;
 
 public final class GravityCollisionApp extends PApplet {
     private static final Logger LOGGER = LoggerFactory.getLogger(GravityCollisionApp.class);
-    private static int frames;
+    private int frames;
 
     private SimulationHandler simulationHandler;
     private GUIHandler guiHandler;
@@ -133,7 +133,7 @@ public final class GravityCollisionApp extends PApplet {
      *
      * @return The frame count.
      */
-    public static int getFrames() {
+    public int getFrames() {
         return frames;
     }
 

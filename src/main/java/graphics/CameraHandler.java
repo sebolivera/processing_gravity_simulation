@@ -1,34 +1,37 @@
 package graphics;
 
+import app.GravityCollisionApp;
 import damkjer.ocd.Camera;
 import events.core.EventManager;
 import events.graphics.CameraChangedEvent;
 import events.graphics.CameraCommandEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import processing.core.PApplet;
+
+import java.util.function.IntSupplier;
 
 public class CameraHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(CameraHandler.class);
     private static final float CAM_PAN_STEP = 20;
     private static final float CAM_DOLLY_STEP = 20;
-
-    private final PApplet app;
     private final EventManager eventManager;
     private final Camera camera;
+    private final IntSupplier width;
+    private final IntSupplier height;
 
-    public CameraHandler(final PApplet appParam, final EventManager eventManagerParam) {
-        this.app = appParam;
+    public CameraHandler(final GravityCollisionApp appParam, final EventManager eventManagerParam) {
         this.eventManager = eventManagerParam;
-        this.camera =
-                new Camera(
-                        appParam,
-                        appParam.width / 2.0f,
-                        appParam.height / 2.0f,
-                        1000.0f,
-                        appParam.width / 2.0f,
-                        appParam.height / 2.0f,
-                        0.0f);
+        this.width = () -> appParam.width;
+        this.height = () -> appParam.height;
+
+        this.camera = new Camera(
+                appParam,
+                width.getAsInt() / 2.0f,
+                height.getAsInt() / 2.0f,
+                1000.0f,
+                width.getAsInt() / 2.0f,
+                height.getAsInt() / 2.0f,
+                0.0f);
         setupCameraEventHandler();
     }
 
@@ -61,9 +64,9 @@ public class CameraHandler {
     }
 
     /** Reset camera to default position. <i>Take 2.</i> */
-    public void resetCamera() {
-        camera.jump(app.width / 2f, app.height / 2f, app.height + 1000f);
-        camera.aim(app.width / 2f, app.height / 2f, 0);
+    public final void resetCamera() {
+        camera.jump(width.getAsInt() / 2f, height.getAsInt() / 2f, height.getAsInt() + 1000f);
+        camera.aim(width.getAsInt() / 2f, height.getAsInt() / 2f, 0);
         eventManager.publish(new CameraChangedEvent(camera));
     }
 

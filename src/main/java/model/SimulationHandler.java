@@ -1,5 +1,7 @@
 package model;
 
+import app.GravityCollisionApp;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import events.core.EventManager;
 import events.graphics.gui.GUIStateChangedEvent;
 import events.physics.GravityChangedEvent;
@@ -9,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import processing.core.PApplet;
 import processing.core.PVector;
 
 /**
@@ -30,14 +31,18 @@ public class SimulationHandler {
 
     public static final int DEFAULT_SPHERE_COUNT = 20;
 
-    private final PApplet app;
+    private final GravityCollisionApp app;
     private final EventManager eventManager;
     private final int threadCount;
 
     private List<PhysicSphere> spheres = new ArrayList<>();
     private List<SphereBatchThread> sphereBatchThreads = new ArrayList<>();
 
-    public SimulationHandler(final PApplet appParam, final EventManager eventManagerParam) {
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification = "PApplet must be shared in Processing; Renderer never exposes app."
+    )
+    public SimulationHandler(final GravityCollisionApp appParam, final EventManager eventManagerParam) {
         this.app = appParam;
         this.eventManager = eventManagerParam;
         this.threadCount = Runtime.getRuntime().availableProcessors();

@@ -6,6 +6,7 @@ import static events.graphics.CameraCommandEvent.Operation.PAN;
 import static events.graphics.CameraCommandEvent.Operation.TILT;
 import static events.graphics.CameraCommandEvent.Operation.TRUCK;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import events.core.EventManager;
 import events.graphics.CameraCommandEvent;
 import events.graphics.gui.GUIStateChangedEvent;
@@ -39,8 +40,8 @@ public class Renderer {
     private boolean shiftHeld;
     private boolean mousePressed;
     private int mouseButton;
-    private float mouseX;
-    private float mouseY;
+    private float currentMouseX;
+    private float currentMouseY;
     private float prevMouseX;
     private float prevMouseY;
     private float prevCrosshairX;
@@ -50,12 +51,15 @@ public class Renderer {
     private final Robot robot;
     private int robotMoveBuffer;
 
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification = "PApplet must be shared in Processing; Renderer never exposes app."
+    )
     public Renderer(
             final PApplet appParam,
             final EventManager eventManagerParam,
             final InputHandler inputHandlerParam,
-            final GUIHandler guiHandlerParam)
-            throws AWTException {
+            final GUIHandler guiHandlerParam) {
         this.app = appParam;
         this.eventManager = eventManagerParam;
         this.guiHandler = guiHandlerParam;
@@ -65,18 +69,21 @@ public class Renderer {
         eventManagerParam.subscribe(MousePositionChangedEvent.class, this::onMousePositionEvent);
         eventManagerParam.subscribe(MouseStateChangedEvent.class, this::onMouseStateEvent);
         eventManagerParam.subscribe(GUIStateChangedEvent.class, this::onGUIStateChangedEvent);
+        Robot localRobot = null;
         try {
-            this.robot = new Robot();
-        } catch (AWTException exc) {
+            localRobot = new Robot();
+        } catch (AWTException e) {
             if (LOGGER.isErrorEnabled()) {
-                LOGGER.error("Could not create Robot for mouse binding: {}", exc.getMessage());
+                LOGGER.error("Could not create Robot for mouse binding: {}", e.toString());
             }
-            throw exc;
         }
-        prevCrosshairX = mouseX;
-        prevCrosshairY = mouseY;
-        prevMouseX = mouseX;
-        prevMouseY = mouseY;
+        this.robot = localRobot;
+        currentMouseX = appParam.mouseX;
+        currentMouseY = appParam.mouseY;
+        prevCrosshairX = currentMouseX;
+        prevCrosshairY = currentMouseY;
+        prevMouseX = currentMouseX;
+        prevMouseY = currentMouseY;
     }
 
     /**
@@ -112,8 +119,8 @@ public class Renderer {
             robotMoveBuffer = 5;
             robot.mouseMove(targetScreenX, targetScreenY);
 
-            mouseX = prevCrosshairX;
-            mouseY = prevCrosshairY;
+            currentMouseX = prevCrosshairX;
+            currentMouseY = prevCrosshairY;
             prevMouseX = prevCrosshairX;
             prevMouseY = prevCrosshairY;
         } catch (Exception exc) {
@@ -147,10 +154,10 @@ public class Renderer {
             return;
         }
 
-        prevMouseX = mouseX;
-        prevMouseY = mouseY;
-        mouseX = exc.x();
-        mouseY = exc.y();
+        prevMouseX = currentMouseX;
+        prevMouseY = currentMouseY;
+        currentMouseX = exc.x();
+        currentMouseY = exc.y();
     }
 
     /**
@@ -195,8 +202,8 @@ public class Renderer {
     /** Draw the crosshair. <i>BOOM! Headshot!</i> */
     public void drawCrosshair() {
         if (!guiHandler.getDisplaySetting(GUIStateChangedEvent.UIElement.FREE_CAM)) {
-            prevCrosshairX = mouseX;
-            prevCrosshairY = mouseY;
+            prevCrosshairX = currentMouseX;
+            prevCrosshairY = currentMouseY;
         }
         app.strokeWeight(2);
         if (guiHandler.getDisplaySetting(GUIStateChangedEvent.UIElement.FREE_CAM)) {
@@ -223,8 +230,8 @@ public class Renderer {
         if (guiHandler.isFreeCamEnabled()) {
             final float speedMult = shiftHeld ? 4 : 1;
             if (mousePressed && mouseButton == PApplet.RIGHT) {
-                final float truck = -(mouseX - prevMouseX);
-                final float boom = mouseY - prevMouseY;
+                final float truck = -(currentMouseX - prevMouseX);
+                final float boom = currentMouseY - prevMouseY;
                 if (truck != 0) {
                     eventManager.publish(new CameraCommandEvent(TRUCK, truck));
                 }
@@ -232,8 +239,8 @@ public class Renderer {
                     eventManager.publish(new CameraCommandEvent(BOOM, boom));
                 }
             } else {
-                final float yaw = PApplet.radians(mouseX - prevMouseX) * 0.125f;
-                final float pitch = PApplet.radians(mouseY - prevMouseY) * 0.125f;
+                final float yaw = PApplet.radians(currentMouseX - prevMouseX) * 0.125f;
+                final float pitch = PApplet.radians(currentMouseY - prevMouseY) * 0.125f;
                 if (yaw != 0) {
                     eventManager.publish(new CameraCommandEvent(PAN, yaw));
                 }
@@ -241,8 +248,8 @@ public class Renderer {
                     eventManager.publish(new CameraCommandEvent(TILT, pitch));
                 }
             }
-            prevMouseX = mouseX;
-            prevMouseY = mouseY;
+            prevMouseX = currentMouseX;
+            prevMouseY = currentMouseY;
 
             for (final String k : inputHandler.getKeysDown()) {
                 switch (k) {

@@ -25,8 +25,8 @@ spotless {
         }
     }
 }
-checkstyleMain.dependsOn spotlessApply
-checkstyleTest.dependsOn spotlessApply
+checkstyleMain.dependsOn spotlessCheck
+checkstyleTest.dependsOn spotlessCheck
 checkstyleMain.dependsOn pmdMain
 checkstyleTest.dependsOn pmdTest
 
@@ -98,6 +98,8 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:2.0.17'
     implementation 'ch.qos.logback:logback-classic:1.5.18'
     implementation("org.processing:core:${processingVersion}")
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.9.6'
+    testCompileOnly 'com.github.spotbugs:spotbugs-annotations:4.9.6'
 
     implementation "org.jogamp.jogl:jogl-all:${joglVersion}"
     implementation "org.jogamp.gluegen:gluegen-rt:${joglVersion}"
@@ -122,11 +124,6 @@ sourceSets {
             }
         }
     }
-    checkstyleMain {
-        java {
-            srcDir 'src/main/java'
-        }
-    }
 }
 
 tasks.named('checkstyleMain') {
@@ -149,13 +146,11 @@ tasks.register('extractNatives') {
 
         configurations.runtimeClasspath.files.each { jarFile ->
             println "Checking file: ${jarFile.name}"
-            // Check for any natives JAR that matches the current platform
             if (jarFile.name.contains(nativesClassifier) && jarFile.name.endsWith('.jar')) {
                 println "Extracting natives from: ${jarFile.name}"
                 copy {
                     from zipTree(jarFile)
                     into nativesDir
-                    // Include all native library extensions based on platform
                     if (nativesClassifier.contains('windows')) {
                         include '**/*.dll'
                     } else if (nativesClassifier.contains('macosx')) {

@@ -1,5 +1,6 @@
 package input;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import events.core.EventManager;
 import events.graphics.CameraCommandEvent;
 import events.graphics.gui.GUIStateChangedEvent;
@@ -9,9 +10,11 @@ import events.input.MouseStateChangedEvent;
 import events.simulation.SimulationRestartEvent;
 import graphics.CameraHandler;
 import graphics.gui.GUIHandler;
+
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+
 import model.SimulationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,10 +34,15 @@ public class InputHandler {
     private final PApplet app;
     private boolean firstMousePress;
 
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification = "PApplet must be shared in Processing; Renderer never exposes app."
+    )
     public InputHandler(
             final PApplet appParam,
             final EventManager eventManagerParam,
-            final GUIHandler guiHandlerParam) {
+            final GUIHandler guiHandlerParam
+    ) {
         this.eventManager = eventManagerParam;
         this.guiHandler = guiHandlerParam;
         this.lastMouseX = appParam.mouseX;
@@ -49,7 +57,7 @@ public class InputHandler {
      * expected to be doing in my future.</i>
      */
     public void updateMousePosition() {
-        if (app.mouseX != lastMouseX || app.mouseY != lastMouseY) {
+        if (app.mouseX != (int) lastMouseX || app.mouseY != (int) lastMouseY) {
             eventManager.publish(
                     new MousePositionChangedEvent(app.mouseX, app.mouseY, lastMouseX, lastMouseY));
             lastMouseX = app.mouseX;
@@ -57,8 +65,13 @@ public class InputHandler {
         }
     }
 
-    /** Handle keyboard press events. <i>Stop pressing my buttons.</i> */
-    public void handleKeyPressed(final int key, final int keyCode) {
+    /**
+     * Handle keyboard press events. <i>Stop pressing my buttons.</i>
+     */
+    public void handleKeyPressed(
+            final int key,
+            final int keyCode
+    ) {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Key '{}' with keycode {} pressed", key, keyCode);
         }
@@ -84,14 +97,12 @@ public class InputHandler {
                     LOGGER.info("Keyboard layout switched to: {}", isAzerty ? "AZERTY" : "QWERTY");
                 }
             }
-            case "f" ->
-                    eventManager.publish(
-                            new GUIStateChangedEvent(
-                                    GUIStateChangedEvent.UIElement.FREE_CAM,
-                                    !guiHandler.isFreeCamEnabled()));
-            case "c" ->
-                    eventManager.publish(
-                            new CameraCommandEvent(CameraCommandEvent.Operation.RESET, 0));
+            case "f" -> eventManager.publish(
+                    new GUIStateChangedEvent(
+                            GUIStateChangedEvent.UIElement.FREE_CAM,
+                            !guiHandler.isFreeCamEnabled()));
+            case "c" -> eventManager.publish(
+                    new CameraCommandEvent(CameraCommandEvent.Operation.RESET, 0));
             default -> {
                 if (LOGGER.isTraceEnabled()) {
                     LOGGER.trace("Unknown key: {}", keyStr);
@@ -100,8 +111,13 @@ public class InputHandler {
         }
     }
 
-    /** Handle keyboard release events */
-    public void handleKeyReleased(final int key, final int keyCode) {
+    /**
+     * Handle keyboard release events
+     */
+    public void handleKeyReleased(
+            final int key,
+            final int keyCode
+    ) {
         final String keyStr =
                 key == PApplet.CODED
                         ? (keyCode == PApplet.SHIFT ? "SHIFT" : String.valueOf(keyCode))
@@ -156,7 +172,9 @@ public class InputHandler {
         }
     }
 
-    /** Handle mouse press events. <i>Hopefully not present in the hydraulic press channel.</i> */
+    /**
+     * Handle mouse press events. <i>Hopefully not present in the hydraulic press channel.</i>
+     */
     public void handleMousePressed() {
         eventManager.publish(new MouseStateChangedEvent(true, app.mouseButton));
         guiHandler.handleMouseClick();
@@ -165,7 +183,9 @@ public class InputHandler {
         }
     }
 
-    /** Handle mouse release events. <i>Release the mice!</i> */
+    /**
+     * Handle mouse release events. <i>Release the mice!</i>
+     */
     public void handleMouseReleased() {
         eventManager.publish(new MouseStateChangedEvent(false, 0));
     }
@@ -186,6 +206,6 @@ public class InputHandler {
      * @return The set of keys currently pressed.
      */
     public Set<String> getKeysDown() {
-        return keysDown;
+        return Set.copyOf(keysDown);
     }
 }

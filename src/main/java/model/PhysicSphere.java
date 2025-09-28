@@ -10,8 +10,9 @@ import static processing.core.PConstants.SQUARE;
 import app.GravityCollisionApp;
 import java.util.ArrayList;
 import java.util.List;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import misc.CollisionIndex;
-import processing.core.PApplet;
 import processing.core.PVector;
 
 /**
@@ -35,7 +36,7 @@ public class PhysicSphere {
     private final float bounciness;
     private final int index;
     private PVector acceleration;
-    private static PApplet app;
+    private static GravityCollisionApp app;
 
     /**
      * Overload for normal bounciness sphere. Bounciness is optional and has been known to cause
@@ -50,7 +51,7 @@ public class PhysicSphere {
      * @param massParam Sphere mass.
      */
     public PhysicSphere(
-            final PApplet appParam,
+            final GravityCollisionApp appParam,
             final int indexParam,
             final int sphereColorParam,
             final PVector positionParam,
@@ -76,7 +77,11 @@ public class PhysicSphere {
      *
      * @param appParam Processing app. <i>Omagaaad, setaaaapp!</i>
      */
-    public static void setApp(final PApplet appParam) {
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_STATIC_REP2",
+            justification = "PApplet must be shared in Processing; Renderer never exposes app."
+    )
+    public static void setApp(final GravityCollisionApp appParam) {
         if (app == null) {
             app = appParam;
         }
@@ -165,20 +170,19 @@ public class PhysicSphere {
      * @return {@code true} if the spheres are colliding.
      */
     private boolean isCollidingWith(final PhysicSphere other) {
-        if (index != other.index) {
-            final boolean isFrameColliding =
-                    other.position.dist(position) < other.radius * 2 + radius * 2;
-            final PVector vectorizedPosition = position.copy();
-            vectorizedPosition.dot(velocity);
-            final PVector otherVectorizedPosition = other.position.copy();
-            otherVectorizedPosition.dot(other.velocity);
-            final boolean isVectorColliding =
-                    vectorizedPosition.dist(otherVectorizedPosition)
-                            < other.radius * 2 + radius * 2;
-            return isFrameColliding || isVectorColliding;
-        }
-        return false;
+        if (index == other.index) return false;
+
+        float sumR = radius + other.radius;
+
+        boolean isFrameColliding = position.dist(other.position) < sumR;
+
+        PVector nextPos = PVector.add(position, velocity);
+        PVector otherNextPos = PVector.add(other.position, other.velocity);
+        boolean isVectorColliding = nextPos.dist(otherNextPos) < sumR;
+
+        return isFrameColliding || isVectorColliding;
     }
+
 
     /**
      * Handles collision detection and resolution between the current PhysicSphere instance and the
@@ -325,7 +329,7 @@ public class PhysicSphere {
         if (SimulationHandler.getTargetPhysicsFPS() < fpsCount) {
             final int frameInterval =
                     Math.round(fpsCount / SimulationHandler.getTargetPhysicsFPS());
-            if (GravityCollisionApp.getFrames() % frameInterval == 0) {
+            if (app.getFrames() % frameInterval == 0) {
                 updatePhysics();
             }
         } else {

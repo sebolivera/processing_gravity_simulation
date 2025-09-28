@@ -1,5 +1,6 @@
 package graphics.gui;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import events.core.EventManager;
 import events.graphics.gui.GUIHoverEvent;
 import misc.MathUtils;
@@ -35,10 +36,10 @@ public class HScrollBar {
     private final float exponentialBase;
 
     /** Configuration for scroll bar positioning and dimensions. */
-    public record Geometry(float xPosition, float yPosition, int sliderWidth, int sliderHeight) {}
+    public record ScrollBarGeometry(float xPosition, float yPosition, int sliderWidth, int sliderHeight) {}
 
     /** Configuration for scroll bar behavior and values. */
-    public record ValueRange(
+    public record ScrollBarValueRange(
             float lerpedMinValue,
             float lerpedMaxValue,
             float defaultValue,
@@ -46,58 +47,66 @@ public class HScrollBar {
             float exponentialBase) {}
 
     /** Configuration for scroll bar display options. */
-    public record DisplayOptions(
+    public record ScrollBarDisplayOptions(
             String label, boolean valueShown, String minLabelValue, String maxLabelValue) {}
 
     /** Dependencies required by the scroll bar. */
-    public record Dependencies(
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP",
+            justification = "PApplet must be shared in Processing; Renderer never exposes app."
+    )
+    public record ScrollBarDependencies(
             PApplet parent,
             EventManager eventManager,
             GUIHandler guiEventManager,
             MathUtils.FloatFunction lambdaController,
             String scrollBarId) {}
 
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP",
+            justification = "PApplet must be shared in Processing; Renderer never exposes app."
+    )
     public HScrollBar(
-            final Geometry geometry,
-            final ValueRange valueRange,
-            final DisplayOptions displayOptions,
-            final Dependencies dependencies) {
-        this.sliderWidth = geometry.sliderWidth;
-        this.sliderHeight = geometry.sliderHeight;
-        this.xPosition = geometry.xPosition;
-        this.yPosition = geometry.yPosition - this.sliderHeight / 2.0f;
+            final ScrollBarGeometry scrollBarGeometry,
+            final ScrollBarValueRange scrollBarValueRange,
+            final ScrollBarDisplayOptions scrollBarDisplayOptions,
+            final ScrollBarDependencies scrollBarDependencies) {
+        this.sliderWidth = scrollBarGeometry.sliderWidth;
+        this.sliderHeight = scrollBarGeometry.sliderHeight;
+        this.xPosition = scrollBarGeometry.xPosition;
+        this.yPosition = scrollBarGeometry.yPosition - this.sliderHeight / 2.0f;
         this.sliderPositionMin = this.xPosition;
         this.sliderPositionMax = this.xPosition + this.sliderWidth - this.sliderHeight;
 
-        this.lerpedMinValue = valueRange.lerpedMinValue;
-        this.lerpedMaxValue = valueRange.lerpedMaxValue;
-        this.useExponentialScale = valueRange.useExponentialScale;
-        this.exponentialBase = valueRange.exponentialBase;
+        this.lerpedMinValue = scrollBarValueRange.lerpedMinValue;
+        this.lerpedMaxValue = scrollBarValueRange.lerpedMaxValue;
+        this.useExponentialScale = scrollBarValueRange.useExponentialScale;
+        this.exponentialBase = scrollBarValueRange.exponentialBase;
 
-        this.label = displayOptions.label;
-        this.valueShown = displayOptions.valueShown;
-        this.minLabelValue = displayOptions.minLabelValue;
-        this.maxLabelValue = displayOptions.maxLabelValue;
+        this.label = scrollBarDisplayOptions.label;
+        this.valueShown = scrollBarDisplayOptions.valueShown;
+        this.minLabelValue = scrollBarDisplayOptions.minLabelValue;
+        this.maxLabelValue = scrollBarDisplayOptions.maxLabelValue;
 
-        this.parent = dependencies.parent;
-        this.eventManager = dependencies.eventManager;
-        this.guiEventManager = dependencies.guiEventManager;
-        this.lambdaController = dependencies.lambdaController;
-        this.scrollBarId = dependencies.scrollBarId;
+        this.parent = scrollBarDependencies.parent;
+        this.eventManager = scrollBarDependencies.eventManager;
+        this.guiEventManager = scrollBarDependencies.guiEventManager;
+        this.lambdaController = scrollBarDependencies.lambdaController;
+        this.scrollBarId = scrollBarDependencies.scrollBarId;
 
-        if (valueRange.useExponentialScale) {
+        if (scrollBarValueRange.useExponentialScale) {
             final float normalizedValue =
-                    (valueRange.defaultValue - valueRange.lerpedMinValue)
-                            / (valueRange.lerpedMaxValue - valueRange.lerpedMinValue);
+                    (scrollBarValueRange.defaultValue - scrollBarValueRange.lerpedMinValue)
+                            / (scrollBarValueRange.lerpedMaxValue - scrollBarValueRange.lerpedMinValue);
             final float linearPosition =
                     (float)
-                            (Math.log(normalizedValue * (valueRange.exponentialBase - 1) + 1)
-                                    / Math.log(valueRange.exponentialBase));
+                            (Math.log(normalizedValue * (scrollBarValueRange.exponentialBase - 1) + 1)
+                                    / Math.log(scrollBarValueRange.exponentialBase));
             this.sliderPosition =
                     linearPosition * (this.sliderWidth - this.sliderHeight) + this.xPosition;
         } else {
             this.sliderPosition =
-                    valueRange.defaultValue * (this.sliderWidth - this.sliderHeight)
+                    scrollBarValueRange.defaultValue * (this.sliderWidth - this.sliderHeight)
                             + this.xPosition;
         }
     }

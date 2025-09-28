@@ -2,6 +2,7 @@ package graphics.gui;
 
 import static events.graphics.gui.GUIStateChangedEvent.UIElement;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import events.core.EventManager;
 import events.graphics.gui.GUIHoverEvent;
 import events.graphics.gui.GUIStateChangedEvent;
@@ -40,6 +41,10 @@ public class GUIHandler {
     private PFont fontLight;
     private PFont fontBold;
 
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification = "PApplet must be shared in Processing; Renderer never exposes app."
+    )
     public GUIHandler(final EventManager eventManagerParam, final PApplet appParam) {
         this.eventManager = eventManagerParam;
         this.app = appParam;
@@ -407,21 +412,21 @@ public class GUIHandler {
 
         gravityScroll =
                 new HScrollBar(
-                        new HScrollBar.Geometry(
+                        new HScrollBar.ScrollBarGeometry(
                                 bottomInitXParam, bottomInitYParam - 330, width / 3, 16),
-                        new HScrollBar.ValueRange(0, 20, 0.5f, true, 2.0f),
-                        new HScrollBar.DisplayOptions("Global gravity scale", true, "0", "2"),
-                        new HScrollBar.Dependencies(
+                        new HScrollBar.ScrollBarValueRange(0, 20, 0.5f, true, 2.0f),
+                        new HScrollBar.ScrollBarDisplayOptions("Global gravity scale", true, "0", "2"),
+                        new HScrollBar.ScrollBarDependencies(
                                 this.app, eventManager, this, editGLambda, "gravity_scroll"));
 
         speedScroll =
                 new HScrollBar(
-                        new HScrollBar.Geometry(
+                        new HScrollBar.ScrollBarGeometry(
                                 bottomInitXParam, bottomInitYParam - 420, width / 3, 16),
-                        new HScrollBar.ValueRange(1f, 3000.0f, 0.01f, true, 30.0f),
-                        new HScrollBar.DisplayOptions(
+                        new HScrollBar.ScrollBarValueRange(1f, 3000.0f, 0.01f, true, 30.0f),
+                        new HScrollBar.ScrollBarDisplayOptions(
                                 "Simulation speed multiplier", true, "1/60x", "50x"),
-                        new HScrollBar.Dependencies(
+                        new HScrollBar.ScrollBarDependencies(
                                 this.app, eventManager, this, editPhysicsFPS, "speed_scroll"));
     }
 
