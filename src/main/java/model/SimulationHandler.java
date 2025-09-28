@@ -40,9 +40,9 @@ public class SimulationHandler {
 
     @SuppressFBWarnings(
             value = "EI_EXPOSE_REP2",
-            justification = "PApplet must be shared in Processing; Renderer never exposes app."
-    )
-    public SimulationHandler(final GravityCollisionApp appParam, final EventManager eventManagerParam) {
+            justification = "PApplet must be shared in Processing; Renderer never exposes app.")
+    public SimulationHandler(
+            final GravityCollisionApp appParam, final EventManager eventManagerParam) {
         this.app = appParam;
         this.eventManager = eventManagerParam;
         this.threadCount = Runtime.getRuntime().availableProcessors();

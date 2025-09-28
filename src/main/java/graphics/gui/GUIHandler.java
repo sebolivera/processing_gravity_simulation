@@ -43,8 +43,7 @@ public class GUIHandler {
 
     @SuppressFBWarnings(
             value = "EI_EXPOSE_REP2",
-            justification = "PApplet must be shared in Processing; Renderer never exposes app."
-    )
+            justification = "PApplet must be shared in Processing; Renderer never exposes app.")
     public GUIHandler(final EventManager eventManagerParam, final PApplet appParam) {
         this.eventManager = eventManagerParam;
         this.app = appParam;
@@ -415,7 +414,8 @@ public class GUIHandler {
                         new HScrollBar.ScrollBarGeometry(
                                 bottomInitXParam, bottomInitYParam - 330, width / 3, 16),
                         new HScrollBar.ScrollBarValueRange(0, 20, 0.5f, true, 2.0f),
-                        new HScrollBar.ScrollBarDisplayOptions("Global gravity scale", true, "0", "2"),
+                        new HScrollBar.ScrollBarDisplayOptions(
+                                "Global gravity scale", true, "0", "2"),
                         new HScrollBar.ScrollBarDependencies(
                                 this.app, eventManager, this, editGLambda, "gravity_scroll"));
 

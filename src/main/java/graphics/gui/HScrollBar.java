@@ -36,7 +36,8 @@ public class HScrollBar {
     private final float exponentialBase;
 
     /** Configuration for scroll bar positioning and dimensions. */
-    public record ScrollBarGeometry(float xPosition, float yPosition, int sliderWidth, int sliderHeight) {}
+    public record ScrollBarGeometry(
+            float xPosition, float yPosition, int sliderWidth, int sliderHeight) {}
 
     /** Configuration for scroll bar behavior and values. */
     public record ScrollBarValueRange(
@@ -53,8 +54,7 @@ public class HScrollBar {
     /** Dependencies required by the scroll bar. */
     @SuppressFBWarnings(
             value = "EI_EXPOSE_REP",
-            justification = "PApplet must be shared in Processing; Renderer never exposes app."
-    )
+            justification = "PApplet must be shared in Processing; Renderer never exposes app.")
     public record ScrollBarDependencies(
             PApplet parent,
             EventManager eventManager,
@@ -64,8 +64,7 @@ public class HScrollBar {
 
     @SuppressFBWarnings(
             value = "EI_EXPOSE_REP",
-            justification = "PApplet must be shared in Processing; Renderer never exposes app."
-    )
+            justification = "PApplet must be shared in Processing; Renderer never exposes app.")
     public HScrollBar(
             final ScrollBarGeometry scrollBarGeometry,
             final ScrollBarValueRange scrollBarValueRange,
@@ -97,10 +96,15 @@ public class HScrollBar {
         if (scrollBarValueRange.useExponentialScale) {
             final float normalizedValue =
                     (scrollBarValueRange.defaultValue - scrollBarValueRange.lerpedMinValue)
-                            / (scrollBarValueRange.lerpedMaxValue - scrollBarValueRange.lerpedMinValue);
+                            / (scrollBarValueRange.lerpedMaxValue
+                                    - scrollBarValueRange.lerpedMinValue);
             final float linearPosition =
                     (float)
-                            (Math.log(normalizedValue * (scrollBarValueRange.exponentialBase - 1) + 1)
+                            (Math.log(
+                                            normalizedValue
+                                                            * (scrollBarValueRange.exponentialBase
+                                                                    - 1)
+                                                    + 1)
                                     / Math.log(scrollBarValueRange.exponentialBase));
             this.sliderPosition =
                     linearPosition * (this.sliderWidth - this.sliderHeight) + this.xPosition;

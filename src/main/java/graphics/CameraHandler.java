@@ -5,10 +5,9 @@ import damkjer.ocd.Camera;
 import events.core.EventManager;
 import events.graphics.CameraChangedEvent;
 import events.graphics.CameraCommandEvent;
+import java.util.function.IntSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.function.IntSupplier;
 
 public class CameraHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(CameraHandler.class);
@@ -24,14 +23,15 @@ public class CameraHandler {
         this.width = () -> appParam.width;
         this.height = () -> appParam.height;
 
-        this.camera = new Camera(
-                appParam,
-                width.getAsInt() / 2.0f,
-                height.getAsInt() / 2.0f,
-                1000.0f,
-                width.getAsInt() / 2.0f,
-                height.getAsInt() / 2.0f,
-                0.0f);
+        this.camera =
+                new Camera(
+                        appParam,
+                        width.getAsInt() / 2.0f,
+                        height.getAsInt() / 2.0f,
+                        1000.0f,
+                        width.getAsInt() / 2.0f,
+                        height.getAsInt() / 2.0f,
+                        0.0f);
         setupCameraEventHandler();
     }
 

@@ -53,8 +53,7 @@ public class Renderer {
 
     @SuppressFBWarnings(
             value = "EI_EXPOSE_REP2",
-            justification = "PApplet must be shared in Processing; Renderer never exposes app."
-    )
+            justification = "PApplet must be shared in Processing; Renderer never exposes app.")
     public Renderer(
             final PApplet appParam,
             final EventManager eventManagerParam,

@@ -8,10 +8,9 @@ import static processing.core.PApplet.lerp;
 import static processing.core.PConstants.SQUARE;
 
 import app.GravityCollisionApp;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.ArrayList;
 import java.util.List;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import misc.CollisionIndex;
 import processing.core.PVector;
 
@@ -79,8 +78,7 @@ public class PhysicSphere {
      */
     @SuppressFBWarnings(
             value = "EI_EXPOSE_STATIC_REP2",
-            justification = "PApplet must be shared in Processing; Renderer never exposes app."
-    )
+            justification = "PApplet must be shared in Processing; Renderer never exposes app.")
     public static void setApp(final GravityCollisionApp appParam) {
         if (app == null) {
             app = appParam;
@@ -170,19 +168,20 @@ public class PhysicSphere {
      * @return {@code true} if the spheres are colliding.
      */
     private boolean isCollidingWith(final PhysicSphere other) {
-        if (index == other.index) return false;
+        if (index == other.index) {
+            return false;
+        }
 
-        float sumR = radius + other.radius;
+        final float sumR = radius + other.radius;
 
-        boolean isFrameColliding = position.dist(other.position) < sumR;
+        final boolean isFrameColliding = position.dist(other.position) < sumR;
 
-        PVector nextPos = PVector.add(position, velocity);
-        PVector otherNextPos = PVector.add(other.position, other.velocity);
-        boolean isVectorColliding = nextPos.dist(otherNextPos) < sumR;
+        final PVector nextPos = PVector.add(position, velocity);
+        final PVector otherNextPos = PVector.add(other.position, other.velocity);
+        final boolean isVectorColliding = nextPos.dist(otherNextPos) < sumR;
 
         return isFrameColliding || isVectorColliding;
     }
-
 
     /**
      * Handles collision detection and resolution between the current PhysicSphere instance and the
