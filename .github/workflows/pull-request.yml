@@ -9,6 +9,6 @@ permissions:
 
 jobs:
   code_quality_checks:
-    uses: ./.github/actions/_code-quality-checks.yml
+    uses: ./.github/workflows/_code-quality-checks.yml
   run:
-    uses: ./.github/actions/_run.yml
+    uses: ./.github/workflows/_run.yml
