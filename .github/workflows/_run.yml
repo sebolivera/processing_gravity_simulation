@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/gradle_build
+      - uses: ./.github/actions/setup
 
       - name: Build distZip
         run: ./gradlew distZip

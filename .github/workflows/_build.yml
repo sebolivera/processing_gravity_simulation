@@ -1,0 +1,20 @@
+name: Build
+on:
+  workflow_call:
+
+jobs:
+  run_simulation:
+    name: Run Simulation
+    strategy:
+      matrix:
+        java-version:
+          - "21"
+        distribution:
+          - "temurin"
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - run: ./gradlew build
